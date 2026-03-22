@@ -1132,11 +1132,12 @@ function flashScene(color){
 
 // ── DROP ──
 let lastDropTime=0;
-const DROP_COOLDOWN=400; // ms — ignore taps within 400ms of a drop
+const DROP_COOLDOWN=400; // ms at low speed
+function getDropCooldown(){ return Math.max(0, DROP_COOLDOWN - spd*40); } // 400ms at spd 2.2 → 0ms at spd 10+
 
 function doDrop(){
   const now=Date.now();
-  if(now-lastDropTime<DROP_COOLDOWN) return; // ignore double-tap
+  if(now-lastDropTime<getDropCooldown()) return;
   if(state!=='playing'||!mover) return;
   lastDropTime=now;
 
@@ -1217,44 +1218,37 @@ function doDrop(){
     ejectBabies();
   }
 
-  // Store each bunny's relative offset from old block center (-0.5 to 0.5)
-  // so they land at the proportionally equivalent position on the new block
-  const oldTop=placed[placed.length-2]||placed[placed.length-1]; // block they're currently on
-  const oldCx=oldTop.lx+oldTop.w/2;
-  const relOffsets={};
-  bunnies.filter(b=>!b.falling).forEach(b=>{
-    // relative offset as fraction of old block half-width
-    relOffsets[bunnies.indexOf(b)]= oldTop.w>0 ? (b.tx-oldCx)/oldTop.w : 0;
-  });
+  // Hop ALL non-falling bunnies to new block with clean evenly-spaced positions
+  const allActive=bunnies.filter(b=>!b.falling);
+  const mamaB=allActive.find(b=>b.isMama);
+  const babiesB=allActive.filter(b=>!b.isMama);
 
-  // Mama hops up to new top immediately — cancel any current state
-  const mama=bunnies.find(b=>b.isMama);
-  if(mama){
-    mama.fromX=mama.grp.position.x;
-    // Mama always goes to center of new block
-    mama.tx=newCx; mama.tz=0;
-    const mamaGnd=bunnyGroundY(mama.blockBy||0,mama.sc,true);
-    mama.fromY=Math.min(mama.grp.position.y, mamaGnd+0.5);
-    mama.toY=bunnyGroundY(newBy, mama.sc, true);
-    mama.toBlockBy=newBy;
-    mama.hopT=0; mama.hopping=true;
-    mama.jumping=false; mama.jo=0; mama.jv=0;
-    mama.moverState='none'; mama.moverCooldown=15;
-    mama.cel=perfect?60:0;
+  // Compute clean slots for babies on the new block
+  const babySlots=getBabySlots(pb, babiesB.length);
+
+  // Hop mama to center of new block
+  if(mamaB){
+    mamaB.fromX=mamaB.grp.position.x;
+    mamaB.hopTargetX=newCx; mamaB.hopTargetZ=0;
+    const mamaGnd=bunnyGroundY(mamaB.blockBy||0,mamaB.sc,true);
+    mamaB.fromY=Math.min(mamaB.grp.position.y, mamaGnd+0.5);
+    mamaB.toY=bunnyGroundY(newBy, mamaB.sc, true);
+    mamaB.toBlockBy=newBy;
+    mamaB.hopT=0; mamaB.hopping=true;
+    mamaB.jumping=false; mamaB.jo=0; mamaB.jv=0;
+    mamaB.moverState='none'; mamaB.moverCooldown=15;
+    mamaB.cel=perfect?60:0;
     wobVel*=0.1; wobAng*=0.1;
     sfxBunnyJump();
   }
 
-  // Babies: set tx proportionally on new block, then hop
-  const activeBabies=bunnies.filter(b=>!b.isMama&&!b.falling&&!b.hopping);
-  activeBabies.forEach((b,i)=>{
+  // Hop all babies to their assigned slots
+  babiesB.forEach((b,i)=>{
+    const slot=babySlots[i]||{x:newCx+(i%2===0?-0.5:0.5), z:0};
     b.fromX=b.grp.position.x;
     b.fromY=b.grp.position.y;
-    // Apply relative offset to new block width, clamped so they stay on block
-    const rel=relOffsets[bunnies.indexOf(b)]||0;
-    const maxOff=newW*0.45;
-    b.tx=newCx + Math.max(-maxOff, Math.min(maxOff, rel*newW));
-    b.tz=b.tz||0;
+    b.hopTargetX=slot.x;
+    b.hopTargetZ=slot.z;
     b.blockBy=newBy;
     b.toY=bunnyGroundY(newBy,b.sc,false);
     b.toBlockBy=newBy;
@@ -1276,38 +1270,78 @@ function ejectBabies(){
   });
 }
 
+function getBabySlots(top, count){
+  const cx=top.lx+top.w/2;
+  const sp=Math.min(0.6, top.w*0.32);
+  const halfW=top.w/2;
+  const clamp=(x,z)=>({
+    x:Math.max(top.lx+0.22, Math.min(top.lx+top.w-0.22, cx+x)),
+    z:Math.max(-halfW+0.1, Math.min(halfW-0.1, z))
+  });
+  const jitter=()=>(Math.random()-0.5)*0.18;
+  // First 4: X pattern from camera perspective, with small jitter
+  const xSlots=[
+    clamp(-sp+jitter(),-sp+jitter()),
+    clamp(sp+jitter(),sp+jitter()),
+    clamp(sp+jitter(),-sp+jitter()),
+    clamp(-sp+jitter(),sp+jitter())
+  ];
+  const slots=xSlots.slice(0,Math.min(count,4));
+  // Beyond 4: random positions within block, avoiding center and existing slots
+  while(slots.length<count){
+    const rx=(Math.random()-0.5)*top.w*0.7;
+    const rz=(Math.random()-0.5)*Math.min(top.w,S)*0.6;
+    const s=clamp(rx,rz);
+    // Check not too close to existing slots or mama (center)
+    const tooClose=slots.some(e=>Math.abs(e.x-s.x)<0.3&&Math.abs(e.z-s.z)<0.3)
+      || (Math.abs(s.x-cx)<0.25&&Math.abs(s.z)<0.25);
+    if(!tooClose) slots.push(s);
+  }
+  return slots;
+}
+
 function addBunny(top){
   const col=BCOLS[Math.floor(Math.random()*BCOLS.length)];
   const sc=0.7+Math.random()*0.2;
   const grp=mkAnimal(col,sc);
   const gndY=bunnyGroundY(top.by,sc,false);
-  // Spawn directly above the block center, drop down — never appears to come from side
-  const spawnX=top.lx+top.w/2;
+  // Figure out which slot this new baby should take
+  const babies=bunnies.filter(b=>!b.isMama&&!b.falling);
+  const slotIdx=babies.length; // this baby will be the nth baby
+  const slots=getBabySlots(top, slotIdx+1);
+  const slot=slots[slotIdx]||{x:top.lx+top.w/2+(Math.random()<0.5?1:-1)*0.4, z:0};
+  const targetX=slot.x+(Math.random()-0.5)*0.1;
+  const targetZ=slot.z+(Math.random()-0.5)*0.1;
   const spawnY=gndY+2.5;
-  grp.position.set(spawnX, spawnY, 0);
-  const b={grp,tx:spawnX,tz:0,blockBy:top.by,
+  grp.position.set(targetX, spawnY, targetZ);
+  const b={grp,tx:targetX,tz:targetZ,blockBy:top.by,
     jv:0,jo:0,jumping:false,
-    hopping:true,hopT:0,fromY:spawnY,toY:gndY,toBlockBy:top.by,
+    hopping:true,hopT:0,fromX:targetX,fromY:spawnY,
+    hopTargetX:targetX,hopTargetZ:targetZ,
+    toY:gndY,toBlockBy:top.by,
     lp:Math.random()*Math.PI*2,falling:false,fv:0,fvx:0,isMama:false,sc,cel:55,
-    moverState:'none',moverCooldown:80}; // long cooldown on spawn
+    moverState:'none',moverCooldown:80};
   bunnies.push(b);
-  repositionBunnies(top);
 }
 
 function repositionBunnies(top){
-  const active=bunnies.filter(b=>!b.falling);
+  // Only reposition bunnies fully at rest — not riding, jumping, or mid-hop
+  const active=bunnies.filter(b=>!b.falling && b.moverState==='none' && !b.jumping && !b.hopping);
   const n=active.length;
-  const scatterX=Math.min(top.w*0.6, n*0.5);
-  const scatterZ=S*0.45;
-  active.forEach((b,i)=>{
-    const cols=Math.max(1,Math.ceil(Math.sqrt(n)));
-    const row=Math.floor(i/cols), col=i%cols;
-    const totalRows=Math.ceil(n/cols);
-    const gx = n===1 ? 0 : (col/(cols-1||1)-0.5)*scatterX;
-    const gz = n===1 ? 0 : (row/(totalRows-1||1)-0.5)*scatterZ;
-    b.tx = top.lx+top.w/2 + gx + (Math.random()-0.5)*0.15;
-    b.tz = gz + (Math.random()-0.5)*0.15;
-    b.blockBy = top.by; // bottom Y of their current block surface
+  if(n===0) return;
+  const mama=active.find(b=>b.isMama);
+  const babies=active.filter(b=>!b.isMama);
+  const cx=top.lx+top.w/2;
+  // Mama always stays center
+  if(mama){ mama.tx=cx; mama.tz=0; mama.blockBy=top.by; }
+  if(babies.length===0) return;
+  // Get slots filling X first, then Z
+  const slots=getBabySlots(top, babies.length);
+  babies.forEach((b,i)=>{
+    const slot=slots[i]||{x:cx+(i%2===0?1:-1)*0.4,z:0};
+    b.tx=slot.x+(Math.random()-0.5)*0.1;
+    b.tz=slot.z+(Math.random()-0.5)*0.1;
+    b.blockBy=top.by;
   });
 }
 
@@ -1501,8 +1535,8 @@ function updateBunnies(dt){
       continue;
     }
 
-    // Smooth X/Z drift — skip while riding or hopping (arc controls X directly)
-    if(b.moverState!=='riding' && !b.hopping){
+    // Smooth X/Z drift — skip while riding, hopping arc, or mover jumping
+    if(b.moverState!=='riding' && !b.hopping && !b.jumping){
       g.position.x+=(b.tx-g.position.x)*0.12;
       g.position.z+=((b.tz||0)-g.position.z)*0.12;
     }
@@ -1525,19 +1559,22 @@ function updateBunnies(dt){
       const nearMoverX = standX > mover.lx-leadDist && standX < mover.lx+mover.w+leadDist;
       const moverSurface=bunnyGroundY(mover.by,b.sc,b.isMama);
       // Slow block = slow lazy hop, fast block = quick snappy hop
-      // Fixed jump height — only the speed of the arc increases at higher speeds
-      // Original feel: small, snappy hops that get faster but not higher
-      const jumpVel = 0.18;  // fixed velocity = fixed peak height
-      const jumpGrav= 0.012 + spd*0.004; // higher gravity at speed = faster arc, same height
+      // Jump height grows slightly with speed — same at start, taller at high speed
+      // Peak height = jv²/(2*grav). Base spd≈2.2: jv=0.18, grav=0.012+2.2*0.004=0.0208 → height≈0.78
+      // At higher speed: increase jv a little, keep grav scaling so it's faster AND slightly higher
+      const speedBoost=Math.max(0,(spd-2.2)*0.012); // 0 at start, grows with speed
+      const jumpVel = 0.18 + speedBoost;
+      const jumpGrav= 0.012 + spd*0.004; // faster arc at higher speed
 
       if(moverSameLevel){
         if(b.moverState==='none' && nearMoverX){
           b.moverState='hoppingOn';
-          // Store offset relative to the bunny's CURRENT block center
-          const currentBlockCx = b.tx; // b.tx is their settled position on current block
+          // Store offset as FRACTION of current block half-width so it scales to mover size
           const currentBlock = placed[placed.length-1];
           const currentCx = currentBlock ? currentBlock.lx + currentBlock.w/2 : 0;
-          b.centerOffsetX = currentBlockCx - currentCx; // how far from center they are
+          const currentHalfW = currentBlock ? currentBlock.w/2 : 1;
+          
+          b.centerOffsetX = (b.tx - currentCx) / Math.max(currentHalfW, 0.01);
           b.fromX = g.position.x;
           b.jumping=false; b.jo=0; b.jumpT=0;
           b.jv=jumpVel; b.jumpGrav=jumpGrav;
@@ -1554,10 +1591,15 @@ function updateBunnies(dt){
         }
         else if(b.moverState==='riding'){
           if(onMoverX || (mover.lx+b.moverOffsetX > mover.lx-0.1 && mover.lx+b.moverOffsetX < mover.lx+mover.w+0.1)){
-            const rideX = mover.lx + b.moverOffsetX;
-            g.position.x = rideX;
-            g.position.y = moverSurface;
-            b.tx = rideX;
+            const bodyR=b.isMama?0.28:0.18*(b.sc||0.8);
+            const moverCx=mover.lx+mover.w/2;
+            const maxOff=Math.max(0,mover.w/2-bodyR);
+            const rawX=mover.lx+b.moverOffsetX;
+            const clampedX=moverCx+Math.max(-maxOff,Math.min(maxOff,rawX-moverCx));
+            g.position.x=clampedX;
+            g.position.y=moverSurface;
+            b.tx=clampedX;
+            b.moverOffsetX=clampedX-mover.lx;
           } else {
             b.moverState='hoppingOff';
             b.fromX = g.position.x;
@@ -1588,7 +1630,6 @@ function updateBunnies(dt){
 
     // ── HOP ARC to new block (after placement) ──
     if(b.hopping){
-      // Decide trick at hop start
       if(b.hopT===0 || b.flipType===undefined){
         const flipChance=Math.min(0.8, score*0.025);
         const roll=Math.random();
@@ -1599,13 +1640,11 @@ function updateBunnies(dt){
       b.hopT+=dt*5.0;
       const t=Math.min(b.hopT,1);
       const arcH=Math.max(0.4, Math.abs(b.toY-b.fromY)*0.5+0.4);
-      // Arc Y
       g.position.y=b.fromY+(b.toY-b.fromY)*t+Math.sin(t*Math.PI)*arcH;
-      // Arc X — lerp from where they were to their new target position
-      if(b.fromX!==undefined){
-        g.position.x=b.fromX+(b.tx-b.fromX)*t;
+      // Arc X using hopTargetX — don't update b.tx until landing
+      if(b.fromX!==undefined && b.hopTargetX!==undefined){
+        g.position.x=b.fromX+(b.hopTargetX-b.fromX)*t;
       }
-      // Apply trick rotation
       if(b.flipType==='flip'){
         g.rotation.x=t*Math.PI*2;
       } else if(b.flipType==='spin'){
@@ -1621,7 +1660,10 @@ function updateBunnies(dt){
         b.moverCooldown=15;
         b.blockBy=b.toBlockBy!==undefined ? b.toBlockBy : (b.blockBy||0)+BH;
         g.position.y=bunnyGroundY(b.blockBy,b.sc,b.isMama);
-        g.position.x=b.tx;
+        // Now set b.tx to the actual landing position
+        if(b.hopTargetX!==undefined){ g.position.x=b.hopTargetX; b.tx=b.hopTargetX; }
+        if(b.hopTargetZ!==undefined){ g.position.z=b.hopTargetZ; b.tz=b.hopTargetZ; }
+        b.hopTargetX=undefined; b.hopTargetZ=undefined;
         g.rotation.x=0;
         g.rotation.y=camRotate*Math.PI/180;
       }
@@ -1646,8 +1688,9 @@ function updateBunnies(dt){
         // Snap to final position
         if(b.moverState==='hoppingOn' && mover && b.centerOffsetX!==undefined){
           const moverCx=mover.lx+mover.w/2;
-          const maxOff=mover.w*0.45;
-          const landX=moverCx+Math.max(-maxOff,Math.min(maxOff,b.centerOffsetX));
+          const bodyR=b.isMama?0.28:0.18*(b.sc||0.8);
+          const maxOff=Math.max(0,mover.w/2-bodyR);
+          const landX=moverCx+Math.max(-maxOff,Math.min(maxOff,b.centerOffsetX*mover.w/2));
           g.position.x=landX; b.tx=landX;
           b.moverOffsetX=landX-mover.lx;
         } else if(b.toX!==undefined){
@@ -1661,8 +1704,9 @@ function updateBunnies(dt){
           let targetX;
           if(b.moverState==='hoppingOn' && mover && b.centerOffsetX!==undefined){
             const moverCx = mover.lx + mover.w/2;
-            const maxOff = mover.w * 0.45;
-            targetX = moverCx + Math.max(-maxOff, Math.min(maxOff, b.centerOffsetX));
+            const bodyR=b.isMama?0.28:0.18*(b.sc||0.8);
+            const maxOff=Math.max(0,mover.w/2-bodyR);
+            targetX = moverCx + Math.max(-maxOff, Math.min(maxOff, b.centerOffsetX * mover.w/2));
           } else {
             targetX = b.toX;
           }
@@ -1748,6 +1792,26 @@ function updateHearts(dt){
   hearts=hearts.filter(h=>h.doneT<1.5);
 }
 
+// Clamp all riding bunnies to stay within mover bounds
+function clampBunniesToMover(){
+  if(!mover) return;
+  const moverCx=mover.lx+mover.w/2;
+  const moverHalfW=mover.w/2;
+  bunnies.forEach(b=>{
+    if(b.moverState!=='riding') return;
+    // Bunny body radius — keep them fully on block
+    const bodyR=b.isMama ? 0.28 : 0.18*(b.sc||0.8);
+    const maxOff=Math.max(0, moverHalfW-bodyR);
+    // Recalculate offset fraction based on current position
+    const curOff=b.grp.position.x-moverCx;
+    const clampedOff=Math.max(-maxOff,Math.min(maxOff,curOff));
+    const newX=moverCx+clampedOff;
+    b.grp.position.x=newX;
+    b.tx=newX;
+    b.moverOffsetX=newX-mover.lx;
+  });
+}
+
 function collectHeart(h){
   if(h.done||hUsed) return;
   h.done=true; h.doneT=0; hUsed=true; htimer=0;
@@ -1766,7 +1830,8 @@ function collectHeart(h){
     mover.lx-=grow/2; mover.w=nw;
     blockResize(mover.mesh,nw);
     mover.mesh.position.x=mover.lx+nw/2;
-    // If block was red (bounced), reset it — player gets one more bounce as reward
+    // Reclamp all riding bunnies to new larger block
+    clampBunniesToMover();
     if(mover.bounces>=1){
       mover.bounces=0;
       blockSetRedWarning(mover.mesh, false);
@@ -1821,7 +1886,8 @@ function updateHUD(){
 }
 
 function showGameOver(){
-  const best=getBest(),nb=score>best;if(nb)setBest(score);
+  const best=getBest(),nb=score>best;
+  if(nb){ setBest(score); buildAnimalSelector(); }
   document.getElementById('go-emoji').textContent=score===0?'😅':nb?'🏆':score>=15?'🍣':'😵';
   document.getElementById('go-title').textContent=score===0?'Zero pieces!':nb?'New Record!':score>=15?'Sushi Master!':'Dropped it!';
   document.getElementById('go-score').textContent=score;
@@ -1898,7 +1964,7 @@ function getMaxScore(){return Math.max(getBest(),score);}
 function buildAnimalSelector(){
   const el=document.getElementById('animal-selector');if(!el)return;
   el.innerHTML='';
-  const best=getMaxScore();
+  const best=Math.max(getBest(), score); // include current game score in case not yet saved
   Object.entries(ANIMALS).forEach(([key,a])=>{
     const unlocked=best>=a.unlockAt;
     const btn=document.createElement('button');
