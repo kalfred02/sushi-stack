@@ -24,6 +24,7 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
 #combo{position:fixed;z-index:10;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Fredoka One',cursive;font-size:38px;color:#fff;text-shadow:0 0 22px rgba(255,200,100,0.9),0 3px 0 rgba(0,0,0,0.18);pointer-events:none;opacity:0;}
 #stage-banner{position:fixed;z-index:10;top:35%;left:50%;transform:translate(-50%,-50%);font-family:'Fredoka One',cursive;font-size:clamp(20px,5vw,30px);color:#fff;text-align:center;text-shadow:0 2px 16px rgba(0,0,0,0.3);pointer-events:none;opacity:0;line-height:1.4;}
 #hint{position:fixed;z-index:10;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Fredoka One',cursive;font-size:18px;color:rgba(255,255,255,0.9);letter-spacing:2px;pointer-events:none;display:none;text-align:center;text-shadow:0 2px 8px rgba(0,0,0,0.3);line-height:1.8;}
+#hint.adv-hint{top:22%;transform:translate(-50%,-50%);}
 #mute{display:none;} /* removed — sound controlled via settings only */
 /* Screens */
 .screen{position:fixed;z-index:100;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;overflow-y:auto;}
@@ -59,11 +60,30 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
 @keyframes tensePulse{0%,100%{opacity:0.6}50%{opacity:1}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes popIn{0%{transform:scale(0.5);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes starPop{0%{transform:translate(-50%,-50%) scale(0.2);opacity:0}
+  40%{transform:translate(-50%,-50%) scale(1.4);opacity:1}
+  70%{transform:translate(-50%,-50%) scale(0.9);opacity:1}
+  100%{transform:translate(-50%,-50%) scale(1);opacity:0}}
 .ad-banner{width:100%;max-width:320px;height:50px;margin:0 auto;overflow:hidden;border-radius:8px;}
 .ad-banner-inner{width:100%;height:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-size:11px;color:rgba(255,255,255,0.25);letter-spacing:1px;}
 #persistent-banner{position:fixed;bottom:0;left:0;right:0;z-index:100;height:60px;
   background:rgba(10,5,20,0.92);border-top:1px solid rgba(255,255,255,0.08);
   display:flex;align-items:center;justify-content:center;}
+/* Adventure mode */
+#s-adventure{background:linear-gradient(160deg,#1a2a1a,#2a1a3a 50%,#1a2a3a);}
+.adv-world{margin-bottom:18px;width:100%;max-width:380px;}
+.adv-world-title{font-family:'Fredoka One',cursive;font-size:14px;letter-spacing:2px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:8px;padding-left:4px;}
+.adv-levels{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+.adv-lvl{aspect-ratio:1;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;border:2px solid transparent;transition:transform 0.15s;}
+.adv-lvl:active{transform:scale(0.92);}
+.adv-lvl.locked{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.08);cursor:default;}
+.adv-lvl.open{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.25);box-shadow:0 4px 12px rgba(0,0,0,0.3);}
+.adv-lvl.done{background:rgba(76,175,125,0.25);border-color:rgba(76,175,125,0.5);}
+.adv-lvl.boss{background:rgba(200,50,50,0.2);border-color:rgba(200,80,80,0.5);animation:bossGlow 2s ease-in-out infinite;}
+.adv-lvl.boss.done{background:rgba(200,50,50,0.35);border-color:rgba(255,100,100,0.7);}
+.adv-lvl-num{font-family:'Fredoka One',cursive;font-size:18px;color:#fff;line-height:1;}
+.adv-lvl-stars{font-size:9px;margin-top:2px;}
+@keyframes bossGlow{0%,100%{box-shadow:0 0 8px rgba(255,80,80,0.4);}50%{box-shadow:0 0 22px rgba(255,80,80,0.9);}}
 </style>
 </head>
 <body>
@@ -77,13 +97,25 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
 
 <!-- HUD -->
 <div class="ui" id="hud" style="display:none;flex-direction:row;justify-content:space-between;align-items:center;left:0;right:0;top:env(safe-area-inset-top,0);padding:14px 18px 0;">
-  <div>
-    <div id="score-wrap"><div id="score-lbl">Score</div><div id="score-val">0</div></div>
-    <div id="perfect-wrap" style="display:none;margin-top:3px;">
+  <!-- Left: perfect streak -->
+  <div style="min-width:54px;">
+    <div id="perfect-wrap" style="display:none;">
       <div id="perfect-val" style="font-family:'Fredoka One',cursive;font-size:20px;color:#ffcc00;text-shadow:0 0 12px rgba(255,200,0,0.8);line-height:1;">0🔥</div>
     </div>
   </div>
-  <!-- Pause button inline with HUD -->
+  <!-- Center: score + goal -->
+  <div id="score-wrap" style="text-align:center;position:absolute;left:50%;transform:translateX(-50%);">
+    <div id="score-lbl" style="font-family:'Fredoka One',cursive;font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.9);text-transform:uppercase;text-shadow:0 1px 4px rgba(0,0,0,0.3);">Score</div>
+    <div id="score-val" style="font-family:'Fredoka One',cursive;font-size:54px;color:#fff;line-height:1;text-shadow:0 2px 12px rgba(0,0,0,0.25);">0</div>
+    <!-- Adventure goal shown inline under score -->
+    <div id="adv-goal-hud" style="display:none;margin-top:2px;">
+      <div id="adv-goal-val" style="font-family:'Fredoka One',cursive;font-size:26px;color:#ffcc00;line-height:1;letter-spacing:1px;"></div>
+      <div style="width:80px;height:5px;background:rgba(255,255,255,0.2);border-radius:3px;margin:4px auto 0;">
+        <div id="adv-goal-bar" style="height:100%;background:#ffcc00;border-radius:3px;width:0%;transition:width 0.3s;"></div>
+      </div>
+    </div>
+  </div>
+  <!-- Right: pause button -->
   <button id="pauseBtn" style="background:rgba(255,255,255,0.22);border:none;border-radius:50%;width:54px;height:54px;cursor:pointer;pointer-events:all;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
     <svg width="22" height="26" viewBox="0 0 22 26" fill="white">
       <rect x="1" y="0" width="8" height="26" rx="2"/>
@@ -122,147 +154,224 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
   background:rgba(15,8,25,0.55);
   align-items:center;justify-content:center;flex-direction:column;">
   <div style="background:rgba(30,15,50,0.92);border:1px solid rgba(255,255,255,0.2);
-    border-radius:28px;padding:32px 28px;max-width:380px;width:92%;text-align:center;
+    border-radius:28px;padding:20px 20px;max-width:380px;width:92%;text-align:center;
     box-shadow:0 20px 60px rgba(0,0,0,0.5);max-height:90vh;overflow-y:auto;">
-    <div style="font-family:'Fredoka One',cursive;font-size:32px;color:#fff;margin-bottom:24px;letter-spacing:1px;">⚙️ Settings</div>
-    <!-- Zoom slider -->
-    <div style="margin-bottom:22px;">
-      <div style="font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:2px;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-bottom:10px;">Camera Zoom</div>
-      <input id="zoom-slider" type="range" min="2.5" max="7" step="0.1" value="4.6"
-        style="width:100%;accent-color:#9b5de5;cursor:pointer;">
-      <div id="zoom-label" style="font-family:'Fredoka One',cursive;font-size:28px;color:#fff;margin-top:8px;letter-spacing:1px;"></div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;">← more zoom · less zoom →</div>
+    <div style="font-family:'Fredoka One',cursive;font-size:26px;color:#fff;margin-bottom:16px;letter-spacing:1px;">⚙️ Settings</div>
+    <!-- Compact sliders: label + value on one line -->
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <span style="font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:1px;color:rgba(255,255,255,0.6);text-transform:uppercase;">Zoom</span>
+        <span id="zoom-label" style="font-family:'Fredoka One',cursive;font-size:14px;color:#9b5de5;"></span>
+      </div>
+      <input id="zoom-slider" type="range" min="2.5" max="7" step="0.1" value="4.6" style="width:100%;accent-color:#9b5de5;cursor:pointer;">
     </div>
-    <!-- Pitch slider -->
-    <div style="margin-bottom:22px;">
-      <div style="font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:2px;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-bottom:10px;">Camera Angle</div>
-      <input id="pitch-slider" type="range" min="4" max="18" step="0.5" value="10"
-        style="width:100%;accent-color:#f5c842;cursor:pointer;">
-      <div id="pitch-label" style="font-family:'Fredoka One',cursive;font-size:28px;color:#fff;margin-top:8px;letter-spacing:1px;"></div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;">← low angle · high angle →</div>
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <span style="font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:1px;color:rgba(255,255,255,0.6);text-transform:uppercase;">Angle</span>
+        <span id="pitch-label" style="font-family:'Fredoka One',cursive;font-size:14px;color:#f5c842;"></span>
+      </div>
+      <input id="pitch-slider" type="range" min="4" max="18" step="0.5" value="10" style="width:100%;accent-color:#f5c842;cursor:pointer;">
     </div>
-    <!-- Rotate slider -->
-    <div style="margin-bottom:22px;">
-      <div style="font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:2px;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-bottom:10px;">Camera Rotate</div>
-      <input id="rotate-slider" type="range" min="0" max="360" step="1" value="45"
-        style="width:100%;accent-color:#44ddff;cursor:pointer;">
-      <div id="rotate-label" style="font-family:'Fredoka One',cursive;font-size:28px;color:#fff;margin-top:8px;letter-spacing:1px;"></div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;">← rotate around stack →</div>
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <span style="font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:1px;color:rgba(255,255,255,0.6);text-transform:uppercase;">Rotate</span>
+        <span id="rotate-label" style="font-family:'Fredoka One',cursive;font-size:14px;color:#44ddff;"></span>
+      </div>
+      <input id="rotate-slider" type="range" min="0" max="360" step="1" value="45" style="width:100%;accent-color:#44ddff;cursor:pointer;">
     </div>
-    <!-- Stack Y offset slider -->
-    <div style="margin-bottom:22px;">
-      <div style="font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:2px;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-bottom:10px;">Stack Position</div>
-      <input id="stacky-slider" type="range" min="-5" max="5" step="0.1" value="0"
-        style="width:100%;accent-color:#ff9955;cursor:pointer;">
-      <div id="stacky-label" style="font-family:'Fredoka One',cursive;font-size:28px;color:#fff;margin-top:8px;letter-spacing:1px;">0.0</div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;">← lower · higher →</div>
+    <div style="margin-bottom:18px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <span style="font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:1px;color:rgba(255,255,255,0.6);text-transform:uppercase;">Stack Pos</span>
+        <span id="stacky-label" style="font-family:'Fredoka One',cursive;font-size:14px;color:#ff9955;">0.0</span>
+      </div>
+      <input id="stacky-slider" type="range" min="-5" max="5" step="0.1" value="0" style="width:100%;accent-color:#ff9955;cursor:pointer;">
     </div>
     <!-- Block Style -->
-    <div style="margin-bottom:22px;">
-      <div style="font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:2px;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-bottom:10px;">Block Style</div>
-      <div style="display:flex;gap:8px;justify-content:center;">
+    <div style="margin-bottom:16px;">
+      <div style="font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;color:rgba(255,255,255,0.6);text-transform:uppercase;margin-bottom:8px;">Block Style</div>
+      <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">
         <button id="style-default" onclick="setBlockStyle('default')"
-          style="flex:1;padding:10px;border-radius:12px;border:2px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.15);color:#fff;font-family:'Fredoka One',cursive;font-size:14px;cursor:pointer;">🟦 Classic</button>
+          style="flex:1;padding:8px;border-radius:10px;border:2px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.15);color:#fff;font-family:'Fredoka One',cursive;font-size:13px;cursor:pointer;">🟦 Classic</button>
         <button id="style-sushi" onclick="setBlockStyle('sushi')"
-          style="flex:1;padding:10px;border-radius:12px;border:2px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.15);color:#fff;font-family:'Fredoka One',cursive;font-size:14px;cursor:pointer;">🍣 Sushi</button>
+          style="flex:1;padding:8px;border-radius:10px;border:2px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.15);color:#fff;font-family:'Fredoka One',cursive;font-size:13px;cursor:pointer;">🍣 Sushi</button>
+        <button id="style-golden" onclick="onGoldenStyleClick()"
+          style="flex:1;padding:8px;border-radius:10px;border:2px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.15);color:#fff;font-family:'Fredoka One',cursive;font-size:13px;cursor:pointer;">✨ Golden</button>
       </div>
     </div>
     <!-- Animal Selector -->
-    <div style="margin-bottom:22px;">
-      <div style="font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:2px;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-bottom:10px;">Animal</div>
-      <div id="animal-selector" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;"></div>
+    <div style="margin-bottom:16px;">
+      <div style="font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;color:rgba(255,255,255,0.6);text-transform:uppercase;margin-bottom:8px;">Animal</div>
+      <div id="animal-selector" style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;"></div>
     </div>
     <button id="pause-mute-btn"
-      style="width:100%;background:rgba(255,255,255,0.15);color:#fff;font-family:'Fredoka One',cursive;
-      font-size:18px;padding:12px;border:1px solid rgba(255,255,255,0.2);border-radius:14px;
-      cursor:pointer;margin-bottom:12px;">🔊 Sound</button>
+      style="width:100%;background:rgba(255,255,255,0.12);color:#fff;font-family:'Fredoka One',cursive;
+      font-size:16px;padding:10px;border:1px solid rgba(255,255,255,0.2);border-radius:12px;
+      cursor:pointer;margin-bottom:8px;">🔊 Sound</button>
+    <!-- Credits button -->
+    <button onclick="showCreditsPopup()"
+      style="width:100%;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);
+      font-family:'Fredoka One',cursive;font-size:14px;padding:9px;
+      border:1px solid rgba(255,255,255,0.1);border-radius:12px;cursor:pointer;margin-bottom:8px;">🎵 Credits</button>
     <!-- Resume / Close -->
     <button id="resumeBtn"
       style="width:100%;background:#9b5de5;color:#fff;font-family:'Fredoka One',cursive;
-      font-size:22px;padding:15px;border:none;border-radius:16px;cursor:pointer;
-      box-shadow:0 5px 0 #6a35b0;margin-bottom:10px;">▶ Resume</button>
-    <!-- Quit — only shown during gameplay -->
-    <button id="quitBtn"
-      style="width:100%;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);
-      font-family:'Fredoka One',cursive;font-size:16px;padding:12px;border:1px solid rgba(255,255,255,0.15);
-      border-radius:14px;cursor:pointer;">Quit to Menu</button>
-
-    <!-- Credits -->
-    <div style="margin-top:24px;border-top:1px solid rgba(255,255,255,0.1);padding-top:18px;">
-      <div style="font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;
-        color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:12px;">Credits</div>
-      <!-- Sushi Roll model -->
-      <div style="background:rgba(255,255,255,0.06);border-radius:12px;padding:12px;margin-bottom:8px;text-align:left;">
-        <div style="font-family:'Fredoka One',cursive;font-size:14px;color:#fff;margin-bottom:3px;">🍣 Sushi Roll 3D Model</div>
-        <div style="font-family:'Nunito',sans-serif;font-size:12px;color:rgba(255,255,255,0.55);margin-bottom:6px;">
-          by <span style="color:#c8a06a;">gecko0307</span> — CC Attribution 4.0
-        </div>
-        <a href="https://sketchfab.com/3d-models/sushi-roll-d7653693cc704752a54784febebbce3b"
-          target="_blank"
-          style="font-family:'Nunito',sans-serif;font-size:11px;color:#9b8de5;text-decoration:none;
-          display:inline-block;padding:4px 10px;background:rgba(155,93,229,0.15);
-          border-radius:8px;border:1px solid rgba(155,93,229,0.3);">
-          View on Sketchfab ↗
-        </a>
-      </div>
-      <!-- Add more credits here as you add more models -->
-      <!-- Music Credits -->
-      <div style="font-family:'Fredoka One',cursive;font-size:11px;letter-spacing:2px;
-        color:rgba(255,255,255,0.3);text-transform:uppercase;margin:14px 0 8px;">🎵 Music</div>
-      ${[
-        {title:'Bumblebee Loop', author:'jobromedia', license:'CC-BY 3.0', url:'https://opengameart.org/content/bumblebee-loop'},
-        {title:'Menu Music', author:'mrpoly', license:'CC0', url:'https://opengameart.org/content/menu-music-2'},
-        {title:'The Field of Dreams', author:'pauliuw', license:'CC0', url:'https://opengameart.org/content/the-field-of-dreams'},
-        {title:'Tower Defense Theme', author:'DST', license:'CC0', url:'https://opengameart.org/content/tower-defense-theme'},
-        {title:'Adventure Time', author:'Scribe', license:'CC0', url:'https://opengameart.org/content/adventure-time-3'},
-        {title:'Awake! (Megawall-10)', author:'cynicmusic', license:'CC0', url:'https://opengameart.org/content/awake-megawall-10'},
-      ].map(m=>`
-        <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:9px 12px;margin-bottom:6px;text-align:left;display:flex;justify-content:space-between;align-items:center;">
-          <div>
-            <div style="font-family:'Fredoka One',cursive;font-size:13px;color:#fff;">${m.title}</div>
-            <div style="font-family:'Nunito',sans-serif;font-size:11px;color:rgba(255,255,255,0.45);">${m.author} — ${m.license}</div>
-          </div>
-          <a href="${m.url}" target="_blank" style="font-size:10px;color:#9b8de5;text-decoration:none;padding:3px 8px;background:rgba(155,93,229,0.15);border-radius:6px;border:1px solid rgba(155,93,229,0.25);white-space:nowrap;">↗</a>
-        </div>`).join('')}
-      <div style="font-family:'Nunito',sans-serif;font-size:10px;color:rgba(255,255,255,0.25);
-        text-align:center;margin-top:8px;">Game by kalfred02</div>
-    </div>
+      font-size:20px;padding:13px;border:none;border-radius:14px;cursor:pointer;
+      box-shadow:0 5px 0 #6a35b0;margin-bottom:8px;">▶ Resume</button>
+    <!-- quitBtn kept as hidden stub for JS listener compatibility -->
+    <button id="quitBtn" style="display:none;"></button>
+    <!-- Back to world map — only in adventure mode -->
+    <button id="advMapBtn" onclick="closePause();goToAdvMapFromPause();"
+      style="display:none;width:100%;background:rgba(76,175,125,0.2);color:#4caf7d;
+      font-family:'Fredoka One',cursive;font-size:14px;padding:10px;
+      border:1px solid rgba(76,175,125,0.35);border-radius:12px;cursor:pointer;pointer-events:all;margin-bottom:6px;">🗺️ World Map</button>
+    <!-- Always-visible title screen button -->
+    <button onclick="closePause();goToTitle();"
+      style="width:100%;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);
+      font-family:'Fredoka One',cursive;font-size:14px;padding:10px;
+      border:1px solid rgba(255,255,255,0.12);border-radius:12px;cursor:pointer;">🏠 Title Screen</button>
   </div>
 </div>
 
+<!-- ADVENTURE MAP SCREEN -->
+<div id="s-adventure" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:100;flex-direction:column;background:#1a3a1a;">
+  <!-- Top bar -->
+  <div id="adv-world-tabs" style="display:flex;align-items:center;flex-shrink:0;
+    padding:12px 14px;gap:8px;background:rgba(0,0,0,0.6);z-index:20;
+    border-bottom:1px solid rgba(255,255,255,0.08);">
+    <button onclick="exitAdvMap()" style="background:rgba(255,255,255,0.15);border:none;
+      border-radius:12px;padding:10px 16px;font-family:'Fredoka One',cursive;
+      font-size:18px;color:#fff;cursor:pointer;flex-shrink:0;pointer-events:all;">← Back</button>
+    <div id="adv-world-tab-list" style="display:flex;gap:6px;overflow-x:auto;
+      flex:1;scrollbar-width:none;-webkit-overflow-scrolling:touch;"></div>
+    <div id="adv-total-stars" style="font-family:'Fredoka One',cursive;
+      font-size:18px;color:#ffcc00;flex-shrink:0;">⭐0</div>
+  </div>
+  <!-- Scrollable map canvas area -->
+  <div style="flex:1;overflow:hidden;position:relative;display:flex;align-items:center;">
+    <!-- Left arrow -->
+    <button id="adv-arrow-left" onclick="advMapNav(-1)"
+      style="position:absolute;left:0;top:0;bottom:0;z-index:50;
+      width:52px;background:linear-gradient(to right,rgba(0,0,0,0.45),transparent);
+      border:none;cursor:pointer;pointer-events:all;
+      display:flex;align-items:center;justify-content:center;">
+      <span style="font-size:32px;color:rgba(255,255,255,0.75);text-shadow:0 2px 8px rgba(0,0,0,0.8);">‹</span>
+    </button>
+    <div id="adv-map-area" style="position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;">
+    <div id="adv-map-inner" style="position:absolute;top:0;left:0;height:100%;will-change:transform;">
+      <canvas id="adv-path-canvas" style="position:absolute;top:0;left:0;pointer-events:none;z-index:1;"></canvas>
+      <div id="adv-map-nodes" style="position:relative;z-index:2;"></div>
+    </div>
+    </div><!-- end adv-map-area -->
+    <!-- Right arrow -->
+    <button id="adv-arrow-right" onclick="advMapNav(1)"
+      style="position:absolute;right:0;top:0;bottom:0;z-index:50;
+      width:52px;background:linear-gradient(to left,rgba(0,0,0,0.45),transparent);
+      border:none;cursor:pointer;pointer-events:all;
+      display:flex;align-items:center;justify-content:center;">
+      <span style="font-size:32px;color:rgba(255,255,255,0.75);text-shadow:0 2px 8px rgba(0,0,0,0.8);">›</span>
+    </button>
+  </div><!-- end map row -->
+  <!-- Bottom panel — level info + play button -->
+  <div id="adv-level-panel" style="flex-shrink:0;padding:10px 20px 16px;
+    text-align:center;background:rgba(0,0,0,0.82);border-top:1px solid rgba(255,255,255,0.1);
+    opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:20;">
+    <div id="adv-panel-levelname" style="font-family:'Fredoka One',cursive;font-size:11px;
+      letter-spacing:2px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:2px;"></div>
+    <div id="adv-panel-title" style="font-family:'Fredoka One',cursive;font-size:20px;color:#fff;margin-bottom:2px;"></div>
+    <div id="adv-panel-goal" style="font-family:'Fredoka One',cursive;font-size:13px;color:#ffcc00;margin-bottom:4px;"></div>
+    <div id="adv-panel-stars" style="font-size:18px;margin-bottom:8px;letter-spacing:4px;"></div>
+    <button id="adv-play-btn" onclick="advPlaySelected()"
+      style="background:linear-gradient(135deg,#9b5de5,#6a2daa);color:#fff;
+      font-family:'Fredoka One',cursive;font-size:20px;padding:12px 56px;
+      border:none;border-radius:20px;cursor:pointer;pointer-events:all;
+      box-shadow:0 5px 0 rgba(0,0,0,0.35);display:none;">▶ Play</button>
+    <div id="adv-panel-locked" style="font-family:'Nunito',sans-serif;font-size:13px;
+      color:rgba(255,255,255,0.4);display:none;">🔒 Complete previous level to unlock</div>
+    <div id="adv-panel-boss-label" style="font-family:'Nunito',sans-serif;
+      font-size:12px;color:#ff8888;margin-top:3px;display:none;"></div>
+  </div>
+</div>
+<!-- ADVENTURE LEVEL INTRO SCREEN -->
+<div class="screen" id="s-adv-intro" style="display:none;background:rgba(0,0,0,0.85);">
+  <div style="background:rgba(20,10,40,0.97);border:1px solid rgba(255,255,255,0.15);border-radius:24px;
+    padding:28px 24px;max-width:320px;width:92%;text-align:center;">
+    <div id="adv-intro-world" style="font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:4px;"></div>
+    <div id="adv-intro-level" style="font-family:'Fredoka One',cursive;font-size:28px;color:#fff;margin-bottom:4px;"></div>
+    <div id="adv-intro-name" style="font-family:'Fredoka One',cursive;font-size:18px;color:#c8a06a;margin-bottom:16px;"></div>
+    <div id="adv-intro-boss-badge" style="display:none;background:linear-gradient(135deg,#ff4444,#aa1111);
+      color:#fff;font-family:'Fredoka One',cursive;font-size:13px;padding:4px 14px;
+      border-radius:20px;margin-bottom:12px;display:inline-block;">👑 BOSS LEVEL</div>
+    <div style="height:1px;background:rgba(255,255,255,0.1);margin-bottom:16px;"></div>
+    <div style="font-family:'Nunito',sans-serif;font-size:12px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Goal</div>
+    <div id="adv-intro-goal" style="font-family:'Fredoka One',cursive;font-size:22px;color:#9b5de5;margin-bottom:8px;"></div>
+    <div id="adv-intro-modifier" style="font-family:'Nunito',sans-serif;font-size:13px;color:rgba(255,100,100,0.9);margin-bottom:16px;min-height:18px;"></div>
+    <div style="font-family:'Nunito',sans-serif;font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:16px;">
+      ⭐ Complete &nbsp;|&nbsp; ⭐⭐ Beat time &nbsp;|&nbsp; ⭐⭐⭐ No misses
+    </div>
+    <button id="adv-intro-start" style="width:100%;background:linear-gradient(135deg,#9b5de5,#6a2daa);
+      color:#fff;font-family:'Fredoka One',cursive;font-size:20px;padding:14px;
+      border:none;border-radius:16px;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,0.3);">
+      Let's Go! 🍣
+    </button>
+    <button onclick="closeAdvIntro()" style="width:100%;margin-top:10px;background:transparent;
+      color:rgba(255,255,255,0.35);font-family:'Fredoka One',cursive;font-size:14px;
+      padding:8px;border:none;cursor:pointer;">← Back to Map</button>
+  </div>
+</div>
+
+<!-- ADVENTURE LEVEL COMPLETE SCREEN -->
+<!-- ADVENTURE LEVEL COMPLETE — handled inline on world map, this is just unlock notification -->
+<div id="s-adv-complete" style="display:none;"></div>
+
 <!-- START SCREEN -->
 <div class="screen" id="s-start">
-  <button onclick="openPause(true)" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.22);border:none;border-radius:50%;width:44px;height:44px;font-size:22px;cursor:pointer;pointer-events:all;">⚙️</button>
-  <div class="emoji-row">🍣 🍱 🍤 🥢 🍙</div>
-  <div style="text-align:center;margin-bottom:clamp(14px,3.5vh,36px);">
-    <div style="font-size:clamp(44px,10vw,70px);animation:pulse 3s ease-in-out infinite;filter:drop-shadow(0 8px 20px rgba(100,60,120,0.3));">🍱</div>
-    <div class="ttl">SUSHI</div>
-    <div class="ttl" style="color:rgba(255,255,255,0.82);">STACK</div>
-    <div class="sub">Stack it. Don't drop it.</div>
+  <button onclick="openPause(true)" style="position:absolute;top:16px;right:16px;
+    background:rgba(255,255,255,0.22);border:none;border-radius:50%;
+    width:52px;height:52px;font-size:26px;cursor:pointer;pointer-events:all;">⚙️</button>
+
+  <!-- Logo area -->
+  <div style="text-align:center;margin-bottom:clamp(10px,2.5vh,28px);">
+    <div style="font-size:clamp(28px,7vw,44px);margin-bottom:4px;animation:sway 4s ease-in-out infinite;">
+      🍣 🍱 🍤 🥢 🍙
+    </div>
+    <div style="font-size:clamp(66px,16vw,105px);animation:pulse 3s ease-in-out infinite;
+      filter:drop-shadow(0 10px 28px rgba(100,60,120,0.35));line-height:1;margin-bottom:6px;">🍱</div>
+    <div class="ttl" style="font-size:clamp(54px,14vw,90px);">SUSHI</div>
+    <div class="ttl" style="font-size:clamp(54px,14vw,90px);color:rgba(255,255,255,0.82);">STACK</div>
+    <div class="sub" style="font-size:clamp(13px,3vw,17px);letter-spacing:5px;margin-top:8px;">Stack it. Don't drop it.</div>
   </div>
-  <button class="play-btn" id="startBtn">TAP TO PLAY</button>
-  <!-- Daily Challenge button -->
-  <button id="startDailyBtn" onclick="startDailyChallenge()"
-    style="margin-top:12px;background:linear-gradient(135deg,#9b5de5,#5e2daa);color:#fff;
-    font-family:'Fredoka One',cursive;font-size:18px;padding:13px 28px;border:none;
-    border-radius:20px;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,0.25);
-    width:100%;max-width:280px;">
-    🗓️ Daily Challenge
-  </button>
-  <!-- Ad offers on start screen -->
-  <button id="headStartBtn" onclick="requestHeadStartAd()"
-    style="margin-top:10px;background:linear-gradient(135deg,#f5c842,#ff9f43);color:#2a1a2e;
-    font-family:'Fredoka One',cursive;font-size:16px;padding:12px 28px;border:none;
-    border-radius:20px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);">
-    📺 Watch Ad → Head Start (Level 3)
-  </button>
-  <button id="heartShowerBtn" onclick="requestHeartShowerAd()"
-    style="margin-top:10px;background:rgba(255,80,120,0.25);color:#fff;
-    border:1px solid rgba(255,80,120,0.5);
-    font-family:'Fredoka One',cursive;font-size:16px;padding:12px 28px;
-    border-radius:20px;cursor:pointer;">
-    📺 Watch Ad → ❤️ Heart Shower
-  </button>
+
+  <!-- All buttons in one column, same width -->
+  <div style="display:flex;flex-direction:column;gap:12px;width:100%;max-width:320px;align-items:stretch;">
+    <button class="play-btn" id="startBtn"
+      style="font-size:clamp(22px,5.5vw,30px);padding:clamp(16px,3.5vh,22px);">TAP TO PLAY</button>
+
+    <button onclick="showAdvMap()"
+      style="background:linear-gradient(135deg,#4caf7d,#2a8a55);color:#fff;
+      font-family:'Fredoka One',cursive;font-size:clamp(18px,4.5vw,24px);
+      padding:16px;border:none;border-radius:20px;cursor:pointer;
+      box-shadow:0 5px 0 rgba(0,0,0,0.25);pointer-events:all;">
+      🗺️ Adventure Mode
+    </button>
+
+    <button id="startDailyBtn" onclick="startDailyChallenge()"
+      style="background:linear-gradient(135deg,#9b5de5,#5e2daa);color:#fff;
+      font-family:'Fredoka One',cursive;font-size:clamp(18px,4.5vw,24px);
+      padding:16px;border:none;border-radius:20px;cursor:pointer;
+      box-shadow:0 5px 0 rgba(0,0,0,0.25);pointer-events:all;">
+      🗓️ Daily Challenge
+    </button>
+
+    <button id="headStartBtn" style="display:none;"></button>
+
+    <button id="heartShowerBtn" onclick="requestHeartShowerAd()"
+      style="background:rgba(255,80,120,0.25);color:#fff;
+      border:1px solid rgba(255,80,120,0.5);
+      font-family:'Fredoka One',cursive;font-size:clamp(15px,3.8vw,20px);
+      padding:14px;border-radius:20px;cursor:pointer;pointer-events:all;">
+      📺 Watch Ad → ❤️ Heart Shower
+    </button>
+  </div>
 </div>
 
 <!-- AD OFFER SCREEN — shown immediately after game ends -->
@@ -593,12 +702,102 @@ var selectedAnimal='bunny'; // unlockable: bunny, bear, cat, frog, fox
 
 // ── ANIMAL UNLOCK THRESHOLDS ──
 const ANIMALS={
-  bunny:{name:'🐰 Bunny',  unlockAt:0,   desc:'Default',   color:0xf0e0d8}, // soft white
-  bear: {name:'🐻 Bear',   unlockAt:10,  desc:'Score 10',  color:0x8B5E3C}, // warm brown
-  cat:  {name:'🐱 Cat',    unlockAt:25,  desc:'Score 25',  color:0xb0a090}, // grey tabby
-  frog: {name:'🐸 Frog',   unlockAt:50,  desc:'Score 50',  color:0x5a9e5a}, // muted green
-  fox:  {name:'🦊 Fox',    unlockAt:100, desc:'Score 100', color:0xd4733a}, // warm orange
+  bunny:{name:'🐰 Bunny',  unlockAt:0,   desc:'Default',              color:0xf0e0d8},
+  bear: {name:'🐻 Bear',   unlockAt:10,  desc:'Score 10',             color:0x8B5E3C},
+  cat:  {name:'🐱 Cat',    unlockAt:25,  desc:'Score 25',             color:0xb0a090},
+  frog: {name:'🐸 Frog',   unlockAt:50,  desc:'Score 50',             color:0x5a9e5a},
+  fox:  {name:'🦊 Fox',    unlockAt:100, desc:'Score 100',            color:0xd4733a},
+  panda:{name:'🐼 Panda',  unlockAt:999, desc:'Complete all 8 worlds',color:0xffffff,
+         pandaMarkings:true, adventureUnlock:true},
 };
+// ── CREDITS POPUP ──
+const CREDITS_DATA={
+  models:[
+    {name:'🍣 Sushi Roll 3D Model',author:'gecko0307',license:'CC Attribution 4.0',url:'https://sketchfab.com/3d-models/sushi-roll-d7653693cc704752a54784febebbce3b'},
+  ],
+  music:[
+    {title:'Bumblebee Loop',author:'jobromedia',license:'CC-BY 3.0',url:'https://opengameart.org/content/bumblebee-loop'},
+    {title:'Menu Music',author:'mrpoly',license:'CC0',url:'https://opengameart.org/content/menu-music-2'},
+    {title:'The Field of Dreams',author:'pauliuw',license:'CC0',url:'https://opengameart.org/content/the-field-of-dreams'},
+    {title:'Tower Defense Theme',author:'DST',license:'CC0',url:'https://opengameart.org/content/tower-defense-theme'},
+    {title:'Adventure Time',author:'Scribe',license:'CC0',url:'https://opengameart.org/content/adventure-time-3'},
+    {title:'Awake! (Megawall-10)',author:'cynicmusic',license:'CC0',url:'https://opengameart.org/content/awake-megawall-10'},
+  ]
+};
+function showCreditsPopup(){
+  const pop=document.createElement('div');
+  pop.style.cssText=`position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;
+    background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;
+    animation:fadeIn 0.2s ease-out;padding:12px;`;
+  let html=`<div style="background:rgba(20,10,40,0.98);border:1px solid rgba(255,255,255,0.15);
+    border-radius:22px;padding:22px 18px;max-width:360px;width:100%;
+    max-height:85vh;overflow-y:auto;text-align:center;">
+    <div style="font-family:'Fredoka One',cursive;font-size:22px;color:#fff;margin-bottom:14px;">🎬 Credits</div>
+    <div style="font-family:'Fredoka One',cursive;font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:10px;">3D Models</div>`;
+  CREDITS_DATA.models.forEach(m=>{
+    html+=`<div style="background:rgba(255,255,255,0.06);border-radius:10px;padding:10px 12px;margin-bottom:8px;text-align:left;display:flex;justify-content:space-between;align-items:center;">
+      <div><div style="font-family:'Fredoka One',cursive;font-size:13px;color:#fff;">${m.name}</div>
+      <div style="font-family:'Nunito',sans-serif;font-size:11px;color:rgba(255,255,255,0.45);">${m.author} — ${m.license}</div></div>
+      <a href="${m.url}" target="_blank" style="font-size:10px;color:#9b8de5;text-decoration:none;padding:3px 8px;background:rgba(155,93,229,0.15);border-radius:6px;border:1px solid rgba(155,93,229,0.25);">↗</a></div>`;
+  });
+  html+=`<div style="font-family:'Fredoka One',cursive;font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.4);text-transform:uppercase;margin:12px 0 10px;">🎵 Music</div>`;
+  CREDITS_DATA.music.forEach(m=>{
+    html+=`<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:9px 12px;margin-bottom:6px;text-align:left;display:flex;justify-content:space-between;align-items:center;">
+      <div><div style="font-family:'Fredoka One',cursive;font-size:13px;color:#fff;">${m.title}</div>
+      <div style="font-family:'Nunito',sans-serif;font-size:11px;color:rgba(255,255,255,0.45);">${m.author} — ${m.license}</div></div>
+      <a href="${m.url}" target="_blank" style="font-size:10px;color:#9b8de5;text-decoration:none;padding:3px 8px;background:rgba(155,93,229,0.15);border-radius:6px;border:1px solid rgba(155,93,229,0.25);">↗</a></div>`;
+  });
+  html+=`<div style="font-family:'Nunito',sans-serif;font-size:11px;color:rgba(255,255,255,0.25);margin-top:12px;">Game by kalfred02</div>
+    <button onclick="this.closest('div[style*=fixed]').remove()" style="margin-top:14px;width:100%;background:#9b5de5;color:#fff;
+      font-family:'Fredoka One',cursive;font-size:16px;padding:11px;border:none;border-radius:12px;cursor:pointer;">Close</button>
+  </div>`;
+  pop.innerHTML=html;
+  document.body.appendChild(pop);
+  pop.addEventListener('click',e=>{ if(e.target===pop) pop.remove(); });
+}
+
+// ── GO TO TITLE ──
+function goToTitle(){
+  // Reset all game state cleanly
+  state='idle';
+  advMode=false;
+  isDailyMode=false;
+  resetAdvBoss();
+  stopAdvMapMusic();
+  setTenseMode(false);
+  hearts.forEach(h=>{if(h.el){h.el.remove();h.el=null;}});hearts=[];
+  bunnies.forEach(b=>scene.remove(b.grp));bunnies=[];
+  document.getElementById('hud').style.display='none';
+  document.getElementById('s-over').style.display='none';
+  document.getElementById('s-ad-offer').style.display='none';
+  document.getElementById('s-adv-intro').style.display='none';
+  document.getElementById('s-adv-complete').style.display='none';
+  document.getElementById('s-adventure').style.display='none';
+  document.getElementById('s-start').style.display='flex';
+  reqFS();
+  showFullscreenNudge();
+  showScreenAds('start');
+  playMusic('menu');
+}
+
+// ── UNLOCK REQUIRED POPUP ──
+function showUnlockRequiredPopup(message){
+  const pop=document.createElement('div');
+  pop.style.cssText=`position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;
+    display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);
+    animation:fadeIn 0.2s;`;
+  pop.innerHTML=`<div style="background:rgba(20,10,40,0.97);border:1px solid rgba(255,255,255,0.15);
+    border-radius:20px;padding:24px 20px;max-width:280px;width:88%;text-align:center;">
+    <div style="font-size:40px;margin-bottom:8px;">🔒</div>
+    <div style="font-family:'Fredoka One',cursive;font-size:18px;color:#fff;margin-bottom:8px;">Locked!</div>
+    <div style="font-family:'Nunito',sans-serif;font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:18px;">${message}</div>
+    <button onclick="this.closest('div[style*=fixed]').remove()" style="width:100%;background:#9b5de5;color:#fff;
+      font-family:'Fredoka One',cursive;font-size:16px;padding:10px;border:none;border-radius:12px;cursor:pointer;">Got it!</button>
+  </div>`;
+  document.body.appendChild(pop);
+  pop.addEventListener('click',e=>{ if(e.target===pop) pop.remove(); });
+}
+
 // ── AD FRAMEWORK ──
 // ================================================================
 // AdMob integration hooks — ready for Capacitor + AdMob plugin
@@ -741,15 +940,27 @@ function requestReviveAd(){
     }
     // Also clear red warning on new top block just in case
     if(placed.length>0) blockSetRedWarning(placed[placed.length-1].mesh, false);
-    // Reposition bunnies to the new top block
+    // Reposition bunnies to the new top block — re-spawn mama if she fell off
     const newTop=placed[placed.length-1];
-    if(newTop) bunnies.forEach(b=>{
-      b.blockBy=newTop.by;
-      b.toBlockBy=newTop.by;
-      if(!b.jumping&&!b.hopping){
-        b.grp.position.y=bunnyGroundY(newTop.by,b.sc||1,b.isMama);
-      }
-    });
+    const activeBunnies=bunnies.filter(b=>!b.falling);
+    if(activeBunnies.length===0 && newTop){
+      // All bunnies fell off during game-over — re-spawn mama
+      const mamaColor=(ANIMALS[selectedAnimal]||ANIMALS.bunny).color;
+      const mamaGrp=mkAnimal(mamaColor,1.8);
+      const mamaGndY=bunnyGroundY(newTop.by,1.8,true);
+      mamaGrp.position.set(0,mamaGndY,0);
+      bunnies=bunnies.filter(b=>!b.falling); // clear fallen
+      bunnies.push({grp:mamaGrp,tx:0,tz:0,blockBy:newTop.by,jv:0,jo:0,jumping:false,hopping:false,hopT:0,fromY:mamaGndY,toY:mamaGndY,toBlockBy:newTop.by,lp:0,falling:false,fv:0,fvx:0,isMama:true,cel:0,sc:1.8,moverState:'none',moverCooldown:0});
+    } else if(newTop){
+      bunnies.forEach(b=>{
+        if(b.falling) return;
+        b.blockBy=newTop.by;
+        b.toBlockBy=newTop.by;
+        if(!b.jumping&&!b.hopping){
+          b.grp.position.y=bunnyGroundY(newTop.by,b.sc||1,b.isMama);
+        }
+      });
+    }
     let reviveW = placed[placed.length-1]?.w || S*0.4;
     for(let i=0;i<3;i++){
       const ratio=reviveW/S;
@@ -757,33 +968,24 @@ function requestReviveAd(){
       reviveW=Math.min(reviveW*(1+gp),S);
     }
     spawnMoverRevive(reviveW);
-    playMusic(isDailyMode?'daily':'game');
+    // Restore boss mechanics if this was an adventure boss level
+    if(advMode && advLevel===9){
+      applyAdvBoss(ADV_WORLDS[advWorld].boss);
+      advBossRotating=true; // always rotate on boss
+      playMusic('daily'); // tense music for boss
+    } else {
+      playMusic(isDailyMode?'daily':'game');
+    }
     showReviveCountdown();
   }, ()=>{
     console.log('Revive ad failed or dismissed');
   });
 }
 
-function showReviveCountdown(){
-  // Snap camera to the top of the stack immediately before countdown starts
-  if(placed.length>0){
-    const topY=placed[placed.length-1].by+getBlockH();
-    const targetLookY=topY+CAM_H*0.85-0.8+stackYOffset;
-    camLookY=targetLookY; // snap instantly, no lerp
-    cam.position.y=targetLookY+camPitch;
-    cam.lookAt(0,camLookY,0);
-  }
-  zoomOut=false;
-  applyZoom(userZoom);
-
-  // Use a separate paused-mover flag — camera/bunnies still update during countdown
-  let countdownActive=true;
-  const origUpdate=mover;
-  // Freeze mover by temporarily nulling speed
-  const savedSpd=spd; spd=0;
-
+let countingDown=false;
+function showCountdown(onDone){
+  countingDown=true;
   const el=document.createElement('div');
-  // Fixed size container prevents layout jumping
   el.style.cssText=`position:fixed;top:50%;left:50%;
     transform:translate(-50%,-50%);z-index:300;
     width:160px;height:160px;
@@ -792,30 +994,37 @@ function showReviveCountdown(){
   const num=document.createElement('div');
   num.style.cssText=`font-family:'Fredoka One',cursive;font-size:120px;color:#fff;
     text-shadow:0 4px 30px rgba(0,0,0,0.5);line-height:1;
-    transition:transform 0.1s ease-out,opacity 0.1s ease-out;`;
+    transition:transform 0.15s ease-out,opacity 0.15s ease-out;`;
   el.appendChild(num);
   document.body.appendChild(el);
-
   let count=3;
   num.textContent=count;
-
   const tick=setInterval(()=>{
     count--;
     if(count>0){
-      // Pop animation via scale, not re-triggering CSS animation
-      num.style.transform='scale(1.4)';
-      num.style.opacity='0.5';
-      setTimeout(()=>{
-        num.textContent=count;
-        num.style.transform='scale(1)';
-        num.style.opacity='1';
-      },100);
+      num.style.transform='scale(1.4)';num.style.opacity='0.5';
+      setTimeout(()=>{num.textContent=count;num.style.transform='scale(1)';num.style.opacity='1';},100);
     } else {
-      clearInterval(tick);
-      el.remove();
-      spd=savedSpd; // restore speed
+      clearInterval(tick);el.remove();
+      countingDown=false;
+      if(onDone) onDone();
     }
   },1000);
+}
+
+function showReviveCountdown(){
+  // Snap camera to the top of the stack immediately
+  if(placed.length>0){
+    const topY=placed[placed.length-1].by+getBlockH();
+    const targetLookY=topY+CAM_H*0.85-0.8+stackYOffset;
+    camLookY=targetLookY;
+    cam.position.y=targetLookY+camPitch;
+    cam.lookAt(0,camLookY,0);
+  }
+  zoomOut=false;
+  applyZoom(userZoom);
+  const savedSpd=spd; spd=0;
+  showCountdown(()=>{ spd=savedSpd; });
   showReviveBanner();
 }
 
@@ -950,6 +1159,919 @@ function showReviveBanner(){
 // ── SHOW/HIDE ADS ON SCREEN TRANSITIONS ──
 function showScreenAds(screen){ admobShowBanner(AD_IDS.banner); }
 function hideScreenAds(){ /* banner stays visible 100% of the time */ }
+// ══════════════════════════════════════════════════
+// ── ADVENTURE MODE ──
+// ══════════════════════════════════════════════════
+
+const ADV_WORLDS = [
+  { name:'Bamboo Beach',   icon:'🌴', color:'#4caf7d', sky:0x5a9e6a, fog:0x3a7a4a,
+    boss:null,          bossLabel:'',                bossDesc:'' },
+  { name:'Lava Peaks',     icon:'🌋', color:'#e05a20', sky:0x8a3a1a, fog:0x6a2810,
+    boss:'nobounce',    bossLabel:'No Bounces!',     bossDesc:'One miss and it\'s over' },
+  { name:'Jungle Ruins',   icon:'🌿', color:'#7ab83a', sky:0x3a6a2a, fog:0x2a5020,
+    boss:'rotating',    bossLabel:'Spinning!',       bossDesc:'Camera revolves around the stack' },
+  { name:'Frost Spire',    icon:'❄️', color:'#7ac8e8', sky:0x4a7a9a, fog:0x3a6080,
+    boss:'earthquake',  bossLabel:'Earthquake!',     bossDesc:'Violent shaking the whole time' },
+  { name:'Shadow Keep',    icon:'🏯', color:'#7a6a9a', sky:0x2a1a3a, fog:0x1a1028,
+    boss:'lightsout',   bossLabel:'Lights Out!',     bossDesc:'Screen dims almost completely' },
+  { name:'Cherry Garden',  icon:'🌸', color:'#e87aaa', sky:0x9a5a7a, fog:0x7a3858,
+    boss:'poisonhearts', bossLabel:'Poison Hearts!', bossDesc:'Hearts shrink your block instead' },
+  { name:'Storm Tower',    icon:'⚡', color:'#e8c840', sky:0x5a5a2a, fog:0x3a3a18,
+    boss:'random',      bossLabel:'Chaos!',          bossDesc:'Random boss mechanic each attempt' },
+  { name:"Dragon's Peak",  icon:'🐉', color:'#e84040', sky:0x5a1a1a, fog:0x3a1010,
+    boss:'all',         bossLabel:'Dragon\'s Wrath!',bossDesc:'All mechanics at once. Good luck.' },
+];
+
+// Per-world difficulty scaling
+// Goals: blocks needed per level (index 0-9), per world (0-7)
+const ADV_GOALS_W = [
+  [ 6,  8, 10, 12, 15, 18, 22, 26, 32, 40],  // W1 - gentle intro, boss=40
+  [12, 16, 21, 26, 31, 36, 41, 46, 52, 62],  // W2
+  [13, 18, 23, 28, 33, 38, 44, 50, 56, 68],  // W3
+  [15, 20, 25, 30, 36, 42, 48, 54, 60, 72],  // W4
+  [16, 22, 27, 33, 39, 45, 51, 57, 64, 76],  // W5
+  [18, 24, 30, 36, 42, 48, 54, 61, 68, 80],  // W6
+  [20, 26, 32, 38, 45, 52, 58, 65, 72, 85],  // W7
+  [22, 28, 35, 42, 49, 56, 63, 70, 78, 90],  // W8 - hardest
+];
+// Time limits per level in seconds (2-star), per world
+const ADV_TIME_W = [
+  [90,105, 120, 135, 145, 155, 165, 175, 185, 210],  // W1 - very generous
+  [65, 80,  95, 110, 120, 130, 140, 150, 160, 185],  // W2
+  [62, 76,  90, 105, 115, 125, 135, 145, 155, 180],  // W3
+  [58, 72,  86, 100, 110, 120, 130, 140, 150, 175],  // W4
+  [55, 68,  82,  96, 106, 116, 126, 136, 146, 170],  // W5
+  [52, 65,  78,  92, 102, 112, 122, 132, 142, 165],  // W6
+  [50, 62,  75,  88,  98, 108, 118, 128, 138, 160],  // W7
+  [48, 60,  72,  85,  95, 105, 115, 125, 135, 155],  // W8 - tightest
+];
+// Extra base speed per world (added on top of score-based speed)
+const ADV_WORLD_SPEED = [0, 0.25, 0.5, 0.75, 1.0, 1.3, 1.6, 2.0];
+
+// Compatibility shims — used when advWorld context isn't available
+const ADV_GOALS = ADV_GOALS_W[0];
+const ADV_TIME  = ADV_TIME_W[0];
+
+function getAdvGoal(w, l){ return (ADV_GOALS_W[w]||ADV_GOALS_W[0])[l]||10; }
+function getAdvTime(w, l){ return (ADV_TIME_W[w]||ADV_TIME_W[0])[l]||60; }
+
+// Level names for flavour
+const ADV_LEVEL_NAMES = [
+  ['Sunrise Stack','Tide Climb','Palm Drop','Shell Tower','Reef Rising',
+   'Wave Stacker','Shore Spire','Beach Peak','Surf Summit','Bamboo Boss'],
+  ['Magma Rise','Cinder Stack','Ash Climb','Ember Tower','Lava Leap',
+   'Smoke Spire','Crater Peak','Inferno Stack','Molten Summit','Lava Boss'],
+  ['Vine Stack','Fern Climb','Moss Tower','Root Rise','Leaf Leap',
+   'Canopy Stack','Ruin Spire','Jungle Peak','Ancient Summit','Jungle Boss'],
+  ['Ice Rise','Snowflake Stack','Blizzard Climb','Frost Tower','Crystal Peak',
+   'Glacier Stack','Tundra Spire','Arctic Leap','Ice Summit','Frost Boss'],
+  ['Shadow Step','Dark Climb','Dusk Tower','Midnight Stack','Ghost Rise',
+   'Phantom Leap','Void Spire','Eclipse Peak','Shadow Summit','Shadow Boss'],
+  ['Petal Rise','Blossom Stack','Bloom Climb','Garden Tower','Sakura Peak',
+   'Flower Leap','Floral Spire','Cherry Stack','Garden Summit','Cherry Boss'],
+  ['Spark Rise','Thunder Stack','Lightning Climb','Storm Tower','Gale Peak',
+   'Tempest Leap','Cyclone Spire','Bolt Stack','Storm Summit','Storm Boss'],
+  ['Scale Rise','Claw Climb','Fang Tower','Talon Stack','Wing Peak',
+   'Fire Leap','Dragon Spire','Scale Summit','Sky Throne','Dragon Boss'],
+];
+
+// Adventure state
+var advMode=false;
+var advWorld=0, advLevel=0;
+var advStartTime=0, advMisses=0;
+var advGoal=0;
+var advBoss=null;
+var advBossLabel='';
+var advMaxPerfectStreak=0;
+var _advLevelMusicKey='game'; // 'game' or 'daily' (tense) for boss
+
+// Required perfect streak for 3rd star — scales with level
+function getAdvRequiredStreak(w, l){
+  // Base streak scales with level, then world adds +1 every 2 worlds
+  const worldBonus = Math.floor((w||0) / 2);
+  if(l<=2) return 3 + worldBonus;
+  if(l<=6) return 5 + worldBonus;
+  return 7 + worldBonus;
+}
+
+function getAdvSave(){
+  try{return JSON.parse(localStorage.getItem('ssAdv')||'{}');}catch{return{};}
+}
+function setAdvSave(d){try{localStorage.setItem('ssAdv',JSON.stringify(d));}catch{}}
+
+function getAdvLevelKey(w,l){ return `${w}_${l}`; }
+function getAdvLevelData(w,l){
+  const d=getAdvSave();
+  return d[getAdvLevelKey(w,l)]||{stars:0,time:0};
+}
+function setAdvLevelData(w,l,stars,time){
+  const d=getAdvSave();
+  const k=getAdvLevelKey(w,l);
+  const prev=d[k]||{stars:0,time:0};
+  // Keep best stars and best time
+  d[k]={stars:Math.max(prev.stars,stars), time:(prev.time>0&&prev.time<time)?prev.time:time};
+  setAdvSave(d);
+}
+function isAdvLevelUnlocked(w,l){
+  if(w===0&&l===0) return true;
+  if(l>0) return getAdvLevelData(w,l-1).stars>0;
+  if(w>0) return getAdvLevelData(w-1,9).stars>0;
+  return false;
+}
+function getAdvTotalStars(){
+  let t=0;
+  for(let w=0;w<8;w++) for(let l=0;l<10;l++) t+=getAdvLevelData(w,l).stars;
+  return t;
+}
+function isAllWorldsComplete(){
+  for(let w=0;w<8;w++) if(!getAdvLevelData(w,9).stars) return false;
+  return true;
+}
+
+// ── ADVENTURE MAP STATE (3D) ──
+let _advMapWorld=0;
+let _advMapMusic=null;
+let _advMapRenderer=null,_advMapScene=null,_advMapCam=null;
+let _advMapRAF=null,_advMapAnimalMesh=null;
+let _advMapScrollX=0,_advMapTargetX=0;
+let _advMapNodeMeshes=[];
+let _advSelectedLevel=0,_advIsHopping=false;
+const ADV_MAP_SPACING=2.6;
+
+function exitAdvMap(){
+  stopAdvMapMusic();stopAdvMap3D();
+  document.getElementById('s-adventure').style.display='none';
+  document.getElementById('s-start').style.display='flex';
+}
+function stopAdvMapMusic(){if(_advMapMusic){_advMapMusic.pause();_advMapMusic=null;}}
+function stopAdvMap3D(){
+  if(_advMapRAF){cancelAnimationFrame(_advMapRAF);_advMapRAF=null;}
+  if(_advMapRenderer){
+    // Do NOT call forceContextLoss — just dispose
+    _advMapRenderer.dispose();
+    _advMapRenderer=null;
+  }
+  _advMapScene=null;_advMapCam=null;_advMapAnimalMesh=null;_advMapNodeMeshes=[];
+}
+function playAdvMapMusic(w){
+  stopAdvMapMusic();
+  if(_muted) return;
+  const src=MT.world[w]||MT.world[0];
+  if(!src) return;
+  const a=new Audio(src);a.loop=true;a.volume=0.45;
+  const p=a.play();
+  if(p) p.catch(()=>{
+    const r=()=>{a.play().catch(()=>{});document.removeEventListener('touchstart',r);document.removeEventListener('click',r);};
+    document.addEventListener('touchstart',r,{once:true});document.addEventListener('click',r,{once:true});
+  });
+  _advMapMusic=a;
+}
+function showAdvMap(jumpToWorld){
+  document.getElementById('s-start').style.display='none';
+  document.getElementById('s-adv-intro').style.display='none';
+  const screen=document.getElementById('s-adventure');
+  screen.style.display='flex';
+  if(jumpToWorld!==undefined) _advMapWorld=jumpToWorld;
+  else{_advMapWorld=0;for(let w=7;w>=0;w--){if(isAdvLevelUnlocked(w,0)){_advMapWorld=w;break;}}}
+  buildWorldTabs();
+  // Use rAF to ensure layout is done before measuring
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      initAdvMap3D(_advMapWorld);
+      playAdvMapMusic(_advMapWorld);
+    });
+  });
+}
+function buildWorldTabs(){
+  const list=document.getElementById('adv-world-tab-list');
+  if(!list) return;
+  list.innerHTML='';
+  ADV_WORLDS.forEach((w,wi)=>{
+    const unlocked=isAdvLevelUnlocked(wi,0),active=wi===_advMapWorld;
+    const btn=document.createElement('button');
+    btn.style.cssText=`padding:10px 16px;border-radius:12px;border:3px solid ${active?w.color:'transparent'};background:${active?'rgba(255,255,255,0.22)':unlocked?'rgba(255,255,255,0.1)':'rgba(0,0,0,0.25)'};color:${unlocked?'#fff':'rgba(255,255,255,0.25)'};font-family:'Fredoka One',cursive;font-size:20px;cursor:${unlocked?'pointer':'default'};white-space:nowrap;flex-shrink:0;box-shadow:${active?'0 0 0 1px '+w.color:'none'};`;
+    btn.textContent=`${w.icon}${wi+1}`;
+    if(unlocked) btn.addEventListener('click',()=>{_advMapWorld=wi;_advSelectedLevel=0;buildWorldTabs();initAdvMap3D(wi);stopAdvMapMusic();playAdvMapMusic(wi);});
+    list.appendChild(btn);
+  });
+  document.getElementById('adv-total-stars').textContent=`⭐${getAdvTotalStars()}`;
+}
+function getFurthestCompletedLevel(wi){for(let l=9;l>=0;l--){if(getAdvLevelData(wi,l).stars>0)return l;}return -1;}
+function getAnimalEmoji(){return{bunny:'🐰',bear:'🐻',cat:'🐱',frog:'🐸',fox:'🦊',panda:'🐼'}[selectedAnimal]||'🐰';}
+function getMapNodePositions(){
+  return Array.from({length:10},(_,i)=>({x:i*ADV_MAP_SPACING,y:Math.sin(i*0.7)*0.3,z:0}));
+}
+function initAdvMap3D(wi){
+  _advMapWorld=wi;
+  _advIsHopping=false;
+  const world=ADV_WORLDS[wi];
+  const bgCols=['#1e3d1e','#3d1505','#163308','#12283d','#0a0415','#2e1220','#201f06','#200505'];
+  const screen=document.getElementById('s-adventure');
+  screen.style.background=bgCols[wi];
+
+  // Determine current level BEFORE building so _placeAnimal uses it
+  const cur=Math.min(getFurthestCompletedLevel(wi)+1,9);
+  _advSelectedLevel=cur;
+
+  buildAdvPathMap(wi);   // places animal at _advSelectedLevel instantly
+  setupCSSMapSwipe(wi);
+
+  // Scroll camera to it (no bounce animation — just snap into place)
+  setTimeout(()=>{
+    scrollToNode(cur);
+    updateLevelPanel(wi,cur,true);
+    updateAdvArrows();
+  },60);
+}
+
+// ── HORIZONTAL MAP ──
+// Each level occupies SLOT_W px horizontally. The track scrolls left/right.
+// Level 1 = leftmost, Level 10 = rightmost.
+// Nodes sit on a gentle sine wave for visual variety.
+
+const ADV_SLOT_W = 300;   // px per level slot (horizontal spacing)
+const ADV_NODE_R = 84;    // radius of each node circle
+const ADV_ANIMAL_SIZE = 108; // px font-size for animal emoji
+
+function getNodePositions(vh){
+  // vh = height of the scrollable area
+  const mid = vh / 2;
+  const amp = vh * 0.18; // wave amplitude
+  return Array.from({length:10},(_,i)=>{
+    const x = ADV_SLOT_W/2 + i*ADV_SLOT_W;
+    const y = mid + Math.sin(i * 0.9) * amp;
+    return {x, y};
+  });
+}
+
+function buildAdvPathMap(wi){
+  const world = ADV_WORLDS[wi];
+  const area  = document.getElementById('adv-map-area');
+  const nodesEl= document.getElementById('adv-map-nodes');
+  const canvas = document.getElementById('adv-path-canvas');
+  if(!area||!nodesEl||!canvas) return;
+
+  nodesEl.innerHTML='';
+  if(_advAnimalEl&&_advAnimalEl.parentNode) _advAnimalEl.parentNode.removeChild(_advAnimalEl);
+  _advAnimalEl=null;
+
+  const totalW = ADV_SLOT_W * 10;
+  const vh     = area.offsetHeight || window.innerHeight * 0.65;
+  const positions = getNodePositions(vh);
+
+  // Size canvas & nodes container
+  canvas.width  = totalW; canvas.height = vh;
+  canvas.style.cssText = `position:absolute;top:0;left:0;width:${totalW}px;height:${vh}px;pointer-events:none;z-index:1;`;
+  nodesEl.style.cssText = `position:relative;width:${totalW}px;height:${vh}px;z-index:2;`;
+
+  // ── World background decorations ──
+  const worldBgEmoji = [
+    ['🌴','🐚','🌊','☀️','🦀','🌺','🏄','🐠','🦋','🌴'],  // Bamboo Beach
+    ['🌋','🔥','💎','🪨','⛰️','🌋','🔥','💨','🌑','🪨'],  // Lava Peaks
+    ['🌿','🍃','🦜','🌺','🍄','🌿','🦎','🌱','🕸️','🌿'],  // Jungle Ruins
+    ['❄️','🌨️','⛄','🧊','🌬️','❄️','🏔️','🌨️','🦭','🧊'],  // Frost Spire
+    ['🌙','👻','🦇','⚔️','🕯️','🌙','🗡️','💀','🕷️','🦇'],  // Shadow Keep
+    ['🌸','🦋','🌺','🍡','🌸','🎋','🦢','🌼','🌸','🎏'],  // Cherry Garden
+    ['⚡','🌩️','🌪️','☁️','⚡','🌧️','🌩️','💨','🌪️','⚡'],  // Storm Tower
+    ['🐉','🔥','💀','🗡️','🐉','⚔️','💎','🌑','🔥','🏔️'],  // Dragon's Peak
+  ];
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,totalW,vh);
+
+  // Draw scattered background emoji
+  const bgEmojis = worldBgEmoji[wi] || worldBgEmoji[0];
+  ctx.font = '28px serif';
+  ctx.globalAlpha = 0.13;
+  // Use seeded positions so they don't move on rebuild
+  const seed = wi * 1000;
+  function seededRand(n){ return ((Math.sin(seed+n)*9301+49297)%233280)/233280; }
+  for(let i=0;i<28;i++){
+    const ex = seededRand(i*2)   * totalW;
+    const ey = seededRand(i*2+1) * vh;
+    const em = bgEmojis[i % bgEmojis.length];
+    // Vary size slightly
+    const sz = 22 + Math.floor(seededRand(i*3)*20);
+    ctx.font = `${sz}px serif`;
+    ctx.fillText(em, ex, ey);
+  }
+  ctx.globalAlpha = 1.0;
+
+  ctx.lineCap='round'; ctx.lineJoin='round';
+
+  for(let i=0;i<9;i++){
+    const a=positions[i], b=positions[i+1];
+    const done = getAdvLevelData(wi,i).stars>0;
+    const nextUnlocked = isAdvLevelUnlocked(wi,i+1);
+
+    // Outer shadow
+    ctx.setLineDash([]); ctx.lineWidth=28;
+    ctx.strokeStyle='rgba(0,0,0,0.45)';
+    ctx.beginPath(); ctx.moveTo(a.x,a.y+5); ctx.lineTo(b.x,b.y+5); ctx.stroke();
+
+    // Inner border/outline for depth
+    ctx.lineWidth=26;
+    ctx.strokeStyle='rgba(0,0,0,0.3)';
+    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+
+    // Main trail — solid+thick if completed, dashed if upcoming
+    ctx.lineWidth=18;
+    if(done && nextUnlocked){
+      ctx.setLineDash([]);
+      ctx.strokeStyle = world.color;
+    } else {
+      ctx.setLineDash([24,16]);
+      ctx.strokeStyle = 'rgba(200,200,200,0.3)';
+    }
+    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+
+    // Bright highlight stripe on completed segments
+    if(done && nextUnlocked){
+      ctx.setLineDash([]);
+      ctx.lineWidth=6;
+      ctx.strokeStyle='rgba(255,255,255,0.35)';
+      ctx.beginPath(); ctx.moveTo(a.x,a.y-3); ctx.lineTo(b.x,b.y-3); ctx.stroke();
+      // Dot markers along path
+      const steps=5;
+      for(let s=1;s<steps;s++){
+        const t=s/steps;
+        const px=a.x+(b.x-a.x)*t, py=a.y+(b.y-a.y)*t;
+        ctx.fillStyle='rgba(255,255,255,0.6)';
+        ctx.beginPath(); ctx.arc(px,py,5,0,Math.PI*2); ctx.fill();
+      }
+    }
+  }
+
+  // ── Create node elements ──
+  const R = ADV_NODE_R;
+  for(let li=0;li<10;li++){
+    const unlocked = isAdvLevelUnlocked(wi,li);
+    const data     = getAdvLevelData(wi,li);
+    const isBoss   = li===9;
+    const pos      = positions[li];
+    const r        = isBoss ? R+10 : R;
+
+    const wrap=document.createElement('div');
+    wrap.style.cssText=`position:absolute;
+      left:${pos.x-r}px;top:${pos.y-r}px;
+      width:${r*2}px;
+      display:flex;flex-direction:column;align-items:center;
+      cursor:${unlocked?'pointer':'default'};`;
+
+    // Circle
+    const nodeBg = !unlocked          ? 'rgba(30,30,30,0.92)' :
+                   data.stars===3     ? 'linear-gradient(135deg,#ffd700,#ff8800)' :
+                   data.stars>0       ? world.color :
+                   isBoss             ? 'linear-gradient(135deg,#cc2222,#880000)' :
+                                        'rgba(245,240,232,0.95)';
+    const node=document.createElement('div');
+    node.style.cssText=`width:${r*2}px;height:${r*2}px;border-radius:50%;
+      background:${nodeBg};
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      box-shadow:0 6px 20px rgba(0,0,0,0.65),
+                 0 0 0 5px rgba(255,255,255,${unlocked?'0.22':'0.06'});
+      ${isBoss&&unlocked?'animation:bossGlow 2s ease-in-out infinite;':''}`;
+
+    // Number / icon label
+    const lbl=document.createElement('div');
+    lbl.style.cssText=`font-family:'Fredoka One',cursive;
+      font-size:${isBoss?r*0.7:r*0.62}px;line-height:1;
+      color:${!unlocked?'#555':data.stars>0||isBoss?'#fff':'#333'};`;
+    lbl.textContent = !unlocked?'🔒': isBoss?'👑': String(li+1);
+    node.appendChild(lbl);
+
+    // Level name under number (unlocked only)
+    if(unlocked){
+      const nm=document.createElement('div');
+      nm.style.cssText=`font-family:'Fredoka One',cursive;
+        font-size:${Math.max(10,r*0.22)}px;margin-top:3px;text-align:center;
+        padding:0 6px;
+        color:${data.stars>0||isBoss?'rgba(255,255,255,0.8)':'rgba(0,0,0,0.45)'};
+        white-space:nowrap;overflow:hidden;max-width:${r*2-8}px;text-overflow:ellipsis;`;
+      nm.textContent=isBoss?'BOSS': ADV_LEVEL_NAMES[wi][li].toUpperCase();
+      node.appendChild(nm);
+    }
+
+    // Stars below circle
+    const starsEl=document.createElement('div');
+    starsEl.style.cssText=`font-size:21px;margin-top:9px;letter-spacing:4px;min-height:30px;`;
+    if(data.stars>0)       starsEl.textContent='⭐'.repeat(data.stars)+'☆'.repeat(3-data.stars);
+    else if(unlocked)      starsEl.textContent='☆☆☆';
+    starsEl.style.color = data.stars>0?'#ffcc00':'rgba(255,255,255,0.3)';
+
+    wrap.appendChild(node);
+    wrap.appendChild(starsEl);
+    if(unlocked) wrap.addEventListener('click',()=>selectLevel(wi,li,true));
+    nodesEl.appendChild(wrap);
+  }
+
+  // Place animal — reload from save so it reflects current selection
+  const sv=getSave(); selectedAnimal=sv.animal||selectedAnimal||'bunny';
+  _placeAnimal(wi, _advSelectedLevel, positions);
+}
+
+let _advAnimalEl=null;
+
+function _placeAnimal(wi, li, positions){
+  const nodesEl=document.getElementById('adv-map-nodes');
+  if(!nodesEl) return;
+  if(_advAnimalEl&&_advAnimalEl.parentNode) _advAnimalEl.parentNode.removeChild(_advAnimalEl);
+  const pos=positions[li];
+  const R=li===9?ADV_NODE_R+10:ADV_NODE_R;
+  const el=document.createElement('div');
+  // No transition on initial placement — selectLevel handles animated moves
+  el.style.cssText=`position:absolute;
+    left:${pos.x}px;
+    top:${pos.y-R-ADV_ANIMAL_SIZE*0.9}px;
+    transform:translateX(-50%);
+    font-size:${ADV_ANIMAL_SIZE}px;
+    line-height:1;
+    z-index:10;pointer-events:none;
+    filter:drop-shadow(0 5px 12px rgba(0,0,0,0.85));`;
+  el.textContent=getAnimalEmoji();
+  nodesEl.appendChild(el);
+  _advAnimalEl=el;
+}
+
+function scrollToNode(li){
+  const area=document.getElementById('adv-map-area');
+  const inner=document.getElementById('adv-map-inner');
+  if(!area||!inner) return;
+  const areaW=area.offsetWidth||window.innerWidth;
+  const nodeX=ADV_SLOT_W/2 + li*ADV_SLOT_W;
+  // No clamping — always center the node, even at the edges
+  const offset=nodeX - areaW/2;
+  inner.style.transition='transform 0.45s cubic-bezier(0.25,1,0.5,1)';
+  inner.style.transform=`translateX(${-offset}px)`;
+}
+
+function selectLevel(wi,li,animate){
+  if(li<0||li>9) return;
+  _advSelectedLevel=li;
+  updateLevelPanel(wi,li,true);
+  updateAdvArrows();
+  scrollToNode(li);
+
+  // Hop animal to new level — never blocks input
+  const area=document.getElementById('adv-map-area');
+  const vh=(area&&area.offsetHeight)||window.innerHeight*0.65;
+  const positions=getNodePositions(vh);
+  const pos=positions[li];
+  const R=li===9?ADV_NODE_R+10:ADV_NODE_R;
+  const targetTop=pos.y-R-ADV_ANIMAL_SIZE*0.9;
+
+  if(_advAnimalEl){
+    // Move left in perfect sync with the camera scroll (same easing + duration)
+    // Bounce up then land
+    _advAnimalEl.style.transition='left 0.45s cubic-bezier(0.25,1,0.5,1),top 0.13s ease-out,transform 0.13s ease-out';
+    _advAnimalEl.style.left=pos.x+'px';
+    _advAnimalEl.style.top=(targetTop-26)+'px';
+    _advAnimalEl.style.transform='translateX(-50%) scale(1.2)';
+    setTimeout(()=>{
+      if(!_advAnimalEl) return;
+      _advAnimalEl.style.transition='left 0.45s cubic-bezier(0.25,1,0.5,1),top 0.2s ease-in,transform 0.2s ease-in';
+      _advAnimalEl.style.top=targetTop+'px';
+      _advAnimalEl.style.transform='translateX(-50%)';
+    },200);
+  }
+}
+
+function advMapNav(dir){
+  // dir: -1 = left (prev), +1 = right (next)
+  const next = _advSelectedLevel + dir;
+  if(next < 0 || next > 9) return;
+  selectLevel(_advMapWorld, next, true);
+  updateAdvArrows();
+}
+
+function updateAdvArrows(){
+  const l=document.getElementById('adv-arrow-left');
+  const r=document.getElementById('adv-arrow-right');
+  if(l) l.style.opacity=_advSelectedLevel===0?'0.2':'1';
+  if(r) r.style.opacity=_advSelectedLevel===9?'0.2':'1';
+}
+
+
+function setupCSSMapSwipe(wi){
+  const area=document.getElementById('adv-map-area');
+  if(!area) return;
+  // Remove old listeners cleanly
+  const fresh=area.cloneNode(true);
+  area.parentNode.replaceChild(fresh,area);
+  const el=document.getElementById('adv-map-area');
+
+  let tx=0,ty=0,swiped=false,gestureStarted=false;
+
+  el.addEventListener('touchstart',e=>{
+    tx=e.touches[0].clientX;
+    ty=e.touches[0].clientY;
+    swiped=false;
+    gestureStarted=true;
+  },{passive:false});
+
+  el.addEventListener('touchmove',e=>{
+    e.preventDefault(); // block ALL native scrolling
+    if(swiped||!gestureStarted) return;
+    const dx=e.touches[0].clientX-tx;
+    const dy=e.touches[0].clientY-ty;
+    if(Math.abs(dx)>36 && Math.abs(dx)>Math.abs(dy)*1.2){
+      swiped=true;
+      gestureStarted=false;
+      if(dx<0) selectLevel(wi,Math.min(_advSelectedLevel+1,9),true);
+      else      selectLevel(wi,Math.max(_advSelectedLevel-1,0),true);
+    }
+  },{passive:false});
+
+  el.addEventListener('touchend',()=>{ gestureStarted=false; },{passive:true});
+}
+
+
+function advPlaySelected(){ openAdvLevel(_advMapWorld, _advSelectedLevel); }
+
+function updateLevelPanel(wi,li,show){
+  const panel=document.getElementById('adv-level-panel');
+  if(!panel) return;
+  if(!show){ panel.style.opacity='0'; panel.style.pointerEvents='none'; return; }
+  const world=ADV_WORLDS[wi], unlocked=isAdvLevelUnlocked(wi,li);
+  const data=getAdvLevelData(wi,li), isBoss=li===9;
+  document.getElementById('adv-panel-levelname').textContent=`${world.icon} World ${wi+1} · Level ${li+1}`;
+  document.getElementById('adv-panel-title').textContent=ADV_LEVEL_NAMES[wi][li];
+  document.getElementById('adv-panel-goal').textContent=unlocked?
+    `Stack ${getAdvGoal(wi,li)} blocks · ${getAdvTime(wi,li)}s · ${getAdvRequiredStreak(wi,li)}x streak`:'';
+  document.getElementById('adv-panel-stars').textContent=data.stars>0?
+    '⭐'.repeat(data.stars)+'☆'.repeat(3-data.stars):(unlocked?'☆☆☆':'');
+  const pb=document.getElementById('adv-play-btn');
+  const le=document.getElementById('adv-panel-locked');
+  const be=document.getElementById('adv-panel-boss-label');
+  if(unlocked){
+    pb.style.display='inline-block';
+    pb.textContent=data.stars>0?'▶ Play Again':'▶ Play';
+    pb.style.background=isBoss?'linear-gradient(135deg,#cc2222,#881111)':'linear-gradient(135deg,#9b5de5,#6a2daa)';
+    le.style.display='none';
+    be.style.display=isBoss?'block':'none';
+    if(isBoss) be.textContent=`⚠️ ${world.bossLabel}`;
+  } else {
+    pb.style.display='none';
+    le.style.display='block';
+    be.style.display='none';
+  }
+  panel.style.opacity='1';
+  panel.style.pointerEvents='all';
+}
+
+
+function hopAnimalToLevel(wi,li,onDone){
+  _advIsHopping=false;
+  selectLevel(wi,li);
+  setTimeout(()=>{if(onDone)onDone();},700);
+}
+
+
+function openAdvLevel(w,l){
+  advWorld=w; advLevel=l;
+  const world=ADV_WORLDS[w];
+  const isBoss=l===9;
+  const goal=getAdvGoal(w,l);
+  const timeLimit=getAdvTime(w,l);
+
+  document.getElementById('adv-intro-world').textContent=`${world.icon} World ${w+1}: ${world.name}`;
+  document.getElementById('adv-intro-level').textContent=isBoss?`👑 Boss Level`:`Level ${l+1}`;
+  document.getElementById('adv-intro-name').textContent=ADV_LEVEL_NAMES[w][l];
+  const bossBadge=document.getElementById('adv-intro-boss-badge');
+  bossBadge.style.display=isBoss?'inline-block':'none';
+  document.getElementById('adv-intro-goal').textContent=`Stack ${goal} blocks`;
+  document.getElementById('adv-intro-modifier').textContent=isBoss?`⚠️ ${world.bossLabel} — ${world.bossDesc}`:'';
+  const streakReq=document.getElementById('adv-intro-streak-req');
+  if(streakReq) streakReq.textContent=getAdvRequiredStreak(w,l);
+  document.getElementById('s-adv-intro').style.display='flex';
+}
+
+function closeAdvIntro(){
+  document.getElementById('s-adv-intro').style.display='none';
+}
+
+function startAdvLevel(){
+  const world=ADV_WORLDS[advWorld];
+  const isBoss=advLevel===9;
+  advGoal=getAdvGoal(advWorld,advLevel);
+  advMisses=0;
+  advMaxPerfectStreak=0;
+  _advLiveStars=0;
+  advStartTime=Date.now();
+  advMode=true;
+  _inAdvSession=true;
+  advBoss=isBoss?world.boss:null;
+  advBossLabel=isBoss?world.bossLabel:'';
+  // Boss levels play tense music, normal levels play regular bgm
+  // Override MT.world key for startGame to pick up
+  _advLevelMusicKey=isBoss?'daily':'game';
+
+  // Close all screens
+  document.getElementById('s-adv-intro').style.display='none';
+  document.getElementById('s-adventure').style.display='none';
+  document.getElementById('s-start').style.display='none';
+
+  // Apply boss mechanics
+  applyAdvBoss(advBoss);
+  // All boss levels get camera rotation (like daily challenge)
+  if(isBoss) advBossRotating=true;
+  // Store world speed bonus — applied after initGame in startGame
+  _advWorldSpeedBonus = ADV_WORLD_SPEED[advWorld]||0;
+
+  // Set stage colors to world theme
+  scene.background=new THREE.Color(world.sky);
+  scene.fog=new THREE.Fog(world.fog,16,40);
+
+  startGame();
+}
+
+function applyAdvBoss(boss){
+  // Boss mechanics applied via flags checked in game loop
+  advBossEarthquake=false;
+  advBossLightsOut=false;
+  advBossPoisonHearts=false;
+  advBossNoBounce=false;
+  advBossRotating=false;
+  advBossSpeedSurge=false;
+
+  if(!boss) return;
+  let b=boss;
+  if(b==='random'){
+    const opts=['speedsurge','nobounce','rotating','earthquake','lightsout','poisonhearts'];
+    b=opts[Math.floor(Math.random()*opts.length)];
+  }
+  if(b==='all'){
+    advBossEarthquake=true; advBossLightsOut=true; advBossPoisonHearts=true;
+    advBossNoBounce=true; advBossRotating=true; advBossSpeedSurge=true;
+    return;
+  }
+  if(b==='speedsurge')  advBossSpeedSurge=true;
+  if(b==='nobounce')    advBossNoBounce=true;
+  if(b==='rotating')    advBossRotating=true;
+  if(b==='earthquake')  advBossEarthquake=true;
+  if(b==='lightsout')   advBossLightsOut=true;
+  if(b==='poisonhearts')advBossPoisonHearts=true;
+}
+
+// Boss mechanic flags
+var advBossEarthquake=false, advBossLightsOut=false, advBossPoisonHearts=false;
+var advBossNoBounce=false, advBossRotating=false, advBossSpeedSurge=false;
+let _advWorldSpeedBonus=0;
+let _pendingAdvSave=null;
+let _inAdvSession=false; // true for entire adv level from start to game-over/complete
+
+function updateAdvBoss(){
+  if(!advMode||!state==='playing') return;
+  // camRotate for boss is handled in main loop before camera calc
+  if(advBossEarthquake) shakeTmr=Math.max(shakeTmr,3);
+  if(advBossLightsOut){
+    // Dim background — pulse between dark and very dark
+    const t=Date.now()*0.001;
+    const dim=0.02+Math.abs(Math.sin(t*0.4))*0.06;
+    scene.background.setRGB(dim,dim*0.8,dim*1.2);
+    scene.fog.color.setRGB(dim*0.5,dim*0.4,dim*0.6);
+  }
+  if(advBossSpeedSurge&&mover){
+    // Keep speed boosted regardless of score
+    spd=Math.max(spd, getSpeed(score)*2);
+  }
+}
+
+// ── LIVE STAR NOTIFICATIONS ──
+let _advLiveStars=0; // stars earned so far this attempt (0-3)
+
+function showAdvStarPop(n){
+  // n = total stars now earned (1, 2, or 3)
+  const labels=['','⭐','⭐⭐','⭐⭐⭐'];
+  const msgs=['','1 Star!','2 Stars!','3 Stars! 🔥'];
+  const el=document.createElement('div');
+  el.style.cssText=`position:fixed;top:38%;left:50%;z-index:50;pointer-events:none;
+    font-family:'Fredoka One',cursive;text-align:center;
+    animation:starPop 1.4s cubic-bezier(0.22,1,0.36,1) forwards;`;
+  el.innerHTML=`<div style="font-size:clamp(44px,12vw,72px);line-height:1;
+    filter:drop-shadow(0 4px 16px rgba(255,200,0,0.9));">${labels[n]}</div>
+    <div style="font-size:clamp(16px,4vw,24px);color:#fff;
+    text-shadow:0 2px 12px rgba(0,0,0,0.7);margin-top:4px;">${msgs[n]}</div>`;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 1500);
+  // Vibrate
+  if(navigator.vibrate) navigator.vibrate(n===3?[80,40,80]:60);
+  // Sound
+  tone(n===3?880:n===2?660:440,'sine',0.35,0.4);
+}
+
+function updateAdvLiveStars(){
+  if(!advMode||state!=='playing') return;
+  const elapsed=Math.round((Date.now()-advStartTime)/1000);
+  const timeLimit=getAdvTime(advWorld,advLevel);
+  const requiredStreak=getAdvRequiredStreak(advWorld,advLevel);
+  const underTime=elapsed<=timeLimit;
+  const gotStreak=advMaxPerfectStreak>=requiredStreak;
+  // Current star count (same logic as finishAdvLevel, but live)
+  // 1 star = always once we hit >= half the goal (committed)
+  // 2 stars = under time so far
+  // 3 stars = under time AND streak met
+  const halfGoal=Math.ceil(advGoal/2);
+  const earnedOne=score>=halfGoal;
+  const newStars=(!earnedOne)?0: gotStreak&&underTime?3: underTime?2: 1;
+  if(newStars>_advLiveStars){
+    _advLiveStars=newStars;
+    showAdvStarPop(newStars);
+  }
+}
+
+function checkAdvGoal(){
+  if(!advMode) return;
+  if(score>=advGoal){
+    const elapsed=Math.round((Date.now()-advStartTime)/1000);
+    const timeLimit=getAdvTime(advWorld,advLevel);
+    const requiredStreak=getAdvRequiredStreak(advWorld,advLevel);
+    const underTime=elapsed<=timeLimit;
+    const gotStreak=advMaxPerfectStreak>=requiredStreak;
+    const stars=gotStreak&&underTime?3:underTime?2:1;
+    // Play fanfare and zoom out just like normal game over
+    advMode=false; // stop boss mechanics
+    state='over';
+    setTimeout(()=>{ zoomOut=true; playMusic('fanfare'); },400);
+    setTimeout(()=>{ finishAdvLevel(stars, elapsed); },3000);
+  }
+}
+
+function finishAdvLevel(stars, elapsed){
+  const savedWorld=advWorld, savedLevel=advLevel;
+  advMode=false;
+  _inAdvSession=false;
+  resetAdvBoss();
+  // Capture previous stars BEFORE saving so celebration knows what's new
+  const prevStars=getAdvLevelData(savedWorld,savedLevel).stars||0;
+  // Save after celebration so node starts empty during the reveal
+  _pendingAdvSave={world:savedWorld,level:savedLevel,stars,elapsed};
+  state='over';
+  document.getElementById('hud').style.display='none';
+  document.getElementById('hint').style.display='none';
+  _fOut(_aud,()=>{_aud=null;_ct=null;}); // fade out game/boss music
+  showAdvMap(savedWorld);
+  setTimeout(()=>showMapCelebration(savedWorld,savedLevel,stars,elapsed,prevStars),400);
+}
+
+function showMapCelebration(wi,li,stars,elapsed,prevStars){
+  const requiredStreak=getAdvRequiredStreak(wi,li);
+  const timeLimit=getAdvTime(wi,li);
+  const underTime=elapsed<=timeLimit;
+  const gotStreak=advMaxPerfectStreak>=requiredStreak;
+
+  // Rebuild map BEFORE saving — node shows pre-run star count (empty if first time)
+  _advSelectedLevel=li;
+  initAdvMap3D(wi);
+
+  // Full-screen dark overlay
+  const overlay=document.createElement('div');
+  overlay.style.cssText=`position:fixed;top:0;left:0;right:0;bottom:0;z-index:150;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.6);`;
+  document.body.appendChild(overlay);
+
+  // Title banner — pops in first
+  const titles=['','🎉 Level Done!','⭐ Nice Work!','🌟 Flawless!'];
+  const banner=document.createElement('div');
+  banner.style.cssText=`font-family:'Fredoka One',cursive;
+    font-size:clamp(28px,8vw,46px);color:#fff;
+    text-shadow:0 4px 24px rgba(0,0,0,0.8);text-align:center;
+    opacity:0;transform:scale(0.6);
+    transition:opacity 0.35s ease-out,transform 0.45s cubic-bezier(0.34,1.56,0.64,1);
+    margin-bottom:32px;`;
+  banner.textContent=titles[stars]||titles[1];
+  overlay.appendChild(banner);
+  setTimeout(()=>{ banner.style.opacity='1'; banner.style.transform='scale(1)'; }, 100);
+
+  // Level label under title
+  const lvlLabel=document.createElement('div');
+  lvlLabel.style.cssText=`font-family:'Fredoka One',cursive;font-size:14px;
+    letter-spacing:2px;color:rgba(255,255,255,0.5);text-transform:uppercase;
+    margin-top:-20px;margin-bottom:28px;opacity:0;transition:opacity 0.4s;`;
+  lvlLabel.textContent=`${ADV_WORLDS[wi].icon} World ${wi+1} · Level ${li+1}`;
+  overlay.appendChild(lvlLabel);
+  setTimeout(()=>lvlLabel.style.opacity='1', 300);
+
+  // Big star row — each star stamps in one at a time with a delay
+  const starRow=document.createElement('div');
+  starRow.style.cssText=`display:flex;gap:clamp(16px,5vw,32px);margin-bottom:28px;align-items:center;`;
+  overlay.appendChild(starRow);
+
+  const STAR_DELAY=800;
+  const FIRST_STAR=400;
+  const newStarCount=Math.max(0,stars-prevStars);
+
+  for(let s=0;s<3;s++){
+    const earned=s<stars;
+    const isNew=earned && s>=prevStars;
+    const hadBefore=earned && s<prevStars;
+    const starEl=document.createElement('div');
+    starEl.textContent=earned?'⭐':'☆';
+    if(hadBefore){
+      // Already earned — show immediately, no animation
+      starEl.style.cssText='font-size:clamp(72px,20vw,110px);line-height:1;opacity:1;';
+    } else if(isNew){
+      // New star — start hidden, animate in
+      starEl.style.cssText=`font-size:clamp(72px,20vw,110px);line-height:1;
+        opacity:0;transform:scale(0.05) rotate(-30deg);
+        transition:opacity 0.15s,transform 0.55s cubic-bezier(0.34,1.56,0.64,1);`;
+      const newIdx=s-prevStars;
+      const delay=FIRST_STAR+newIdx*STAR_DELAY;
+      setTimeout(()=>{
+        starEl.style.opacity='1';
+        starEl.style.transform='scale(1) rotate(0deg)';
+        tone(330+s*150,'sine',0.4,0.55);
+        if(navigator.vibrate) navigator.vibrate([60,20,60]);
+        const rect=starEl.getBoundingClientRect();
+        spawnParticles(rect.left+rect.width/2,rect.top+rect.height/2,20);
+        // no background flash
+      },delay);
+    } else {
+      // Unearned — fade in dim after new stars are done
+      starEl.style.cssText='font-size:clamp(72px,20vw,110px);line-height:1;opacity:0;filter:grayscale(1) brightness(0.3);';
+      setTimeout(()=>{ starEl.style.opacity='0.35'; },FIRST_STAR+newStarCount*STAR_DELAY+200);
+    }
+    starRow.appendChild(starEl);
+  }
+
+  // Stats line — appears after all stars
+  const statsDelay=FIRST_STAR+Math.max(newStarCount,1)*STAR_DELAY;
+  const stats=document.createElement('div');
+  const tc=underTime?'#4caf7d':'rgba(255,255,255,0.4)';
+  const sc=gotStreak?'#ffcc00':'rgba(255,255,255,0.4)';
+  stats.style.cssText=`font-family:'Nunito',sans-serif;font-size:14px;
+    text-align:center;opacity:0;transition:opacity 0.6s;margin-bottom:8px;`;
+  stats.innerHTML=`<span style="color:${tc}">⏱ ${elapsed}s / ${timeLimit}s</span>
+    &nbsp;&nbsp;<span style="color:${sc}">🎯 Streak: ${advMaxPerfectStreak}/${requiredStreak}</span>`;
+  overlay.appendChild(stats);
+  setTimeout(()=>stats.style.opacity='1', statsDelay+100);
+
+  // "Tap to continue" hint
+  const hint=document.createElement('div');
+  hint.style.cssText=`font-family:'Fredoka One',cursive;font-size:14px;
+    color:rgba(255,255,255,0.35);letter-spacing:2px;
+    opacity:0;transition:opacity 0.6s;margin-top:8px;`;
+  hint.textContent='TAP TO CONTINUE';
+  overlay.appendChild(hint);
+  setTimeout(()=>hint.style.opacity='1', statsDelay+400);
+
+  // Tap to skip / auto-continue
+  const hopDelay=statsDelay+1800;
+  let proceeded=false;
+  function proceed(){
+    if(proceeded) return;
+    proceeded=true;
+    doCelebrationEnd();
+  }
+  setTimeout(proceed, hopDelay);
+  overlay.style.pointerEvents='all';
+  overlay.addEventListener('click', proceed);
+  overlay.addEventListener('touchstart', proceed, {passive:true});
+
+  function doCelebrationEnd(){
+    // 1. Save result — node will now show new stars
+    if(_pendingAdvSave){
+      const p=_pendingAdvSave; _pendingAdvSave=null;
+      setAdvLevelData(p.world,p.level,p.stars,p.elapsed);
+      if(isAllWorldsComplete()){
+        const sv=getSave(); sv.pandaUnlocked=true; sv.goldenUnlocked=true; setSave(sv);
+        buildAnimalSelector();
+      }
+    }
+    // 2. Fade out overlay, rebuild map (node now has new stars filled)
+    overlay.style.transition='opacity 0.45s';
+    overlay.style.opacity='0';
+    _advSelectedLevel=li;
+    initAdvMap3D(wi);
+
+    // 3. After fade, THEN move camera to next level
+    setTimeout(()=>{
+      overlay.remove();
+      const isBossComplete=li===9;
+      const nextWorld=isBossComplete?Math.min(wi+1,7):wi;
+      const nextLi=isBossComplete?0:Math.min(li+1,9);
+      setTimeout(()=>{
+        if(isBossComplete && nextWorld>wi){
+          _advMapWorld=nextWorld; _advSelectedLevel=0;
+          buildWorldTabs(); initAdvMap3D(nextWorld);
+          stopAdvMapMusic(); playAdvMapMusic(nextWorld);
+        } else {
+          selectLevel(wi,nextLi,true);
+        }
+        setTimeout(()=>updateLevelPanel(nextWorld,nextLi,true),500);
+      },300);
+    },500);
+  }
+}
+
+function resetAdvBoss(){
+  advBossEarthquake=false; advBossLightsOut=false; advBossPoisonHearts=false;
+  advBossNoBounce=false; advBossRotating=false; advBossSpeedSurge=false;
+  // Restore fog
+  const st=getStage(score);
+  if(!isDailyMode) scene.fog=new THREE.Fog(st.fog,16,40);
+}
+
 // ── NAME SANITIZATION ──
 const BLOCKED_WORDS=['fuck','shit','ass','bitch','cunt','dick','cock','pussy','nigger','nigga','fag','faggot','retard','whore','slut','bastard','piss','damn','crap','sex','porn','nazi','hitler'];
 function sanitizeName(raw){
@@ -1043,7 +2165,9 @@ const MT={
   menu:resolveAssetPath('Music/bgm_menu.mp3'),
   fanfare:resolveAssetPath('Music/bgm_fanfare.mp3'),
   daily:resolveAssetPath('Music/bgm_tense_01.mp3'),
-  game:['Music/bgm_01.mp3','Music/bgm_02.mp3','Music/bgm_03.mp3','Music/bgm_04.mp3'].map(resolveAssetPath)
+  game:['Music/bgm_01.mp3','Music/bgm_02.mp3','Music/bgm_03.mp3','Music/bgm_04.mp3'].map(resolveAssetPath),
+  world:['Music/World_01.mp3','Music/World_02.mp3','Music/World_03.mp3','Music/World_04.mp3',
+         'Music/World_05.mp3','Music/World_06.mp3','Music/World_07.mp3','Music/World_08.mp3'].map(resolveAssetPath),
 };
 let _aud=null,_ct=null,_muted=false,_mu=false;
 try{_muted=localStorage.getItem('ssMuted')==='1';}catch{}
@@ -1053,7 +2177,12 @@ function _fOut(a,cb){if(!a){cb?.();return;}let i=0;const sv=a.volume,t=setInterv
 function playMusic(k){
   if(_muted)return;
   const ff=k==='fanfare';
-  const src=k==='menu'?MT.menu:k==='fanfare'?MT.fanfare:k==='daily'?MT.daily:MT.game[Math.floor(Math.random()*MT.game.length)];
+  let src;
+  if(k==='menu') src=MT.menu;
+  else if(k==='fanfare') src=MT.fanfare;
+  else if(k==='daily') src=MT.daily;
+  else if(k==='world') src=MT.world[advWorld]||MT.world[0];
+  else src=MT.game[Math.floor(Math.random()*MT.game.length)];
   if(_ct===src&&_aud&&!_aud.paused&&!ff)return;
   _ct=src;_fOut(_aud,()=>{_aud=_cA(src,!ff);_aud.play().then(()=>_fIn(_aud,ff?0.7:0.5)).catch(()=>{});});
 }
@@ -1103,6 +2232,10 @@ function onResize(){
   cam.left=-userZoom*asp; cam.right=userZoom*asp;
   cam.top=userZoom; cam.bottom=-userZoom;
   cam.updateProjectionMatrix();
+  // Rebuild world map if visible (CSS map reflows automatically)
+  if(document.getElementById('s-adventure').style.display!=='none'){
+    initAdvMap3D(_advMapWorld);
+  }
 }
 onResize();
 window.addEventListener('resize',onResize);
@@ -1158,6 +2291,13 @@ function w2s(v3){const v=v3.clone().project(cam);return{x:(v.x+1)/2*window.inner
 // Make a block mesh
 function mkBlock(w,color){
   if(blockStyle==='sushi') return mkSushiBlock(w,color);
+  if(blockStyle==='golden'){
+    // Shimmering gold block
+    const m=new THREE.Mesh(new THREE.BoxGeometry(w,BH,S),
+      new THREE.MeshStandardMaterial({color:0xffd700,roughness:0.2,metalness:0.9,
+        emissive:new THREE.Color(0xaa6600),emissiveIntensity:0.15}));
+    m.castShadow=true;m.receiveShadow=true;scene.add(m);return m;
+  }
   const m=new THREE.Mesh(new THREE.BoxGeometry(w,BH,S),
     new THREE.MeshStandardMaterial({color,roughness:0.6,metalness:0.05,
       emissive:new THREE.Color(0x000000),emissiveIntensity:0}));
@@ -1220,12 +2360,48 @@ function mkBunny(col,sc){
 
 function mkAnimal(col,sc){
   switch(selectedAnimal){
-    case 'bear': return mkBear(col,sc);
-    case 'cat':  return mkCat(col,sc);
-    case 'frog': return mkFrog(col,sc);
-    case 'fox':  return mkFox(col,sc);
-    default:     return mkBunny(col,sc);
+    case 'bear':  return mkBear(col,sc);
+    case 'cat':   return mkCat(col,sc);
+    case 'frog':  return mkFrog(col,sc);
+    case 'fox':   return mkFox(col,sc);
+    case 'panda': return mkPanda(col,sc);
+    default:      return mkBunny(col,sc);
   }
+}
+
+function mkPanda(col,sc){
+  // Panda: white base with black markings — built on bunny shape
+  const g=new THREE.Group();
+  const white=new THREE.MeshStandardMaterial({color:0xf8f8f8,roughness:0.7,metalness:0.01});
+  const black=new THREE.MeshStandardMaterial({color:0x111111,roughness:0.6,metalness:0.01});
+  const pink=new THREE.MeshStandardMaterial({color:0xffaacc,roughness:0.8});
+  // Body
+  const body=new THREE.Mesh(new THREE.SphereGeometry(0.24,12,8),white);body.scale.set(1,1.05,1);body.castShadow=true;g.add(body);
+  // Black belly patch
+  const belly=new THREE.Mesh(new THREE.SphereGeometry(0.14,8,6),black);belly.position.set(0,-0.04,0.16);belly.scale.set(0.9,0.8,0.3);g.add(belly);
+  // Head
+  const head=new THREE.Mesh(new THREE.SphereGeometry(0.175,10,8),white);head.position.set(0,0.34,0);head.castShadow=true;g.add(head);
+  // Black ears
+  [-1,1].forEach(s=>{
+    const ear=new THREE.Mesh(new THREE.SphereGeometry(0.07,8,6),black);ear.position.set(s*0.14,0.49,0);g.add(ear);
+  });
+  // Black eye patches (panda's signature)
+  [-1,1].forEach(s=>{
+    const patch=new THREE.Mesh(new THREE.SphereGeometry(0.055,8,6),black);patch.position.set(s*0.085,0.37,0.12);patch.scale.set(1.1,0.9,0.5);g.add(patch);
+    const eye=new THREE.Mesh(new THREE.SphereGeometry(0.025,6,5),new THREE.MeshStandardMaterial({color:0x111111}));eye.position.set(s*0.085,0.37,0.16);g.add(eye);
+    const shine=new THREE.Mesh(new THREE.SphereGeometry(0.009,4,4),new THREE.MeshStandardMaterial({color:0xffffff}));shine.position.set(s*0.085+0.01,0.38,0.18);g.add(shine);
+  });
+  // Snout
+  const snout=new THREE.Mesh(new THREE.SphereGeometry(0.075,8,6),white);snout.position.set(0,0.29,0.15);snout.scale.set(1,0.7,0.6);g.add(snout);
+  const nose=new THREE.Mesh(new THREE.SphereGeometry(0.022,5,4),black);nose.position.set(0,0.32,0.22);g.add(nose);
+  // Black arms/legs
+  [-1,1].forEach(s=>{
+    const arm=new THREE.Mesh(new THREE.SphereGeometry(0.055,7,5),black);arm.position.set(s*0.24,-0.04,0.08);arm.scale.set(0.7,1.1,0.7);g.add(arm);
+    const leg=new THREE.Mesh(new THREE.SphereGeometry(0.065,7,5),black);leg.position.set(s*0.16,-0.26,0.06);leg.scale.set(1,0.85,0.9);g.add(leg);
+  });
+  // Stubby tail
+  const tail=new THREE.Mesh(new THREE.SphereGeometry(0.045,6,5),white);tail.position.set(0,-0.1,-0.2);g.add(tail);
+  g.rotation.y=camRotate*Math.PI/180;g.scale.setScalar(sc);g.castShadow=true;scene.add(g);return g;
 }
 
 function mkBear(col,sc){
@@ -1512,6 +2688,7 @@ function initGame(){
   perfectStreak=0;
   updatePerfectDisplay();
   barrierFlashT=0;
+  // Boss flags are set by startAdvLevel/resetAdvBoss — don't reset them here
   // Load saved style and animal
   const sv2=getSave();
   blockStyle=sv2.blockStyle||'sushi';
@@ -1559,6 +2736,7 @@ function initGame(){
 let barrierFlashT=0;
 
 function updateBarrier(){
+  if(advMode) return; // no stage banner during adventure levels
   const stIdx=getStageIdx(score);
   const nextBoundary=(stIdx+1)*STAGE_SIZE;
   const blocksUntil=nextBoundary-score;
@@ -1812,6 +2990,7 @@ function doDrop(){
   score++;
   combo=perfect?combo+1:0;
   perfectStreak=perfect?perfectStreak+1:0;
+  if(advMode && perfectStreak>advMaxPerfectStreak) advMaxPerfectStreak=perfectStreak;
   updatePerfectDisplay();
 
   // Landing sound varies by block width
@@ -1889,6 +3068,7 @@ function doDrop(){
     setTimeout(()=>sfxBunnyJump(), i*60);
   });
   updateHUD();
+  checkAdvGoal();
   spawnMover();
 }
 
@@ -1989,6 +3169,25 @@ function repositionBunnies(top){
 
 // ── MISS ──
 function doMiss(){
+  if(advMode) advMisses++;
+  // In adventure mode, a miss ends the level attempt (back to map)
+  if(advMode){
+    state='over';
+    setTenseMode(false);
+    sfxDrop(); shakeTmr=20;
+    if(mover){ scene.remove(mover.mesh); blockDispose(mover.mesh); mover=null; }
+    hearts.forEach(h=>{if(!h.done&&h.el){h.done=true;h.el.style.opacity='0';setTimeout(()=>{if(h.el){h.el.remove();h.el=null;}},400);}});
+    bunnies.forEach((b,i)=>{b.falling=true;b.fv=-0.12-Math.random()*0.1;b.fvx=(Math.random()<0.5?1:-1)*(0.08+Math.random()*0.12);setTimeout(()=>sfxScream(),i*55);});
+    resetAdvBoss();
+    const _canRevive=score>=3&&!adState.reviveUsed;
+    setTimeout(()=>{
+      state='idle';
+      document.getElementById('hud').style.display='none';
+      document.getElementById('hint').style.display='none';
+      if(_canRevive) showAdvReviveOffer(); else showAdvRetry();
+    },2000);
+    return;
+  }
   state='over';
   setTenseMode(false);
   sfxDrop();shakeTmr=20;
@@ -2043,7 +3242,7 @@ function update(){
   }
 
   // ── Move mover ──
-  if(mover){
+  if(mover && !countingDown){
     mover.lx+=spd*mover.dir*dt;
     mover.mesh.position.x=mover.lx+mover.w/2;
 
@@ -2051,13 +3250,13 @@ function update(){
     // Right exit: lx > S (left edge past right boundary)
     // Left exit: lx+w < -S (right edge past left boundary)
     if(mover.lx > S+0.5){
-      if(mover.bounces>=1){doMiss();return;}
+      if(mover.bounces>=1||(advMode&&advBossNoBounce)){if(!countingDown){doMiss();return;}}
       mover.bounces++;mover.dir=-1;
       mover.lx=S+0.5;
       blockSetRedWarning(mover.mesh, true);
     }
     if(mover.lx+mover.w < -S-0.5){
-      if(mover.bounces>=1){doMiss();return;}
+      if(mover.bounces>=1||(advMode&&advBossNoBounce)){if(!countingDown){doMiss();return;}}
       mover.bounces++;mover.dir=1;
       mover.lx=-S-0.5-mover.w;
       blockSetRedWarning(mover.mesh, true);
@@ -2119,19 +3318,19 @@ function update(){
   cam.lookAt(0,camLookY,0);
 
   // Camera X/Z from camRotate, Y from camPitch+lookAt
-  // In daily mode: slowly revolve camera + disco pulsing background
-  if(isDailyMode && state==='playing'){
-    // Rotation speed scales with stack height — starts slow, gets faster as you stack higher
-    const stackBoost=Math.min(placed.length*0.012, 0.5); // caps at +0.5 extra
+  // In daily mode OR adv boss: slowly revolve camera
+  if(state==='playing' && !countingDown && (isDailyMode || advBossRotating)){
+    const stackBoost=Math.min(placed.length*0.012, 0.5);
     camRotate=(camRotate+0.18+stackBoost)%360;
-    // Cycle through vibrant techno colors
-    const t=Date.now()*0.001;
-    const r=0.35+Math.sin(t*1.1)*0.25;
-    const g=0.1+Math.sin(t*0.7+2.1)*0.15;
-    const b=0.45+Math.sin(t*0.9+4.2)*0.3;
-    scene.background.setRGB(r,g,b);
-    // Pulse the fog color in sync
-    scene.fog.color.setRGB(r*0.7,g*0.7,b*0.7);
+    // Disco colors only in daily mode — boss levels keep their world sky
+    if(isDailyMode){
+      const t=Date.now()*0.001;
+      const r=0.35+Math.sin(t*1.1)*0.25;
+      const g=0.1+Math.sin(t*0.7+2.1)*0.15;
+      const b=0.45+Math.sin(t*0.9+4.2)*0.3;
+      scene.background.setRGB(r,g,b);
+      scene.fog.color.setRGB(r*0.7,g*0.7,b*0.7);
+    }
   }
   const camRad=camRotate*Math.PI/180;
   const camDist=14.14;
@@ -2166,6 +3365,7 @@ function update(){
   updateBunnies(dt);
   updateHearts(dt);
   updateHeartShower();
+  updateAdvBoss();
   updateBarrier();
 
   // ── Tense mode: red overlay when block is very small ──
@@ -2490,6 +3690,18 @@ function collectHeart(h){
     setTimeout(()=>{if(h.el){h.el.remove();h.el=null;}},300);
   }
   if(mover){
+    // Poison hearts boss — shrink instead of grow
+    if(advMode && advBossPoisonHearts){
+      const shrink=mover.w*0.18;
+      const nw=Math.max(mover.w-shrink, S*0.12);
+      const loss=mover.w-nw;
+      mover.lx+=loss/2; mover.w=nw;
+      blockResize(mover.mesh,nw);
+      mover.mesh.position.x=mover.lx+nw/2;
+      // Flash red to signal poison
+      blockSetEmissiveFlash(mover.mesh,0xff0000,0.8);
+      return;
+    }
     const ratio=mover.w/S,gp=Math.min(0.3/ratio,2);
     const nw=Math.min(mover.w*(1+gp),S),grow=nw-mover.w;
     mover.lx-=grow/2; mover.w=nw;
@@ -2531,6 +3743,7 @@ function setTenseMode(active){
 
 // ── UI ──
 function showCombo(){
+  if(advMode) return; // no combo text during adventure — keep UI clean
   const el=document.getElementById('combo');
   const M=['PERFECT!','AMAZING!','FLAWLESS!','SUSHI MASTER!','LEGEND!'];
   el.textContent=(combo>=2?`${combo}x `:'')+M[Math.min(combo-1,4)];
@@ -2546,12 +3759,45 @@ function showStageBanner(){
 }
 
 function updateHUD(){
-  document.getElementById('score-val').textContent=score;
-  // best-val removed
+  const scoreVal=document.getElementById('score-val');
+  const scoreLbl=document.getElementById('score-lbl');
+  scoreVal.textContent=score;
+  // Scale font size in adventure mode
+  scoreVal.style.fontSize=advMode?'58px':'54px';
+  scoreLbl.textContent=isDailyMode?'DAILY':advMode?ADV_WORLDS[advWorld]?.icon+' Level '+(advLevel+1):'Score';
+
+  // Adventure goal progress shown inline under score
+  const goalHud=document.getElementById('adv-goal-hud');
+  if(advMode && goalHud){
+    goalHud.style.display='block';
+    const pct=Math.min(100,Math.round(score/advGoal*100));
+    document.getElementById('adv-goal-val').textContent=`${score} / ${advGoal}`;
+    document.getElementById('adv-goal-bar').style.width=pct+'%';
+    document.getElementById('adv-goal-bar').style.background=pct>=100?'#4caf7d':'#ffcc00';
+  } else if(goalHud){
+    goalHud.style.display='none';
+  }
 }
 
 function showGameOver(){
-  _wasDaily=isDailyMode; // MUST be first line — save before anything resets it
+  // Adventure mode — show level failed screen instead
+  if(advMode){
+    advMode=false;
+    _inAdvSession=false;
+    resetAdvBoss();
+    state='over';
+    document.getElementById('hud').style.display='none';
+    document.getElementById('hint').style.display='none';
+    bunnies.forEach((b,i)=>{b.falling=true;b.fv=-0.12-Math.random()*0.1;b.fvx=(Math.random()<0.5?1:-1)*(0.08+Math.random()*0.12);setTimeout(()=>sfxScream(),i*55);});
+    // Show revive offer if score >= 3 and not already used
+    const canRevive=score>=3&&!adState.reviveUsed;
+    setTimeout(()=>{
+      if(canRevive) showAdvReviveOffer(); else showAdvRetry();
+    }, 1800);
+    playMusic('menu');
+    return;
+  }
+  _wasDaily=isDailyMode; // MUST be first — save before anything resets it
   const best=getBest(),nb=score>best;
   if(nb){ setBest(score); buildAnimalSelector(); }
 
@@ -2654,6 +3900,82 @@ function showHeartShowerOffer(){
   });
 }
 
+function showAdvReviveOffer(){
+  const world=ADV_WORLDS[advWorld];
+  const pop=document.createElement('div');
+  pop.style.cssText=`position:fixed;top:0;left:0;right:0;bottom:0;z-index:400;
+    display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);
+    animation:fadeIn 0.25s ease-out;`;
+  pop.innerHTML=`
+    <div style="background:rgba(20,10,40,0.97);border:1px solid rgba(255,255,255,0.15);
+      border-radius:24px;padding:28px 24px;max-width:300px;width:88%;text-align:center;
+      box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+      <div style="font-size:44px;margin-bottom:8px;">😵</div>
+      <div style="font-family:'Fredoka One',cursive;font-size:22px;color:#fff;margin-bottom:4px;">
+        ${world.icon} ${ADV_LEVEL_NAMES[advWorld][advLevel]}</div>
+      <div style="font-family:'Nunito',sans-serif;font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:20px;">
+        You reached ${score} / ${advGoal} blocks</div>
+      <button id="adv-revive-yes" style="width:100%;margin-bottom:10px;
+        background:linear-gradient(135deg,#f5c842,#ff9f43);color:#2a1a2e;
+        font-family:'Fredoka One',cursive;font-size:18px;padding:14px;
+        border:none;border-radius:14px;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,0.2);">
+        📺 Watch Ad to Revive!
+      </button>
+      <button id="adv-revive-no" style="width:100%;background:transparent;
+        color:rgba(255,255,255,0.4);font-family:'Fredoka One',cursive;font-size:15px;
+        padding:8px;border:none;cursor:pointer;">Continue without reviving</button>
+    </div>`;
+  document.body.appendChild(pop);
+  document.getElementById('adv-revive-yes').addEventListener('click',()=>{
+    pop.remove();
+    // Re-enable adventure mode for revive
+    advMode=true;
+    requestReviveAd();
+  });
+  document.getElementById('adv-revive-no').addEventListener('click',()=>{
+    pop.remove();
+    showAdvRetry();
+  });
+}
+
+function showAdvRetry(){
+  // Show a lightweight retry overlay directly on the game screen
+  const existing=document.getElementById('adv-retry-overlay');
+  if(existing) existing.remove();
+  const el=document.createElement('div');
+  el.id='adv-retry-overlay';
+  el.style.cssText=`position:fixed;top:0;left:0;right:0;bottom:0;z-index:200;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.7);animation:fadeIn 0.3s ease-out;`;
+  const world=ADV_WORLDS[advWorld];
+  el.innerHTML=`
+    <div style="background:rgba(20,10,40,0.97);border:1px solid rgba(255,255,255,0.15);
+      border-radius:22px;padding:26px 22px;max-width:300px;width:88%;text-align:center;">
+      <div style="font-size:44px;margin-bottom:8px;">😵</div>
+      <div style="font-family:'Fredoka One',cursive;font-size:22px;color:#fff;margin-bottom:4px;">Level Failed</div>
+      <div style="font-family:'Nunito',sans-serif;font-size:13px;color:rgba(255,255,255,0.45);margin-bottom:18px;">
+        ${world.icon} ${ADV_LEVEL_NAMES[advWorld][advLevel]}
+      </div>
+      <button id="adv-retry-btn" style="width:100%;background:linear-gradient(135deg,#9b5de5,#6a2daa);
+        color:#fff;font-family:'Fredoka One',cursive;font-size:18px;padding:13px;
+        border:none;border-radius:14px;cursor:pointer;box-shadow:0 4px 0 rgba(0,0,0,0.3);margin-bottom:10px;">
+        🔄 Try Again
+      </button>
+      <button id="adv-map-btn" style="width:100%;background:rgba(255,255,255,0.1);
+        color:rgba(255,255,255,0.6);font-family:'Fredoka One',cursive;font-size:15px;
+        padding:10px;border:none;border-radius:12px;cursor:pointer;">
+        🗺️ Back to Map
+      </button>
+    </div>`;
+  document.body.appendChild(el);
+  document.getElementById('adv-retry-btn').addEventListener('click',()=>{
+    el.remove(); startAdvLevel();
+  });
+  document.getElementById('adv-map-btn').addEventListener('click',()=>{
+    el.remove(); _fOut(_aud,()=>{_aud=null;_ct=null;}); showAdvMap();
+  });
+}
+
 function showLeaderboardScreen(){
   document.getElementById('s-ad-offer').style.display='none';
   document.getElementById('s-over').style.display='flex';
@@ -2675,12 +3997,19 @@ function updatePerfectDisplay(){
 }
 
 // ── BLOCK STYLE ──
+function onGoldenStyleClick(){
+  const sv=getSave();
+  if(sv.goldenUnlocked){ setBlockStyle('golden'); }
+  else{ showUnlockRequiredPopup('Complete all 8 Adventure worlds to unlock Golden Blocks!'); }
+}
+
 function setBlockStyle(s){
   blockStyle=s;
   const sv=getSave();sv.blockStyle=s;setSave(sv);
   document.getElementById('style-default').style.border=s==='default'?'2px solid #fff':'2px solid rgba(255,255,255,0.3)';
   document.getElementById('style-sushi').style.border=s==='sushi'?'2px solid #f5c842':'2px solid rgba(255,255,255,0.3)';
-  // Rebuild mover immediately if playing
+  const goldenBtn=document.getElementById('style-golden');
+  if(goldenBtn) goldenBtn.style.border=s==='golden'?'2px solid #ffd700':'2px solid rgba(255,255,255,0.3)';
   if(state==='playing' && mover){
     const oldLx=mover.lx,oldW=mover.w,oldDir=mover.dir,oldBy=mover.by,oldBounces=mover.bounces,oldOrigColor=mover.origColor;
     scene.remove(mover.mesh); blockDispose(mover.mesh);
@@ -2699,15 +4028,20 @@ function getMaxScore(){return Math.max(getBest(),score);}
 function buildAnimalSelector(){
   const el=document.getElementById('animal-selector');if(!el)return;
   el.innerHTML='';
-  const best=Math.max(getBest(), score); // include current game score in case not yet saved
+  const best=Math.max(getBest(), score);
+  const sv=getSave();
   Object.entries(ANIMALS).forEach(([key,a])=>{
-    const unlocked=best>=a.unlockAt;
+    const unlocked=a.adventureUnlock ? !!sv.pandaUnlocked : best>=a.unlockAt;
     const btn=document.createElement('button');
     btn.style.cssText=`padding:8px 12px;border-radius:12px;border:2px solid ${selectedAnimal===key?'#ffcc00':'rgba(255,255,255,0.25)'};
       background:${unlocked?'rgba(255,255,255,0.15)':'rgba(0,0,0,0.2)'};color:${unlocked?'#fff':'rgba(255,255,255,0.4)'};
       font-family:'Fredoka One',cursive;font-size:13px;cursor:${unlocked?'pointer':'default'};`;
-    btn.textContent=unlocked?a.name:`🔒 ${a.desc}`;
-    btn.title=unlocked?`Play as ${a.name}`:`Unlock at score ${a.unlockAt}`;
+    btn.textContent=unlocked?a.name:`🔒 ${a.name}`;
+    btn.style.cursor='pointer'; // always clickable
+    if(!unlocked) btn.addEventListener('click',()=>{
+      const msg=a.adventureUnlock?`Complete all 8 Adventure worlds to unlock ${a.name}!`:`Reach a score of ${a.unlockAt} to unlock ${a.name}!`;
+      showUnlockRequiredPopup(msg);
+    });
     if(unlocked) btn.addEventListener('click',()=>{
       selectedAnimal=key;
       const sv=getSave();sv.animal=key;setSave(sv);
@@ -2744,6 +4078,8 @@ function startDailyChallenge(){
   dailyRng=seededRand(getDailySeed());
   document.getElementById('score-lbl').textContent='DAILY';
   startGame();
+  // Force daily music after a short delay to ensure unlock has fired
+  setTimeout(()=>{ if(!_muted) playMusic('daily'); }, 200);
 }
 
 async function submitDailyScore(name,score){
@@ -2775,7 +4111,7 @@ loop();
 
 // ── INPUT ──
 function handleTap(x,y){
-  if(state==='playing') doDrop();
+  if(state==='playing' && !countingDown) doDrop();
 }
 
 // Canvas gets gameplay taps
@@ -2790,35 +4126,85 @@ document.getElementById('c').addEventListener('touchstart',e=>{
 document.getElementById('c').addEventListener('mousedown',e=>handleTap(e.clientX,e.clientY));
 window.addEventListener('touchmove',e=>{if(e.touches[0]){_px=e.touches[0].clientX;_py=e.touches[0].clientY;}},{passive:true});
 window.addEventListener('mousemove',e=>{_px=e.clientX;_py=e.clientY;});
-document.addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='Enter'){e.preventDefault();if(state==='playing')doDrop();}});
+document.addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='Enter'){e.preventDefault();if(state==='playing'&&!countingDown)doDrop();}});
 
 // Gamepad
 let gpI=null,gpLA=false;
-window.addEventListener('gamepadconnected',()=>{if(!gpI)gpI=setInterval(()=>{const p=navigator.getGamepads?.();if(p)for(const pad of p){if(!pad)continue;const a=pad.buttons[0]?.pressed;if(a&&!gpLA&&state==='playing')doDrop();gpLA=a;}},50);});
+window.addEventListener('gamepadconnected',()=>{if(!gpI)gpI=setInterval(()=>{const p=navigator.getGamepads?.();if(p)for(const pad of p){if(!pad)continue;const a=pad.buttons[0]?.pressed;if(a&&!gpLA&&state==='playing'&&!countingDown)doDrop();gpLA=a;}},50);});
 
 // Fullscreen
 function reqFS(){try{const e=document.documentElement;(e.requestFullscreen||e.webkitRequestFullscreen)?.call(e,{navigationUI:'hide'});}catch{}try{screen.orientation?.lock('portrait').catch(()=>{});}catch{}}
 
+function showFullscreenNudge(){
+  // Don't show if already fullscreen
+  if(document.fullscreenElement||document.webkitFullscreenElement) return;
+  // Don't show if nudge already visible
+  if(document.getElementById('fs-nudge')) return;
+  const el=document.createElement('div');
+  el.id='fs-nudge';
+  el.style.cssText=`position:fixed;top:0;left:0;right:0;bottom:0;z-index:999;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.0);cursor:pointer;`;
+  // Subtle pulsing "tap for fullscreen" hint at the bottom
+  const hint=document.createElement('div');
+  hint.style.cssText=`position:absolute;bottom:32px;left:50%;transform:translateX(-50%);
+    font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:2px;
+    color:rgba(255,255,255,0.45);text-transform:uppercase;
+    animation:pulse 2s ease-in-out infinite;white-space:nowrap;pointer-events:none;`;
+  hint.textContent='↑ Tap for fullscreen ↑';
+  el.appendChild(hint);
+  document.body.appendChild(el);
+  function doFS(){
+    reqFS();
+    el.remove();
+  }
+  el.addEventListener('touchstart', doFS, {once:true, passive:true});
+  el.addEventListener('click', doFS, {once:true});
+}
+
 // ── BUTTONS ──
 function startGame(){
   reqFS();
-  // Reset camera rotation to default at start (daily mode will revolve from here)
-  if(!isDailyMode) camRotate=parseFloat(getSave().rotate||45);
-  else camRotate=45; // daily always starts at same angle then revolves
-  unlockMusic(isDailyMode?'daily':'game');
+  if(!isDailyMode && !advMode) camRotate=parseFloat(getSave().rotate||45);
+  else if(isDailyMode) camRotate=45;
+  // adventure mode keeps camRotate as-is (world default)
+  // Stop world map music when level starts
+  stopAdvMapMusic();
+  unlockMusic(isDailyMode?'daily':advMode?_advLevelMusicKey:'game');
   hideScreenAds();
   document.getElementById('s-start').style.display='none';
   document.getElementById('s-over').style.display='none';
   document.getElementById('hud').style.display='flex';
-  document.getElementById('hint').style.display='block';
-  document.getElementById('hint').style.opacity='1';
-  // pauseBtn shows with HUD
+  // Show goal hint in adventure mode
+  const hintEl=document.getElementById('hint');
+  hintEl.style.display='block';
+  hintEl.style.opacity='1';
+  if(advMode){
+    hintEl.className='adv-hint';
+    hintEl.innerHTML=`<div style="animation:pulse 2s ease-in-out infinite;font-size:22px;letter-spacing:2px;">
+      ${ADV_WORLDS[advWorld].icon} ${ADV_LEVEL_NAMES[advWorld][advLevel]}</div>
+      <div style="margin-top:8px;font-size:28px;color:#ffcc00;font-family:'Fredoka One',cursive;">
+      Goal: ${advGoal} blocks</div>
+      ${advBossLabel?`<div style="margin-top:10px;font-size:26px;color:#ff8888;font-family:'Fredoka One',cursive;text-shadow:0 0 16px rgba(255,80,80,0.6);">⚠️ ${advBossLabel}</div>`:''}`;
+    setTimeout(()=>{hintEl.style.transition='opacity 1s';hintEl.style.opacity='0';setTimeout(()=>{hintEl.style.display='none';hintEl.className='';},1000);},4000);
+  } else {
+    hintEl.className='';
+    hintEl.innerHTML=`<div style="animation:pulse 2s ease-in-out infinite;font-size:20px;letter-spacing:3px;">TAP TO DROP</div>
+      <div style="margin-top:10px;font-size:13px;color:rgba(255,255,255,0.65);letter-spacing:1px;font-family:'Nunito',sans-serif;font-weight:700;">
+      ❤️ Touch falling hearts to grow the block</div>`;
+    setTimeout(()=>{hintEl.style.transition='opacity 1s';hintEl.style.opacity='0';},3000);
+  }
   state='playing';
   adState.reviveUsed=false;
   initGame();
   applyHeadStart();
   activateHeartShower();
-  setTimeout(()=>{document.getElementById('hint').style.transition='opacity 1s';document.getElementById('hint').style.opacity='0';},3000);
+  // Show 3-2-1 countdown at start of adventure levels
+  if(advMode){
+    spd+=_advWorldSpeedBonus; // world difficulty speed bonus
+    const savedSpd=spd; spd=0;
+    showCountdown(()=>{ spd=savedSpd; });
+  }
 }
 
 // ── PAUSE / ZOOM ──
@@ -2879,13 +4265,13 @@ function openPause(fromMenu){
   pb2.textContent=_muted?'🔇 Sound Off':'🔊 Sound On';
   // Show/hide resume vs close based on context
   const resumeBtn=document.getElementById('resumeBtn');
-  const quitBtn=document.getElementById('quitBtn');
+  const advMapBtn=document.getElementById('advMapBtn');
   if(fromMenu||state!=='playing'){
     resumeBtn.textContent='✕ Close';
-    quitBtn.style.display='none';
+    if(advMapBtn) advMapBtn.style.display='none';
   } else {
     resumeBtn.textContent='▶ Resume';
-    quitBtn.style.display='block';
+    if(advMapBtn) advMapBtn.style.display=_inAdvSession?'block':'none';
   }
   setBlockStyle(blockStyle);
   buildAnimalSelector();
@@ -2896,7 +4282,25 @@ function closePause(){
   document.getElementById('pause-menu').style.display='none';
 }
 
-document.getElementById('pauseBtn').addEventListener('click',openPause);
+function goToAdvMapFromPause(){
+  state='idle';
+  advMode=false;
+  _inAdvSession=false;
+  resetAdvBoss();
+  // Stop game/boss music, then showAdvMap will start world map music
+  stopAdvMapMusic(); // stop any existing map music first
+  _fOut(_aud,()=>{
+    _aud=null;_ct=null;
+  });
+  document.getElementById('hud').style.display='none';
+  document.getElementById('hint').style.display='none';
+  setTenseMode(false);
+  hearts.forEach(h=>{if(h.el){h.el.remove();h.el=null;}});
+  hearts=[];
+  showAdvMap(advWorld); // showAdvMap calls playAdvMapMusic internally
+}
+
+document.getElementById('pauseBtn').addEventListener('click',()=>openPause(false));
 document.getElementById('resumeBtn').addEventListener('click',closePause);
 // Click outside the panel to close
 document.getElementById('pause-menu').addEventListener('click',e=>{
@@ -2905,12 +4309,17 @@ document.getElementById('pause-menu').addEventListener('click',e=>{
 document.getElementById('quitBtn').addEventListener('click',()=>{
   closePause();
   state='idle';
+  advMode=false;
+  _inAdvSession=false;
+  resetAdvBoss();
+  _fOut(_aud,()=>{_aud=null;_ct=null;});
+  stopAdvMapMusic();
   document.getElementById('hud').style.display='none';
-  // pauseBtn hides with HUD
   document.getElementById('s-start').style.display='flex';
   setTenseMode(false);
   hearts.forEach(h=>{if(h.el){h.el.remove();h.el=null;}});
   hearts=[];
+  playMusic('menu');
   showScreenAds('start');
 });
 document.getElementById('zoom-slider').addEventListener('input',e=>{
@@ -2943,6 +4352,7 @@ document.getElementById('pause-mute-btn').addEventListener('click',()=>{
 });
 
 document.getElementById('startBtn').addEventListener('click',startGame);
+document.getElementById('adv-intro-start').addEventListener('click',startAdvLevel);
 document.getElementById('retryBtn').addEventListener('click',()=>{
   const sv=getSave();delete sv.pending;setSave(sv);
   document.getElementById('name-entry').style.display='none';
@@ -2991,6 +4401,20 @@ showScreenAds('start');
 applyPitch(camPitch);
 applyRotate(camRotate);
 document.getElementById('zoom-slider').value=userZoom;
+// Fullscreen on first user interaction
+(function(){
+  function tryFS(){
+    reqFS();
+    document.removeEventListener('touchstart',tryFS);
+    document.removeEventListener('click',tryFS);
+  }
+  document.addEventListener('touchstart',tryFS,{once:true,passive:true});
+  document.addEventListener('click',tryFS,{once:true});
+  // Also try immediately in case page was already interacted with
+  reqFS();
+})();
+// Show fullscreen nudge on initial load if not already fullscreen
+setTimeout(showFullscreenNudge, 300);
 </script>
 </body>
 </html>
