@@ -57,26 +57,48 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
 @keyframes sway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
 @keyframes floatUp{0%{transform:translate(-50%,-50%);opacity:1}100%{transform:translate(-50%,-130%);opacity:0}}
 @keyframes tensePulse{0%,100%{opacity:0.6}50%{opacity:1}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes popIn{0%{transform:scale(0.5);opacity:0}100%{transform:scale(1);opacity:1}}
+.ad-banner{width:100%;max-width:320px;height:50px;margin:0 auto;overflow:hidden;border-radius:8px;}
+.ad-banner-inner{width:100%;height:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-size:11px;color:rgba(255,255,255,0.25);letter-spacing:1px;}
+#persistent-banner{position:fixed;bottom:0;left:0;right:0;z-index:100;height:60px;
+  background:rgba(10,5,20,0.92);border-top:1px solid rgba(255,255,255,0.08);
+  display:flex;align-items:center;justify-content:center;}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 <div id="particles"></div>
+<!-- Persistent banner ad — shown on all non-gameplay screens -->
+<div id="persistent-banner">
+  <div style="font-family:'Nunito',sans-serif;font-size:11px;color:rgba(255,255,255,0.2);
+    letter-spacing:1px;" id="persistent-banner-inner">Advertisement</div>
+</div>
 
 <!-- HUD -->
-<div class="ui" id="hud" style="display:none;flex-direction:row;justify-content:space-between;align-items:flex-start;left:0;right:0;top:env(safe-area-inset-top,0);padding:14px 18px 0;">
-  <div id="score-wrap"><div id="score-lbl">Score</div><div id="score-val">0</div></div>
-  <div id="perfect-wrap" style="text-align:center;display:none;">
-    <div style="font-family:'Fredoka One',cursive;font-size:10px;letter-spacing:2px;color:rgba(255,220,50,0.9);text-transform:uppercase;">Perfect</div>
-    <div id="perfect-val" style="font-family:'Fredoka One',cursive;font-size:28px;color:#ffcc00;text-shadow:0 0 12px rgba(255,200,0,0.8),0 2px 0 rgba(0,0,0,0.2);line-height:1;">0</div>
+<div class="ui" id="hud" style="display:none;flex-direction:row;justify-content:space-between;align-items:center;left:0;right:0;top:env(safe-area-inset-top,0);padding:14px 18px 0;">
+  <div>
+    <div id="score-wrap"><div id="score-lbl">Score</div><div id="score-val">0</div></div>
+    <div id="perfect-wrap" style="display:none;margin-top:3px;">
+      <div id="perfect-val" style="font-family:'Fredoka One',cursive;font-size:20px;color:#ffcc00;text-shadow:0 0 12px rgba(255,200,0,0.8);line-height:1;">0🔥</div>
+    </div>
   </div>
+  <!-- Pause button inline with HUD -->
+  <button id="pauseBtn" style="background:rgba(255,255,255,0.22);border:none;border-radius:50%;width:54px;height:54px;cursor:pointer;pointer-events:all;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+    <svg width="22" height="26" viewBox="0 0 22 26" fill="white">
+      <rect x="1" y="0" width="8" height="26" rx="2"/>
+      <rect x="13" y="0" width="8" height="26" rx="2"/>
+    </svg>
+  </button>
 </div>
-<!-- Pause button fixed top-right, always visible during gameplay -->
-<button id="pauseBtn" style="position:fixed;z-index:20;top:env(safe-area-inset-top,12px);right:14px;background:rgba(255,255,255,0.22);border:none;border-radius:50%;width:54px;height:54px;cursor:pointer;pointer-events:all;display:none;align-items:center;justify-content:center;">
-  <svg width="22" height="26" viewBox="0 0 22 26" fill="white">
-    <rect x="1" y="0" width="8" height="26" rx="2"/>
-    <rect x="13" y="0" width="8" height="26" rx="2"/>
-  </svg>
+<!-- Heart booster ad button — shows during gameplay after score 3 -->
+<button id="heartBoostBtn" onclick="requestHeartBoostAd()" style="position:fixed;z-index:20;
+  bottom:env(safe-area-inset-bottom,16px);right:14px;
+  background:linear-gradient(135deg,#f5c842,#ff9f43);color:#2a1a2e;
+  font-family:'Fredoka One',cursive;font-size:13px;padding:8px 14px;
+  border:none;border-radius:20px;cursor:pointer;pointer-events:all;display:none;
+  box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+  📺 +3 ❤️
 </button>
 <button id="mute" onclick="toggleMute()" style="display:none;"></button>
 <div id="combo"></div>
@@ -87,7 +109,7 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
     ❤️ Touch falling hearts to grow the block
   </div>
 </div>
-<div id="stage-progress" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:10;
+<div id="stage-progress" style="display:none;position:fixed;bottom:60px;left:0;right:0;z-index:10;
   padding:8px 16px;font-family:'Fredoka One',cursive;font-size:14px;letter-spacing:2px;
   color:#fff;text-align:center;text-shadow:0 1px 4px rgba(0,0,0,0.5);
   pointer-events:none;transition:opacity 0.2s;"></div>
@@ -150,7 +172,7 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
       <div style="font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:2px;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-bottom:10px;">Animal</div>
       <div id="animal-selector" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;"></div>
     </div>
-    <button onclick="toggleMute()" id="pause-mute-btn"
+    <button id="pause-mute-btn"
       style="width:100%;background:rgba(255,255,255,0.15);color:#fff;font-family:'Fredoka One',cursive;
       font-size:18px;padding:12px;border:1px solid rgba(255,255,255,0.2);border-radius:14px;
       cursor:pointer;margin-bottom:12px;">🔊 Sound</button>
@@ -164,6 +186,47 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
       style="width:100%;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);
       font-family:'Fredoka One',cursive;font-size:16px;padding:12px;border:1px solid rgba(255,255,255,0.15);
       border-radius:14px;cursor:pointer;">Quit to Menu</button>
+
+    <!-- Credits -->
+    <div style="margin-top:24px;border-top:1px solid rgba(255,255,255,0.1);padding-top:18px;">
+      <div style="font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;
+        color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:12px;">Credits</div>
+      <!-- Sushi Roll model -->
+      <div style="background:rgba(255,255,255,0.06);border-radius:12px;padding:12px;margin-bottom:8px;text-align:left;">
+        <div style="font-family:'Fredoka One',cursive;font-size:14px;color:#fff;margin-bottom:3px;">🍣 Sushi Roll 3D Model</div>
+        <div style="font-family:'Nunito',sans-serif;font-size:12px;color:rgba(255,255,255,0.55);margin-bottom:6px;">
+          by <span style="color:#c8a06a;">gecko0307</span> — CC Attribution 4.0
+        </div>
+        <a href="https://sketchfab.com/3d-models/sushi-roll-d7653693cc704752a54784febebbce3b"
+          target="_blank"
+          style="font-family:'Nunito',sans-serif;font-size:11px;color:#9b8de5;text-decoration:none;
+          display:inline-block;padding:4px 10px;background:rgba(155,93,229,0.15);
+          border-radius:8px;border:1px solid rgba(155,93,229,0.3);">
+          View on Sketchfab ↗
+        </a>
+      </div>
+      <!-- Add more credits here as you add more models -->
+      <!-- Music Credits -->
+      <div style="font-family:'Fredoka One',cursive;font-size:11px;letter-spacing:2px;
+        color:rgba(255,255,255,0.3);text-transform:uppercase;margin:14px 0 8px;">🎵 Music</div>
+      ${[
+        {title:'Bumblebee Loop', author:'jobromedia', license:'CC-BY 3.0', url:'https://opengameart.org/content/bumblebee-loop'},
+        {title:'Menu Music', author:'mrpoly', license:'CC0', url:'https://opengameart.org/content/menu-music-2'},
+        {title:'The Field of Dreams', author:'pauliuw', license:'CC0', url:'https://opengameart.org/content/the-field-of-dreams'},
+        {title:'Tower Defense Theme', author:'DST', license:'CC0', url:'https://opengameart.org/content/tower-defense-theme'},
+        {title:'Adventure Time', author:'Scribe', license:'CC0', url:'https://opengameart.org/content/adventure-time-3'},
+        {title:'Awake! (Megawall-10)', author:'cynicmusic', license:'CC0', url:'https://opengameart.org/content/awake-megawall-10'},
+      ].map(m=>`
+        <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:9px 12px;margin-bottom:6px;text-align:left;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-family:'Fredoka One',cursive;font-size:13px;color:#fff;">${m.title}</div>
+            <div style="font-family:'Nunito',sans-serif;font-size:11px;color:rgba(255,255,255,0.45);">${m.author} — ${m.license}</div>
+          </div>
+          <a href="${m.url}" target="_blank" style="font-size:10px;color:#9b8de5;text-decoration:none;padding:3px 8px;background:rgba(155,93,229,0.15);border-radius:6px;border:1px solid rgba(155,93,229,0.25);white-space:nowrap;">↗</a>
+        </div>`).join('')}
+      <div style="font-family:'Nunito',sans-serif;font-size:10px;color:rgba(255,255,255,0.25);
+        text-align:center;margin-top:8px;">Game by kalfred02</div>
+    </div>
   </div>
 </div>
 
@@ -178,13 +241,73 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
     <div class="sub">Stack it. Don't drop it.</div>
   </div>
   <button class="play-btn" id="startBtn">TAP TO PLAY</button>
-  <div style="margin-top:14px;font-size:13px;color:rgba(255,255,255,0.78);">🗓️ Daily Challenge available!</div>
+  <!-- Daily Challenge button -->
+  <button id="startDailyBtn" onclick="startDailyChallenge()"
+    style="margin-top:12px;background:linear-gradient(135deg,#9b5de5,#5e2daa);color:#fff;
+    font-family:'Fredoka One',cursive;font-size:18px;padding:13px 28px;border:none;
+    border-radius:20px;cursor:pointer;box-shadow:0 5px 0 rgba(0,0,0,0.25);
+    width:100%;max-width:280px;">
+    🗓️ Daily Challenge
+  </button>
+  <!-- Ad offers on start screen -->
+  <button id="headStartBtn" onclick="requestHeadStartAd()"
+    style="margin-top:10px;background:linear-gradient(135deg,#f5c842,#ff9f43);color:#2a1a2e;
+    font-family:'Fredoka One',cursive;font-size:16px;padding:12px 28px;border:none;
+    border-radius:20px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);">
+    📺 Watch Ad → Head Start (Level 3)
+  </button>
+  <button id="heartShowerBtn" onclick="requestHeartShowerAd()"
+    style="margin-top:10px;background:rgba(255,80,120,0.25);color:#fff;
+    border:1px solid rgba(255,80,120,0.5);
+    font-family:'Fredoka One',cursive;font-size:16px;padding:12px 28px;
+    border-radius:20px;cursor:pointer;">
+    📺 Watch Ad → ❤️ Heart Shower
+  </button>
 </div>
 
-<!-- GAME OVER SCREEN -->
+<!-- AD OFFER SCREEN — shown immediately after game ends -->
+<div class="screen" id="s-ad-offer" style="display:none;">
+  <div style="background:rgba(30,15,50,0.97);border:1px solid rgba(255,255,255,0.15);
+    border-radius:24px;padding:28px 24px;text-align:center;max-width:340px;width:94%;
+    box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+    <div id="ao-daily-badge" style="display:none;background:#f5c842;color:#2a1a2e;font-family:'Fredoka One',cursive;font-size:13px;padding:4px 12px;border-radius:20px;margin-bottom:8px;">🗓️ DAILY CHALLENGE</div>
+    <span class="go-emoji" id="ao-emoji">😵</span>
+    <div style="font-family:'Fredoka One',cursive;font-size:26px;color:#fff;margin-bottom:4px;" id="ao-title">Dropped it!</div>
+    <div style="font-family:'Fredoka One',cursive;font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:4px;">Your Score</div>
+    <div style="font-family:'Fredoka One',cursive;font-size:56px;color:#9b5de5;line-height:1;margin-bottom:20px;" id="ao-score">0</div>
+
+    <div style="height:1px;background:rgba(255,255,255,0.1);margin-bottom:18px;"></div>
+
+    <!-- Revive — big and prominent -->
+    <button id="reviveBtn" onclick="requestReviveAd()"
+      style="display:none;width:100%;margin-bottom:8px;
+      background:linear-gradient(135deg,#f5c842,#ff9f43);color:#2a1a2e;
+      font-family:'Fredoka One',cursive;font-size:20px;padding:15px;
+      border:none;border-radius:18px;cursor:pointer;
+      box-shadow:0 6px 0 rgba(0,0,0,0.25);">
+      📺 Watch Ad to Revive!
+    </button>
+    <div id="revive-sub" style="display:none;font-family:'Nunito',sans-serif;font-size:11px;
+      color:rgba(255,255,255,0.4);margin-bottom:14px;">Continue with a bigger block — one time only</div>
+
+    <!-- Continue to leaderboard -->
+    <button onclick="showLeaderboardScreen()"
+      style="width:100%;margin-top:4px;background:rgba(155,93,229,0.25);
+      color:#fff;border:1px solid rgba(155,93,229,0.4);
+      font-family:'Fredoka One',cursive;font-size:17px;padding:13px;
+      border-radius:14px;cursor:pointer;">
+      Continue →
+    </button>
+  </div>
+</div>
+
+<!-- GAME OVER / LEADERBOARD SCREEN -->
 <div class="screen" id="s-over">
   <div class="panel" style="position:relative;">
-    <button onclick="openPause(true)" style="position:absolute;top:12px;right:12px;background:rgba(155,93,229,0.15);border:none;border-radius:50%;width:38px;height:38px;font-size:18px;cursor:pointer;pointer-events:all;">⚙️</button>
+    <button onclick="openPause(true)" style="position:absolute;top:12px;right:12px;
+      background:rgba(155,93,229,0.35);border:1px solid rgba(155,93,229,0.5);
+      border-radius:12px;width:44px;height:44px;font-size:20px;
+      cursor:pointer;pointer-events:all;">⚙️</button>
     <div id="daily-badge" style="display:none;background:#f5c842;color:#2a1a2e;font-family:'Fredoka One',cursive;font-size:13px;padding:4px 12px;border-radius:20px;margin-bottom:6px;">🗓️ DAILY CHALLENGE</div>
     <span class="go-emoji" id="go-emoji">😵</span>
     <div class="go-title" id="go-title">Dropped it!</div>
@@ -345,7 +468,105 @@ const SH={'Content-Type':'application/json','apikey':SK,'Authorization':'Bearer 
 const getSave=()=>{try{return JSON.parse(localStorage.getItem('ss')||'{}');}catch(e){return{};}};
 const setSave=d=>{try{localStorage.setItem('ss',JSON.stringify(d));}catch(e){}};
 const getBest=()=>getSave().best||0;
-const setBest=s=>{const d=getSave();if(s>d.best){d.best=s;setSave(d);}};
+const setBest=s=>{
+  const d=getSave();
+  const prevBest=d.best||0;
+  if(s>prevBest){
+    d.best=s;
+    setSave(d);
+    checkAnimalUnlocks(prevBest, s);
+  }
+};
+function checkAnimalUnlocks(prevBest, newBest){
+  Object.entries(ANIMALS).forEach(([key,a])=>{
+    if(a.unlockAt>0 && newBest>=a.unlockAt && prevBest<a.unlockAt){
+      setTimeout(()=>showUnlockPopup(key,a),800);
+    }
+  });
+}
+function showUnlockPopup(key, animal){
+  const old=document.getElementById('unlock-popup');
+  if(old) old.remove();
+
+  const pop=document.createElement('div');
+  pop.id='unlock-popup';
+  pop.style.cssText=`position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(10,5,20,0.82);animation:fadeIn 0.35s ease-out;`;
+
+  pop.innerHTML=`
+    <div style="text-align:center;padding:36px 28px;background:rgba(30,15,50,0.95);
+      border:2px solid rgba(255,200,80,0.6);border-radius:28px;max-width:320px;width:88%;
+      box-shadow:0 0 60px rgba(255,180,0,0.25);animation:popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);">
+      <div style="font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:3px;
+        color:#f5c842;text-transform:uppercase;margin-bottom:12px;">✨ New Unlock ✨</div>
+      <div style="display:flex;justify-content:center;align-items:center;margin-bottom:16px;">
+      <canvas id="unlock-canvas" width="360" height="360"
+        style="display:block;border-radius:50%;width:220px;height:220px;
+        background:rgba(255,255,255,0.06);"></canvas>
+      </div>
+      <div style="font-family:'Fredoka One',cursive;font-size:30px;color:#fff;
+        margin-bottom:6px;text-shadow:0 2px 12px rgba(0,0,0,0.5);">${animal.name}</div>
+      <div style="font-family:'Nunito',sans-serif;font-size:14px;color:rgba(255,255,255,0.65);
+        margin-bottom:24px;">Reach score ${animal.unlockAt} — unlocked!</div>
+      <button id="unlock-close" style="background:#9b5de5;color:#fff;font-family:'Fredoka One',cursive;
+        font-size:18px;padding:12px 32px;border:none;border-radius:16px;cursor:pointer;
+        box-shadow:0 5px 0 #6a35b0;width:100%;">Let's Go! 🎉</button>
+    </div>`;
+
+  document.body.appendChild(pop);
+
+  // Build model for preview using a proxy scene object so we don't touch the main scene
+  const scene2=new THREE.Scene();
+  const sceneProxy={add:(o)=>scene2.add(o), fog:null};
+  // Temporarily swap scene reference for mkAnimal
+  const realScene=scene;
+  // We can't override 'scene' (const) so we patch mkAnimal's scene reference via a wrapper
+  const animalCol=animal.color||0xf0e0d8;
+  // Create animal parts manually by calling mkAnimal then moving the result from main scene to scene2
+  const model=mkAnimal(animalCol,1.5);
+  // mkAnimal adds to main scene — move it to scene2 instead
+  realScene.remove(model);
+  scene2.add(model);
+  model.position.set(0,0,0);
+
+  const canvas=document.getElementById('unlock-canvas');
+  const renderer2=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
+  renderer2.setSize(360,360);
+  renderer2.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  const cam2=new THREE.PerspectiveCamera(45,1,0.1,100);
+  cam2.position.set(0,0.5,3.2);
+  cam2.lookAt(0,0.3,0);
+  scene2.add(new THREE.AmbientLight(0xffffff,0.7));
+  const dl=new THREE.DirectionalLight(0xffffff,0.9);
+  dl.position.set(3,5,3);
+  scene2.add(dl);
+  scene2.add(model);
+  let angle=0,alive=true;
+  function spin(){
+    if(!alive) return;
+    requestAnimationFrame(spin);
+    angle+=0.025;
+    model.rotation.y=angle;
+    renderer2.render(scene2,cam2);
+  }
+  spin();
+
+  function closePopup(){
+    alive=false;
+    renderer2.dispose();
+    scene2.remove(model);
+    pop.style.opacity='0';
+    pop.style.transition='opacity 0.3s';
+    setTimeout(()=>pop.remove(),300);
+  }
+
+  document.getElementById('unlock-close').addEventListener('click',closePopup);
+  pop.addEventListener('click',e=>{if(e.target===pop)closePopup();});
+  setTimeout(closePopup,10000);
+
+  sfxCombo(6);
+}
 // Load saved settings
 userZoom=parseFloat(getSave().zoom||5.5);
 camPitch=parseFloat(getSave().pitch||10.0);
@@ -372,12 +593,363 @@ var selectedAnimal='bunny'; // unlockable: bunny, bear, cat, frog, fox
 
 // ── ANIMAL UNLOCK THRESHOLDS ──
 const ANIMALS={
-  bunny:{name:'🐰 Bunny',  unlockAt:0,   desc:'Default'},
-  bear: {name:'🐻 Bear',   unlockAt:10,  desc:'Score 10'},
-  cat:  {name:'🐱 Cat',    unlockAt:25,  desc:'Score 25'},
-  frog: {name:'🐸 Frog',   unlockAt:50,  desc:'Score 50'},
-  fox:  {name:'🦊 Fox',    unlockAt:100, desc:'Score 100'},
+  bunny:{name:'🐰 Bunny',  unlockAt:0,   desc:'Default',   color:0xf0e0d8}, // soft white
+  bear: {name:'🐻 Bear',   unlockAt:10,  desc:'Score 10',  color:0x8B5E3C}, // warm brown
+  cat:  {name:'🐱 Cat',    unlockAt:25,  desc:'Score 25',  color:0xb0a090}, // grey tabby
+  frog: {name:'🐸 Frog',   unlockAt:50,  desc:'Score 50',  color:0x5a9e5a}, // muted green
+  fox:  {name:'🦊 Fox',    unlockAt:100, desc:'Score 100', color:0xd4733a}, // warm orange
 };
+// ── AD FRAMEWORK ──
+// ================================================================
+// AdMob integration hooks — ready for Capacitor + AdMob plugin
+// When wrapping with Capacitor, replace AdMob.* calls with real SDK
+// Test Ad Unit IDs (replace with real ones before publishing):
+//   Banner:        ca-app-pub-3940256099942544/6300978111
+//   Interstitial:  ca-app-pub-3940256099942544/1033173712
+//   Rewarded:      ca-app-pub-3940256099942544/5224354917
+// ================================================================
+
+const AD_IDS = {
+  banner:      'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX',
+  rewarded:    'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX',
+};
+
+// Track ad state
+let adState = {
+  reviveUsed: false,        // one revive per game
+  headStartPending: false,  // head start earned for next game
+  heartShowerPending: false,// heart shower earned for next game
+  heartShowerActive: false, // heart shower currently running
+  heartShowerTimer: 0,      // frames remaining
+  isNative: false,          // true when running inside Capacitor
+};
+const HEART_SHOWER_DURATION = 30 * 60; // 30 seconds at 60fps
+
+// Detect if running inside Capacitor (native app)
+function checkNativeEnv(){
+  adState.isNative = !!(window.Capacitor && window.Capacitor.isNative);
+  console.log('Native env:', adState.isNative);
+}
+checkNativeEnv();
+
+// ── ADMOB HOOKS (swap these for real SDK calls in Capacitor) ──
+async function admobShowRewarded(adUnitId, onRewarded, onFailed){
+  if(adState.isNative){
+    // CAPACITOR: Uncomment when AdMob plugin is installed
+    // try {
+    //   await AdMob.prepareRewardVideoAd({ adId: adUnitId });
+    //   const result = await AdMob.showRewardVideoAd();
+    //   if(result.type === RewardAdPluginEvents.Rewarded) onRewarded();
+    //   else onFailed();
+    // } catch(e) { onFailed(); }
+    console.log('[AdMob] Would show rewarded ad:', adUnitId);
+    // Simulate ad for testing — shows a fake countdown
+    showFakeAdOverlay(onRewarded, onFailed);
+  } else {
+    // Web fallback — show fake ad for testing
+    showFakeAdOverlay(onRewarded, onFailed);
+  }
+}
+
+async function admobShowBanner(adUnitId){
+  if(adState.isNative){
+    // CAPACITOR: Uncomment when AdMob plugin is installed
+    // await AdMob.showBanner({ adId: adUnitId, position: BannerAdPosition.BOTTOM_CENTER });
+    console.log('[AdMob] Would show banner:', adUnitId);
+    hideFakeBanners(); // hide placeholder when real banner shows
+  }
+  // On web, placeholder banners in HTML are already visible
+}
+
+async function admobHideBanner(){
+  if(adState.isNative){
+    // CAPACITOR: await AdMob.hideBanner();
+    console.log('[AdMob] Would hide banner');
+  }
+}
+
+// ── FAKE AD OVERLAY (web testing only) ──
+function showFakeAdOverlay(onRewarded, onFailed){
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `position:fixed;top:0;left:0;right:0;bottom:0;z-index:999;
+    background:rgba(0,0,0,0.92);display:flex;flex-direction:column;
+    align-items:center;justify-content:center;`;
+  let secs = 5;
+  overlay.innerHTML = `
+    <div style="color:rgba(255,255,255,0.4);font-size:11px;letter-spacing:2px;
+      font-family:'Nunito',sans-serif;margin-bottom:16px;">ADVERTISEMENT</div>
+    <div style="width:280px;height:160px;background:#222;border-radius:12px;
+      display:flex;align-items:center;justify-content:center;
+      color:rgba(255,255,255,0.3);font-family:'Fredoka One',cursive;font-size:18px;">
+      📺 Ad Placeholder
+    </div>
+    <div id="fake-ad-timer" style="margin-top:20px;font-family:'Fredoka One',cursive;
+      font-size:16px;color:rgba(255,255,255,0.6);">Closing in ${secs}s...</div>
+    <button id="fake-ad-close" disabled style="margin-top:12px;background:#444;color:#888;
+      font-family:'Fredoka One',cursive;font-size:14px;padding:8px 24px;
+      border:none;border-radius:10px;cursor:default;">✕ Skip</button>`;
+  document.body.appendChild(overlay);
+  const timerEl = overlay.querySelector('#fake-ad-timer');
+  const closeBtn = overlay.querySelector('#fake-ad-close');
+  const countdown = setInterval(()=>{
+    secs--;
+    timerEl.textContent = secs > 0 ? `Closing in ${secs}s...` : '✅ Reward earned!';
+    if(secs <= 0){
+      clearInterval(countdown);
+      closeBtn.disabled = false;
+      closeBtn.textContent = '🎉 Done!';
+      closeBtn.style.background = '#9b5de5';
+      closeBtn.style.color = '#fff';
+      closeBtn.style.cursor = 'pointer';
+      closeBtn.onclick = ()=>{ overlay.remove(); onRewarded(); };
+    }
+  }, 1000);
+}
+
+function hideFakeBanners(){
+  // Banner always visible
+}
+
+// ── REWARDED AD ACTIONS ──
+
+// 1. REVIVE — continue from death with a slightly larger block
+let _wasDaily=false; // saved daily state for revive
+function requestReviveAd(){
+  if(adState.reviveUsed) return;
+  admobShowRewarded(AD_IDS.rewarded, ()=>{
+    adState.reviveUsed = true;
+    // Restore daily mode fully if this was a daily game
+    isDailyMode=_wasDaily;
+    document.getElementById('reviveBtn').style.display='none';
+    document.getElementById('s-ad-offer').style.display='none';
+    document.getElementById('s-over').style.display='none';
+    document.getElementById('hud').style.display='flex';
+    if(isDailyMode){
+      document.getElementById('score-lbl').textContent='DAILY';
+    }
+    state='playing';
+    zoomOut=false;
+    applyZoom(userZoom);
+    // Remove the last placed block (the tiny losing one) before reviving
+    if(placed.length>1){
+      const last=placed.pop();
+      blockSetRedWarning(last.mesh, false);
+      scene.remove(last.mesh);
+      blockDispose(last.mesh);
+      score=Math.max(0,score-1); // keep score in sync
+      updateHUD();
+    }
+    // Also clear red warning on new top block just in case
+    if(placed.length>0) blockSetRedWarning(placed[placed.length-1].mesh, false);
+    // Reposition bunnies to the new top block
+    const newTop=placed[placed.length-1];
+    if(newTop) bunnies.forEach(b=>{
+      b.blockBy=newTop.by;
+      b.toBlockBy=newTop.by;
+      if(!b.jumping&&!b.hopping){
+        b.grp.position.y=bunnyGroundY(newTop.by,b.sc||1,b.isMama);
+      }
+    });
+    let reviveW = placed[placed.length-1]?.w || S*0.4;
+    for(let i=0;i<3;i++){
+      const ratio=reviveW/S;
+      const gp=Math.min(0.3/ratio,2);
+      reviveW=Math.min(reviveW*(1+gp),S);
+    }
+    spawnMoverRevive(reviveW);
+    playMusic(isDailyMode?'daily':'game');
+    showReviveCountdown();
+  }, ()=>{
+    console.log('Revive ad failed or dismissed');
+  });
+}
+
+function showReviveCountdown(){
+  // Snap camera to the top of the stack immediately before countdown starts
+  if(placed.length>0){
+    const topY=placed[placed.length-1].by+getBlockH();
+    const targetLookY=topY+CAM_H*0.85-0.8+stackYOffset;
+    camLookY=targetLookY; // snap instantly, no lerp
+    cam.position.y=targetLookY+camPitch;
+    cam.lookAt(0,camLookY,0);
+  }
+  zoomOut=false;
+  applyZoom(userZoom);
+
+  // Use a separate paused-mover flag — camera/bunnies still update during countdown
+  let countdownActive=true;
+  const origUpdate=mover;
+  // Freeze mover by temporarily nulling speed
+  const savedSpd=spd; spd=0;
+
+  const el=document.createElement('div');
+  // Fixed size container prevents layout jumping
+  el.style.cssText=`position:fixed;top:50%;left:50%;
+    transform:translate(-50%,-50%);z-index:300;
+    width:160px;height:160px;
+    display:flex;align-items:center;justify-content:center;
+    pointer-events:none;`;
+  const num=document.createElement('div');
+  num.style.cssText=`font-family:'Fredoka One',cursive;font-size:120px;color:#fff;
+    text-shadow:0 4px 30px rgba(0,0,0,0.5);line-height:1;
+    transition:transform 0.1s ease-out,opacity 0.1s ease-out;`;
+  el.appendChild(num);
+  document.body.appendChild(el);
+
+  let count=3;
+  num.textContent=count;
+
+  const tick=setInterval(()=>{
+    count--;
+    if(count>0){
+      // Pop animation via scale, not re-triggering CSS animation
+      num.style.transform='scale(1.4)';
+      num.style.opacity='0.5';
+      setTimeout(()=>{
+        num.textContent=count;
+        num.style.transform='scale(1)';
+        num.style.opacity='1';
+      },100);
+    } else {
+      clearInterval(tick);
+      el.remove();
+      spd=savedSpd; // restore speed
+    }
+  },1000);
+  showReviveBanner();
+}
+
+// 2. HEAD START — start at level 3 with pre-built stack
+function requestHeadStartAd(){
+  admobShowRewarded(AD_IDS.rewarded, ()=>{
+    adState.headStartPending = true;
+    document.getElementById('headStartBtn').textContent = '✅ Head Start Ready!';
+    document.getElementById('headStartBtn').style.background = 'rgba(76,175,125,0.8)';
+    document.getElementById('headStartBtn').onclick = null;
+  }, ()=>{
+    console.log('Head start ad failed');
+  });
+}
+
+// 3. HEART SHOWER — 30 seconds of continuous hearts next game
+function requestHeartShowerAd(){
+  admobShowRewarded(AD_IDS.rewarded, ()=>{
+    adState.heartShowerPending = true;
+    const hsBtn=document.getElementById('heartShowerBtn');
+    if(hsBtn){ hsBtn.textContent='✅ Heart Shower Ready!'; hsBtn.disabled=true; hsBtn.style.opacity='0.6'; }
+  }, ()=>{
+    console.log('Heart shower ad failed');
+  });
+}
+
+// ── AD GAME LOGIC ──
+
+// Apply head start — pre-place 3 blocks at game start
+function applyHeadStart(){
+  if(!adState.headStartPending) return;
+  adState.headStartPending = false;
+  // Place 3 pre-stacked blocks silently
+  const headStartW = S * 0.85;
+  for(let i=0;i<3;i++){
+    const by = i * getBlockH();
+    const st = getStage(i);
+    const col = new THREE.Color(st.block);
+    const mesh = mkBlock(headStartW, col);
+    mesh.position.set(0, by + getBlockH()/2, 0);
+    placed.push({mesh, lx:-headStartW/2, w:headStartW, by});
+    score++;
+  }
+  updateHUD();
+  // Reset head start button
+  const btn=document.getElementById('headStartBtn');
+  btn.textContent='📺 Watch Ad → Head Start (Level 3)';
+  btn.style.background='linear-gradient(135deg,#f5c842,#ff9f43)';
+  btn.onclick=requestHeadStartAd;
+}
+
+// Activate heart shower if pending
+function activateHeartShower(){
+  if(!adState.heartShowerPending) return;
+  adState.heartShowerPending = false;
+  adState.heartShowerActive = true;
+  adState.heartShowerTimer = HEART_SHOWER_DURATION;
+  // Spawn first heart immediately
+  setTimeout(forceSpawnHeart, 500);
+  // Show indicator
+  const ind=document.createElement('div');
+  ind.id='heart-shower-hud';
+  ind.style.cssText=`position:fixed;top:80px;left:50%;transform:translateX(-50%);
+    z-index:19;font-family:'Fredoka One',cursive;font-size:14px;
+    color:#ff6688;pointer-events:none;text-shadow:0 1px 4px rgba(0,0,0,0.5);`;
+  ind.textContent='❤️ Heart Shower Active!';
+  document.body.appendChild(ind);
+  const btn=document.getElementById('heartShowerBtn');
+  if(btn){btn.textContent='📺 Watch Ad → ❤️ Heart Shower Next Game';btn.disabled=false;btn.style.opacity='1';}
+}
+
+// Update heart shower each frame — called from game loop
+function updateHeartShower(){
+  if(!adState.heartShowerActive) return;
+  adState.heartShowerTimer--;
+  // Spawn a heart every 3 seconds (180 frames)
+  if(adState.heartShowerTimer % 180 === 0) forceSpawnHeart();
+  if(adState.heartShowerTimer <= 0){
+    adState.heartShowerActive = false;
+    const ind=document.getElementById('heart-shower-hud');
+    if(ind) ind.remove();
+  }
+}
+
+// Force spawn a heart regardless of normal timer
+function forceSpawnHeart(){
+  if(hearts.length > 3) return; // don't flood screen
+  const sx = 20 + Math.random() * 60;
+  const el = document.createElement('div');
+  el.style.cssText=`position:fixed;left:${sx}%;top:-60px;z-index:30;
+    font-size:clamp(28px,6vw,44px);cursor:pointer;pointer-events:all;
+    filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));user-select:none;
+    transition:transform 0.1s;`;
+  el.textContent='❤️';
+  el.setAttribute('data-heart','1');
+  document.getElementById('game-container')?.appendChild(el) || document.body.appendChild(el);
+  const h={el,y:-60,vy:1.8+Math.random()*1.0,sx,done:false,doneT:0,grp:null};
+  el.addEventListener('touchstart',e=>{e.preventDefault();e.stopPropagation();collectHeart(h);},{passive:false});
+  el.addEventListener('mousedown',e=>{e.stopPropagation();collectHeart(h);});
+  hearts.push(h);
+}
+
+// Spawn revive mover at given width
+function spawnMoverRevive(w){
+  if(!placed.length) return;
+  const top=placed[placed.length-1];
+  const by=top.by+getBlockH();
+  const st=getStage(score);
+  setStageColors(st);
+  spd=getSpeed(score);
+  const col=new THREE.Color(st.block);
+  const mesh=mkBlock(w,col);
+  const dir=Math.random()<0.5?1:-1;
+  const lx=dir===1?-(S+w):S;
+  mesh.position.set(lx+w/2,by+getBlockH()/2,0);
+  mover={mesh,lx,w,dir,bounces:0,by,origColor:col.clone()};
+  hUsed=false;
+}
+
+// Show revive banner briefly
+function showReviveBanner(){
+  const el=document.createElement('div');
+  el.style.cssText=`position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+    z-index:50;background:rgba(245,200,66,0.95);color:#2a1a2e;
+    font-family:'Fredoka One',cursive;font-size:22px;padding:14px 32px;
+    border-radius:20px;pointer-events:none;animation:popIn 0.4s ease-out;`;
+  el.textContent='🔁 Revived!';
+  document.body.appendChild(el);
+  setTimeout(()=>{el.style.transition='opacity 0.5s';el.style.opacity='0';setTimeout(()=>el.remove(),500);},1500);
+}
+
+// ── SHOW/HIDE ADS ON SCREEN TRANSITIONS ──
+function showScreenAds(screen){ admobShowBanner(AD_IDS.banner); }
+function hideScreenAds(){ /* banner stays visible 100% of the time */ }
 // ── NAME SANITIZATION ──
 const BLOCKED_WORDS=['fuck','shit','ass','bitch','cunt','dick','cock','pussy','nigger','nigga','fag','faggot','retard','whore','slut','bastard','piss','damn','crap','sex','porn','nazi','hitler'];
 function sanitizeName(raw){
@@ -460,9 +1032,17 @@ function sfxBunnyJump(){
 }
 
 // ── Music ──
+function resolveAssetPath(relativePath){
+  const loc=window.location.href;
+  if(loc.startsWith('https://')||loc.startsWith('http://')) return relativePath;
+  const base=loc.substring(0,loc.lastIndexOf('/')+1);
+  console.log('Local asset path:',base+relativePath);
+  return base+relativePath;
+}
 const MT={
   menu:resolveAssetPath('Music/bgm_menu.mp3'),
   fanfare:resolveAssetPath('Music/bgm_fanfare.mp3'),
+  daily:resolveAssetPath('Music/bgm_tense_01.mp3'),
   game:['Music/bgm_01.mp3','Music/bgm_02.mp3','Music/bgm_03.mp3','Music/bgm_04.mp3'].map(resolveAssetPath)
 };
 let _aud=null,_ct=null,_muted=false,_mu=false;
@@ -473,13 +1053,15 @@ function _fOut(a,cb){if(!a){cb?.();return;}let i=0;const sv=a.volume,t=setInterv
 function playMusic(k){
   if(_muted)return;
   const ff=k==='fanfare';
-  const src=k==='menu'?MT.menu:k==='fanfare'?MT.fanfare:MT.game[Math.floor(Math.random()*MT.game.length)];
+  const src=k==='menu'?MT.menu:k==='fanfare'?MT.fanfare:k==='daily'?MT.daily:MT.game[Math.floor(Math.random()*MT.game.length)];
   if(_ct===src&&_aud&&!_aud.paused&&!ff)return;
   _ct=src;_fOut(_aud,()=>{_aud=_cA(src,!ff);_aud.play().then(()=>_fIn(_aud,ff?0.7:0.5)).catch(()=>{});});
 }
 function toggleMute(){
   _muted=!_muted;try{localStorage.setItem('ssMuted',_muted?'1':'0');}catch{}
   if(_muted){_aud?.pause();}else{if(_aud){_aud.play().catch(()=>{});_fIn(_aud,0.5);}}
+  const btn=document.getElementById('pause-mute-btn');
+  if(btn) btn.textContent=_muted?'🔇 Sound Off':'🔊 Sound On';
 }
 function unlockMusic(k){if(_mu){playMusic(k);return;}_mu=true;playMusic(k);}
 
@@ -709,24 +1291,70 @@ function mkCat(col,sc){
 
 function mkFrog(col,sc){
   const g=new THREE.Group();
-  const frogGreen=new THREE.MeshStandardMaterial({color:col||0x44bb44,roughness:0.7,metalness:0.05});
-  const belly=new THREE.MeshStandardMaterial({color:0xaaffaa,roughness:0.8});
-  const dark=new THREE.MeshStandardMaterial({color:0x112211,roughness:0.3});
-  // Body — wide and squat
-  const body=new THREE.Mesh(new THREE.SphereGeometry(0.24,12,8),frogGreen);body.scale.set(1.1,0.8,1.0);body.castShadow=true;g.add(body);
-  // Belly
-  const bp=new THREE.Mesh(new THREE.SphereGeometry(0.18,8,6),belly);bp.position.set(0,0,0.12);bp.scale.set(0.9,0.8,0.4);g.add(bp);
-  // Head — wide, flat
-  const head=new THREE.Mesh(new THREE.SphereGeometry(0.2,12,8),frogGreen);head.position.set(0,0.28,0);head.scale.set(1.2,0.7,1.0);g.add(head);
-  // Bulging eyes on top
+  const frogCol=col||0x5a9e5a;
+  const mat=new THREE.MeshStandardMaterial({color:frogCol,roughness:0.7,metalness:0.05});
+  const belly=new THREE.MeshStandardMaterial({color:0xd4f0b0,roughness:0.8});
+  const dark=new THREE.MeshStandardMaterial({color:0x0a1a0a,roughness:0.3});
+  const shine=()=>new THREE.MeshStandardMaterial({color:0xffffff,roughness:0.1});
+
+  // Body — wide squat sphere
+  const body=new THREE.Mesh(new THREE.SphereGeometry(0.22,12,8),mat);
+  body.scale.set(1.15,0.85,1.05);body.castShadow=true;g.add(body);
+  // Belly patch
+  const bel=new THREE.Mesh(new THREE.SphereGeometry(0.16,8,6),belly);
+  bel.position.set(0,-0.02,0.14);bel.scale.set(0.85,0.9,0.35);g.add(bel);
+  // Head — wide and flat on top
+  const head=new THREE.Mesh(new THREE.SphereGeometry(0.19,12,8),mat);
+  head.position.set(0,0.26,0.02);head.scale.set(1.25,0.72,1.1);g.add(head);
+  // Big bulging eyes on TOP of head
   [-1,1].forEach(s=>{
-    const eyebulge=new THREE.Mesh(new THREE.SphereGeometry(0.075,8,7),frogGreen);eyebulge.position.set(s*0.12,0.41,0.04);g.add(eyebulge);
-    const pupil=new THREE.Mesh(new THREE.SphereGeometry(0.04,6,6),dark);pupil.position.set(s*0.12,0.42,0.1);g.add(pupil);
-    const shine=new THREE.Mesh(new THREE.SphereGeometry(0.014,4,4),new THREE.MeshStandardMaterial({color:0xffffff}));shine.position.set(s*0.12+0.015,0.435,0.12);g.add(shine);
+    const eyeBase=new THREE.Mesh(new THREE.SphereGeometry(0.082,10,8),mat);
+    eyeBase.position.set(s*0.115,0.38,0.04);g.add(eyeBase);
+    const pupil=new THREE.Mesh(new THREE.SphereGeometry(0.052,8,7),dark);
+    pupil.position.set(s*0.115,0.39,0.1);g.add(pupil);
+    const sh=new THREE.Mesh(new THREE.SphereGeometry(0.018,5,5),shine());
+    sh.position.set(s*0.115+0.018,0.405,0.13);g.add(sh);
   });
-  // Wide smile line
-  const smile=new THREE.Mesh(new THREE.BoxGeometry(0.18,0.012,0.012),new THREE.MeshStandardMaterial({color:0x224422}));smile.position.set(0,0.26,0.18);smile.rotation.x=0.3;g.add(smile);
-  g.rotation.y=camRotate*Math.PI/180;g.scale.setScalar(sc);g.castShadow=true;scene.add(g);return g;
+  // Wide smile
+  const smileMat=new THREE.MeshStandardMaterial({color:0x2a5a2a});
+  const smile=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.015,0.01),smileMat);
+  smile.position.set(0,0.22,0.2);smile.rotation.x=0.25;g.add(smile);
+  // Nostrils
+  [-1,1].forEach(s=>{
+    const n=new THREE.Mesh(new THREE.SphereGeometry(0.012,4,4),dark);
+    n.position.set(s*0.045,0.25,0.19);g.add(n);
+  });
+  // Back legs — properly connected to body sides
+  [-1,1].forEach(s=>{
+    // Upper thigh — originates from body side
+    const thigh=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.04,0.2,6),mat);
+    thigh.position.set(s*0.22,-0.08,0.0);
+    thigh.rotation.z=s*1.2; thigh.rotation.x=0.15;
+    g.add(thigh);
+    // Lower leg — connects at knee
+    const shin=new THREE.Mesh(new THREE.CylinderGeometry(0.035,0.028,0.18,6),mat);
+    shin.position.set(s*0.36,-0.2,0.08);
+    shin.rotation.z=s*0.4; shin.rotation.x=0.7;
+    g.add(shin);
+    // Foot — flat pad at end of shin
+    const foot=new THREE.Mesh(new THREE.SphereGeometry(0.06,8,5),belly);
+    foot.position.set(s*0.34,-0.32,0.24);
+    foot.scale.set(1.3,0.3,1.8);
+    g.add(foot);
+    // Knee bump
+    const knee=new THREE.Mesh(new THREE.SphereGeometry(0.04,6,5),mat);
+    knee.position.set(s*0.32,-0.14,0.05);
+    g.add(knee);
+  });
+  // Small front arms — at sides of lower body
+  [-1,1].forEach(s=>{
+    const arm=new THREE.Mesh(new THREE.SphereGeometry(0.05,6,5),mat);
+    arm.position.set(s*0.2,-0.02,0.18);arm.scale.set(0.55,0.55,1.1);
+    g.add(arm);
+  });
+
+  g.rotation.y=camRotate*Math.PI/180;
+  g.scale.setScalar(sc);g.castShadow=true;scene.add(g);return g;
 }
 
 function mkFox(col,sc){
@@ -860,13 +1488,24 @@ function setStageColors(st){
 
 // ── INIT GAME ──
 function initGame(){
-  // Remove all old objects
+  // Remove all tracked objects
   for(const b of placed){scene.remove(b.mesh);blockDispose(b.mesh);}
   placed=[];
   if(mover){scene.remove(mover.mesh);blockDispose(mover.mesh);mover=null;}
   for(const b of bunnies) scene.remove(b.grp);
   bunnies=[];
   for(const h of hearts){if(h.el){h.el.remove();h.el=null;}} hearts=[];
+  // Purge any orphaned meshes/groups left in scene (e.g. from revive or head start)
+  const toRemove=[];
+  scene.children.forEach(c=>{
+    if(c.isMesh||c.isGroup) toRemove.push(c);
+  });
+  toRemove.forEach(c=>scene.remove(c));
+  // Also clear heart shower HUD indicator if present
+  const showerHud=document.getElementById('heart-shower-hud');
+  if(showerHud) showerHud.remove();
+  adState.heartShowerActive=false;
+  adState.heartShowerTimer=0;
 
   score=0;combo=0;htimer=0;hnext=120;hUsed=false;
   wobAng=0;wobVel=0;shakeTmr=0;camLookY=3.0;zoomOut=false;
@@ -897,8 +1536,9 @@ function initGame(){
   base.position.set(0,BH/2,0);
   placed.push({mesh:base,lx:-S/2,w:S,by:0,isBase:true});
 
-  // Mama bunny
-  const mamaGrp=mkAnimal(0xf0e8ff,1.8);
+  // Mama bunny — use selected animal's color
+  const mamaColor=(ANIMALS[selectedAnimal]||ANIMALS.bunny).color;
+  const mamaGrp=mkAnimal(mamaColor,1.8);
   const mamaGndY=bunnyGroundY(0,1.8,true);
   mamaGrp.position.set(0,mamaGndY,0);
   bunnies.push({grp:mamaGrp,tx:0,tz:0,blockBy:0,jv:0,jo:0,jumping:false,hopping:false,hopT:0,fromY:mamaGndY,toY:mamaGndY,toBlockBy:0,lp:0,falling:false,fv:0,fvx:0,isMama:true,cel:0,sc:1.8,moverState:'none',moverCooldown:0});
@@ -941,15 +1581,6 @@ function updateBarrier(){
 }
 
 // ── ASSET PATH RESOLUTION — try local Android path first, fall back to relative ──
-function resolveAssetPath(relativePath){
-  const loc=window.location.href;
-  // On https (Netlify/Cloudflare) just use relative paths — they work fine
-  if(loc.startsWith('https://') || loc.startsWith('http://')) return relativePath;
-  // On Android file:// or content://, build absolute path from document location
-  const base=loc.substring(0,loc.lastIndexOf('/')+1);
-  console.log('Local asset path:',base+relativePath);
-  return base+relativePath;
-}
 let sushiGLB=null;
 let sushiGLBSize=null; // cached original bounding box size
 let sushiGLBCenter=null;
@@ -1214,7 +1845,7 @@ function doDrop(){
     wobVel=0; wobAng=0; // stop wobble immediately on perfect
     addBunny(pb);
   } else {
-    wobVel+=(Math.random()<0.5?1:-1)*Math.min(0.01+placed.length*0.0006,0.03);
+    wobVel+=(Math.random()<0.5?1:-1)*Math.min(0.0025+placed.length*0.00015,0.0075); // 75% less
     ejectBabies();
   }
 
@@ -1287,21 +1918,32 @@ function getBabySlots(top, count){
     clamp(-sp+jitter(),sp+jitter())
   ];
   const slots=xSlots.slice(0,Math.min(count,4));
-  // Beyond 4: random positions within block, avoiding center and existing slots
+  // Beyond 4: random positions within block
+  // Reduce spacing requirement based on block size to prevent infinite loop
+  const minSpacing=Math.min(0.3, top.w*0.15);
+  let attempts=0;
   while(slots.length<count){
+    attempts++;
     const rx=(Math.random()-0.5)*top.w*0.7;
     const rz=(Math.random()-0.5)*Math.min(top.w,S)*0.6;
     const s=clamp(rx,rz);
-    // Check not too close to existing slots or mama (center)
-    const tooClose=slots.some(e=>Math.abs(e.x-s.x)<0.3&&Math.abs(e.z-s.z)<0.3)
-      || (Math.abs(s.x-cx)<0.25&&Math.abs(s.z)<0.25);
+    const tooClose=attempts<50 && (
+      slots.some(e=>Math.abs(e.x-s.x)<minSpacing&&Math.abs(e.z-s.z)<minSpacing)
+      || (Math.abs(s.x-cx)<minSpacing&&Math.abs(s.z)<minSpacing)
+    );
     if(!tooClose) slots.push(s);
   }
   return slots;
 }
 
 function addBunny(top){
-  const col=BCOLS[Math.floor(Math.random()*BCOLS.length)];
+  // Use selected animal's color with slight random variation for each baby
+  const baseCol=(ANIMALS[selectedAnimal]||ANIMALS.bunny).color;
+  const c=new THREE.Color(baseCol);
+  c.r=Math.min(1,c.r+(Math.random()-0.5)*0.08);
+  c.g=Math.min(1,c.g+(Math.random()-0.5)*0.08);
+  c.b=Math.min(1,c.b+(Math.random()-0.5)*0.08);
+  const col=c.getHex();
   const sc=0.7+Math.random()*0.2;
   const grp=mkAnimal(col,sc);
   const gndY=bunnyGroundY(top.by,sc,false);
@@ -1350,6 +1992,8 @@ function doMiss(){
   state='over';
   setTenseMode(false);
   sfxDrop();shakeTmr=20;
+  // Remove the mover mesh immediately — it shouldn't persist
+  if(mover){ scene.remove(mover.mesh); blockDispose(mover.mesh); mover=null; }
   // Fade out and disable all active hearts immediately
   hearts.forEach(h=>{
     if(!h.done && h.el){
@@ -1429,7 +2073,7 @@ function update(){
   // ── Wobble ──
   const stiff=Math.max(0.006,0.022-placed.length*0.0008);
   wobVel-=wobAng*stiff;wobVel*=0.93;
-  wobAng+=wobVel;wobAng=Math.max(-0.05,Math.min(0.05,wobAng));
+  wobAng+=wobVel;wobAng=Math.max(-0.0125,Math.min(0.0125,wobAng)); // 75% less
   if(Math.abs(wobAng)>0.0003){
     for(const b of placed){
       if(!b.isBase){
@@ -1458,6 +2102,7 @@ function update(){
         filter:drop-shadow(0 4px 12px rgba(255,50,100,0.6));
         transition:none;user-select:none;-webkit-user-select:none;`;
       el.textContent='❤️';
+      el.setAttribute('data-heart','1');
       document.body.appendChild(el);
       const h={el,y:-60,vy:1.8+Math.random()*1.0,sx,done:false,doneT:0,grp:null};
       el.addEventListener('touchstart',ev=>{ev.preventDefault();ev.stopPropagation();collectHeart(h);},{passive:false});
@@ -1474,6 +2119,20 @@ function update(){
   cam.lookAt(0,camLookY,0);
 
   // Camera X/Z from camRotate, Y from camPitch+lookAt
+  // In daily mode: slowly revolve camera + disco pulsing background
+  if(isDailyMode && state==='playing'){
+    // Rotation speed scales with stack height — starts slow, gets faster as you stack higher
+    const stackBoost=Math.min(placed.length*0.012, 0.5); // caps at +0.5 extra
+    camRotate=(camRotate+0.18+stackBoost)%360;
+    // Cycle through vibrant techno colors
+    const t=Date.now()*0.001;
+    const r=0.35+Math.sin(t*1.1)*0.25;
+    const g=0.1+Math.sin(t*0.7+2.1)*0.15;
+    const b=0.45+Math.sin(t*0.9+4.2)*0.3;
+    scene.background.setRGB(r,g,b);
+    // Pulse the fog color in sync
+    scene.fog.color.setRGB(r*0.7,g*0.7,b*0.7);
+  }
   const camRad=camRotate*Math.PI/180;
   const camDist=14.14;
   const targetCamX=Math.cos(camRad)*camDist;
@@ -1506,6 +2165,7 @@ function update(){
 
   updateBunnies(dt);
   updateHearts(dt);
+  updateHeartShower();
   updateBarrier();
 
   // ── Tense mode: red overlay when block is very small ──
@@ -1813,8 +2473,13 @@ function clampBunniesToMover(){
 }
 
 function collectHeart(h){
-  if(h.done||hUsed) return;
-  h.done=true; h.doneT=0; hUsed=true; htimer=0;
+  if(h.done) return;
+  // During heart shower, bypass the one-heart-at-a-time limit
+  if(hUsed && !adState.heartShowerActive) return;
+  h.done=true; h.doneT=0;
+  // Only set hUsed if NOT in heart shower mode
+  if(!adState.heartShowerActive){ hUsed=true; }
+  htimer=0;
   sfxHeart();
   if(h.el){
     const rect=h.el.getBoundingClientRect();
@@ -1886,17 +2551,28 @@ function updateHUD(){
 }
 
 function showGameOver(){
+  _wasDaily=isDailyMode; // MUST be first line — save before anything resets it
   const best=getBest(),nb=score>best;
   if(nb){ setBest(score); buildAnimalSelector(); }
-  document.getElementById('go-emoji').textContent=score===0?'😅':nb?'🏆':score>=15?'🍣':'😵';
-  document.getElementById('go-title').textContent=score===0?'Zero pieces!':nb?'New Record!':score>=15?'Sushi Master!':'Dropped it!';
-  document.getElementById('go-score').textContent=score;
 
-  // Daily mode badge
+  // Set emoji/title on both screens
+  const emoji=score===0?'😅':nb?'🏆':score>=15?'🍣':'😵';
+  const title=score===0?'Zero pieces!':nb?'New Record!':score>=15?'Sushi Master!':'Dropped it!';
+  document.getElementById('go-emoji').textContent=emoji;
+  document.getElementById('go-title').textContent=title;
+  document.getElementById('go-score').textContent=score;
+  document.getElementById('ao-emoji').textContent=emoji;
+  document.getElementById('ao-title').textContent=title;
+  document.getElementById('ao-score').textContent=score;
+
+  // Daily badge on both screens
   const dailyBadge=document.getElementById('daily-badge');
   if(dailyBadge) dailyBadge.style.display=isDailyMode?'block':'none';
+  const aoDailyBadge=document.getElementById('ao-daily-badge');
+  if(aoDailyBadge) aoDailyBadge.style.display=isDailyMode?'block':'none';
   if(isDailyMode && score>0) markDailyPlayed(score);
 
+  // Prepare leaderboard in background
   const ne=document.getElementById('name-entry'),ni=document.getElementById('name-input');
   const sb=document.getElementById('saveBtn'),sm=document.getElementById('save-msg');
   if(score>0){
@@ -1909,10 +2585,8 @@ function showGameOver(){
 
   const lbEl=document.getElementById('lb');
   lbEl.innerHTML='<div style="text-align:center;color:#aaa;font-size:12px;padding:8px">Loading...</div>';
-  // Show daily leaderboard header if in daily mode
   const lbHeader=document.getElementById('lb-header');
   if(lbHeader) lbHeader.textContent=isDailyMode?`🗓️ Today's Challenge — ${getDailyDate()}`:'🐰 Top Scores';
-
   const dailyKey=isDailyMode?getDailyDate():null;
   fetchLB(dailyKey).then(entries=>{
     const nm=ni.value.trim();
@@ -1920,9 +2594,70 @@ function showGameOver(){
     renderLB(score>0?pv.slice(0,10):entries,score);
     ni.oninput=()=>{const le=[...entries,{name:ni.value.trim()||'?',score}];le.sort((a,b)=>b.score-a.score);renderLB(le.slice(0,10),score);};
   });
-  document.getElementById('s-over').style.display='flex';
+
+  // Decide whether to show ad offer screen first — allow revive in daily too
+  const showRevive=score>=5&&!adState.reviveUsed;
+  const hasAdOffer=showRevive;
+
+  const revBtn=document.getElementById('reviveBtn');
+  const revSub=document.getElementById('revive-sub');
+  if(revBtn){ revBtn.style.display=showRevive?'block':'none'; }
+  if(revSub){ revSub.style.display=showRevive?'block':'none'; }
+
+  if(hasAdOffer && score>0){
+    // Show ad offer screen first
+    document.getElementById('s-ad-offer').style.display='flex';
+    document.getElementById('s-over').style.display='none';
+  } else {
+    // Skip straight to leaderboard
+    showLeaderboardScreen();
+  }
+
   playMusic('menu');
-  isDailyMode=false; // reset for next game
+  // Only reset camera rotation if NOT daily (daily revive needs camRotate intact)
+  if(!_wasDaily) camRotate=parseFloat(getSave().rotate||45);
+  isDailyMode=false;
+}
+
+function showHeartShowerOffer(){
+  const pop=document.createElement('div');
+  pop.style.cssText=`position:fixed;top:0;left:0;right:0;bottom:0;z-index:400;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.75);animation:fadeIn 0.25s ease-out;`;
+  pop.innerHTML=`
+    <div style="background:rgba(30,15,50,0.97);border:1px solid rgba(255,80,120,0.4);
+      border-radius:24px;padding:28px 24px;max-width:300px;width:88%;text-align:center;
+      box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+      <div style="font-size:48px;margin-bottom:8px;">❤️</div>
+      <div style="font-family:'Fredoka One',cursive;font-size:22px;color:#fff;margin-bottom:6px;">Heart Shower!</div>
+      <div style="font-family:'Nunito',sans-serif;font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:20px;">
+        Watch a short ad and hearts will rain for 30 seconds in your next game!
+      </div>
+      <button id="hs-yes" style="width:100%;margin-bottom:10px;
+        background:linear-gradient(135deg,#ff6688,#ff9f43);color:#fff;
+        font-family:'Fredoka One',cursive;font-size:18px;padding:13px;
+        border:none;border-radius:14px;cursor:pointer;
+        box-shadow:0 5px 0 rgba(0,0,0,0.2);">📺 Yes please!</button>
+      <button id="hs-no" style="width:100%;background:transparent;color:rgba(255,255,255,0.4);
+        font-family:'Fredoka One',cursive;font-size:15px;padding:8px;
+        border:none;cursor:pointer;">No thanks, just play</button>
+    </div>`;
+  document.body.appendChild(pop);
+  document.getElementById('hs-yes').addEventListener('click',()=>{
+    pop.remove();
+    requestHeartShowerAd();
+    setTimeout(startGame, 200);
+  });
+  document.getElementById('hs-no').addEventListener('click',()=>{
+    pop.remove();
+    startGame();
+  });
+}
+
+function showLeaderboardScreen(){
+  document.getElementById('s-ad-offer').style.display='none';
+  document.getElementById('s-over').style.display='flex';
+  showScreenAds('gameover');
 }
 
 // ── PERFECT STREAK DISPLAY ──
@@ -1983,7 +2718,14 @@ function buildAnimalSelector(){
         const oldBunnies=[...bunnies];
         bunnies=[];
         oldBunnies.forEach(b=>{
-          const col=b.isMama?0xf0e0d8:BCOLS[Math.floor(Math.random()*BCOLS.length)];
+          const animalCol=(ANIMALS[selectedAnimal]||ANIMALS.bunny).color;
+          const col=b.isMama ? animalCol : (() => {
+            const c=new THREE.Color(animalCol);
+            c.r=Math.min(1,c.r+(Math.random()-0.5)*0.08);
+            c.g=Math.min(1,c.g+(Math.random()-0.5)*0.08);
+            c.b=Math.min(1,c.b+(Math.random()-0.5)*0.08);
+            return c.getHex();
+          })();
           const grp=mkAnimal(col,b.sc);
           grp.position.copy(b.grp.position);
           grp.rotation.copy(b.grp.rotation);
@@ -2038,6 +2780,9 @@ function handleTap(x,y){
 
 // Canvas gets gameplay taps
 document.getElementById('c').addEventListener('touchstart',e=>{
+  // Don't drop block if tapping a heart
+  if(e.target && e.target.closest && e.target.closest('[data-heart]')) return;
+  if(e.target && e.target.textContent==='❤️') return;
   e.preventDefault();
   const t=e.changedTouches[0];_px=t.clientX;_py=t.clientY;
   handleTap(t.clientX,t.clientY);
@@ -2056,15 +2801,23 @@ function reqFS(){try{const e=document.documentElement;(e.requestFullscreen||e.we
 
 // ── BUTTONS ──
 function startGame(){
-  reqFS();unlockMusic('game');
+  reqFS();
+  // Reset camera rotation to default at start (daily mode will revolve from here)
+  if(!isDailyMode) camRotate=parseFloat(getSave().rotate||45);
+  else camRotate=45; // daily always starts at same angle then revolves
+  unlockMusic(isDailyMode?'daily':'game');
+  hideScreenAds();
   document.getElementById('s-start').style.display='none';
   document.getElementById('s-over').style.display='none';
   document.getElementById('hud').style.display='flex';
   document.getElementById('hint').style.display='block';
   document.getElementById('hint').style.opacity='1';
-  document.getElementById('pauseBtn').style.display='flex';
+  // pauseBtn shows with HUD
   state='playing';
+  adState.reviveUsed=false;
   initGame();
+  applyHeadStart();
+  activateHeartShower();
   setTimeout(()=>{document.getElementById('hint').style.transition='opacity 1s';document.getElementById('hint').style.opacity='0';},3000);
 }
 
@@ -2153,12 +2906,12 @@ document.getElementById('quitBtn').addEventListener('click',()=>{
   closePause();
   state='idle';
   document.getElementById('hud').style.display='none';
-  document.getElementById('pauseBtn').style.display='none';
+  // pauseBtn hides with HUD
   document.getElementById('s-start').style.display='flex';
   setTenseMode(false);
-  // Clean up hearts
   hearts.forEach(h=>{if(h.el){h.el.remove();h.el=null;}});
   hearts=[];
+  showScreenAds('start');
 });
 document.getElementById('zoom-slider').addEventListener('input',e=>{
   applyZoom(parseFloat(e.target.value));
@@ -2196,6 +2949,7 @@ document.getElementById('retryBtn').addEventListener('click',()=>{
   document.getElementById('save-msg').style.display='none';
   const sb=document.getElementById('saveBtn');sb.style.display='block';sb.disabled=false;sb.textContent='💾 Save Score';
   document.getElementById('name-input').disabled=false;
+  document.getElementById('s-ad-offer').style.display='none';
   startGame();
 });
 document.getElementById('saveBtn').addEventListener('click',async()=>{
@@ -2218,19 +2972,22 @@ document.getElementById('saveBtn').addEventListener('click',async()=>{
   }
 });
 document.getElementById('dailyBtn').addEventListener('click',startDailyChallenge);
-// Update daily button to show if already played today
+// Update daily buttons to show if already played today
 (function(){
-  const btn=document.getElementById('dailyBtn');
   if(checkDailyPlayed()){
     const sv=getSave();
-    btn.textContent=`🗓️ Daily Done ✅ (${sv.dailyScore||'?'} pts)`;
-    btn.style.opacity='0.7';
+    const doneText=`🗓️ Daily Done ✅ (${sv.dailyScore||'?'} pts)`;
+    const btn=document.getElementById('dailyBtn');
+    btn.textContent=doneText; btn.style.opacity='0.7';
+    const startBtn=document.getElementById('startDailyBtn');
+    if(startBtn){ startBtn.textContent=doneText; startBtn.style.opacity='0.7'; startBtn.style.background='rgba(155,93,229,0.4)'; }
   }
 })();
 
 // best-val removed
 // Apply saved zoom on load
 applyZoom(userZoom);
+showScreenAds('start');
 applyPitch(camPitch);
 applyRotate(camRotate);
 document.getElementById('zoom-slider').value=userZoom;
