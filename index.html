@@ -1289,9 +1289,9 @@ const ADV_WORLDS = [
   { name:'Bamboo Beach',   icon:'🌴', color:'#4caf7d', sky:0x5a9e6a, fog:0x3a7a4a,
     boss:null,          bossLabel:'',                bossDesc:'' },
   { name:'Lava Peaks',     icon:'🌋', color:'#e05a20', sky:0x8a3a1a, fog:0x6a2810,
-    boss:'nobounce',    bossLabel:'No Bounces!',     bossDesc:'One miss and it\'s over' },
+    boss:'nobounce',    bossLabel:'2 Bounces Only!', bossDesc:'Block turns red on your last bounce' },
   { name:'Jungle Ruins',   icon:'🌿', color:'#7ab83a', sky:0x3a6a2a, fog:0x2a5020,
-    boss:'rotating',    bossLabel:'Spinning!',       bossDesc:'Camera revolves around the stack' },
+    boss:'rotating',    bossLabel:'Spinning! 1 Bounce',bossDesc:'Camera spins — one bounce left' },
   { name:'Frost Spire',    icon:'❄️', color:'#7ac8e8', sky:0x4a7a9a, fog:0x3a6080,
     boss:'earthquake',  bossLabel:'Earthquake!',     bossDesc:'Violent shaking the whole time' },
   { name:'Shadow Keep',    icon:'🏯', color:'#7a6a9a', sky:0x2a1a3a, fog:0x1a1028,
@@ -2015,6 +2015,17 @@ function applyAdvBoss(boss){
 // Boss mechanic flags
 var advBossEarthquake=false, advBossLightsOut=false, advBossPoisonHearts=false;
 var advBossNoBounce=false, advBossRotating=false, advBossSpeedSurge=false;
+var _maxBounces=3; // default: lose after 3rd bounce (turns red on 3rd)
+
+function getMaxBounces(){
+  if(advMode && advLevel===9){
+    // Scale bounce limit by world — harder worlds = fewer bounces
+    // W1(0)=2, W2(1)=2, W3(2)=1, W4(3)=1, W5(4)=0, W6(5)=0, W7(6)=0, W8(7)=0
+    const bossBounces=[2,2,1,1,0,0,0,0];
+    return bossBounces[advWorld]||0;
+  }
+  return 3; // normal levels: 3 bounces allowed
+}
 let _advWorldSpeedBonus=0;
 let _pendingAdvSave=null;
 let _inAdvSession=false; // true for entire adv level from start to game-over/complete
@@ -3660,21 +3671,22 @@ function update(){
     // Right exit: lx > S (left edge past right boundary)
     // Left exit: lx+w < -S (right edge past left boundary)
     if(mover.lx > S+0.5){
-      if(mover.bounces>=1||(advMode&&advBossNoBounce)){if(!countingDown){doMiss();return;}}
+      if(mover.bounces>=_maxBounces){if(!countingDown){doMiss();return;}}
       mover.bounces++;mover.dir=-1;
       mover.lx=S+0.5;
-      blockSetRedWarning(mover.mesh, true);
+      // Turn red on final allowed bounce
+      if(mover.bounces>=_maxBounces) blockSetRedWarning(mover.mesh, true);
     }
     if(mover.lx+mover.w < -S-0.5){
-      if(mover.bounces>=1||(advMode&&advBossNoBounce)){if(!countingDown){doMiss();return;}}
+      if(mover.bounces>=_maxBounces){if(!countingDown){doMiss();return;}}
       mover.bounces++;mover.dir=1;
       mover.lx=-S-0.5-mover.w;
-      blockSetRedWarning(mover.mesh, true);
+      if(mover.bounces>=_maxBounces) blockSetRedWarning(mover.mesh, true);
     }
   }
 
   // ── Pulse red while bounced ──
-  if(mover && mover.bounces>=1){
+  if(mover && mover.bounces>=_maxBounces){
     const pulse=0.4+Math.sin(Date.now()*0.01)*0.4;
     getAllMeshMaterials(mover.mesh).forEach(m=>{m.emissiveIntensity=pulse;});
   }
@@ -4666,6 +4678,7 @@ function startGame(){
   else if(advMode) camRotate=parseFloat(getSave().rotate||45); // always reset for adv — boss levels spin from here anyway
   // Stop world map music when level starts
   stopAdvMapMusic();
+  _maxBounces=getMaxBounces();
   _ct=null; // ensure music always switches cleanly
   unlockMusic(isDailyMode?'daily':advMode?_advLevelMusicKey:'game');
   hideScreenAds();
