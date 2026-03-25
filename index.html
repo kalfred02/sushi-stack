@@ -110,6 +110,32 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
 }
 @keyframes modalBgIn{0%{opacity:0;}100%{opacity:1;}}
 @keyframes modalBgOut{0%{opacity:1;}100%{opacity:0;}}
+@keyframes colSlideUp{
+  0%{transform:translateY(100%);opacity:0;}
+  100%{transform:translateY(0);opacity:1;}
+}
+@keyframes colSlideDown{
+  0%{transform:translateY(0);opacity:1;}
+  100%{transform:translateY(100%);opacity:0;}
+}
+@keyframes colCardBounce{
+  0%{transform:scale(1);}
+  30%{transform:scale(1.15);}
+  60%{transform:scale(0.95);}
+  100%{transform:scale(1);}
+}
+@keyframes colCardIn{
+  0%{transform:scale(0.7) translateY(20px);opacity:0;}
+  100%{transform:scale(1) translateY(0);opacity:1;}
+}
+@keyframes colTabSlideLeft{
+  0%{transform:translateX(60px);opacity:0;}
+  100%{transform:translateX(0);opacity:1;}
+}
+@keyframes colTabSlideRight{
+  0%{transform:translateX(-60px);opacity:0;}
+  100%{transform:translateX(0);opacity:1;}
+}
 @keyframes animalFloat{
   0%,100%{transform:translateX(-50%) translateY(0);}
   50%{transform:translateX(-50%) translateY(-12px);}
@@ -170,13 +196,18 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
       </div>
     </div>
   </div>
-  <!-- Right: pause button -->
-  <button id="pauseBtn" style="background:rgba(255,255,255,0.22);border:none;border-radius:50%;width:54px;height:54px;cursor:pointer;pointer-events:all;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-    <svg width="22" height="26" viewBox="0 0 22 26" fill="white">
-      <rect x="1" y="0" width="8" height="26" rx="2"/>
-      <rect x="13" y="0" width="8" height="26" rx="2"/>
-    </svg>
-  </button>
+  <!-- Right: collection + pause -->
+  <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
+    <button onclick="showCollection()" style="background:rgba(255,255,255,0.22);border:none;border-radius:50%;
+      width:48px;height:48px;font-size:22px;cursor:pointer;pointer-events:all;
+      display:flex;align-items:center;justify-content:center;">🎁</button>
+    <button id="pauseBtn" style="background:rgba(255,255,255,0.22);border:none;border-radius:50%;width:54px;height:54px;cursor:pointer;pointer-events:all;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <svg width="22" height="26" viewBox="0 0 22 26" fill="white">
+        <rect x="1" y="0" width="8" height="26" rx="2"/>
+        <rect x="13" y="0" width="8" height="26" rx="2"/>
+      </svg>
+    </button>
+  </div>
 </div>
 <!-- Heart booster ad button — shows during gameplay after score 3 -->
 <button id="heartBoostBtn" onclick="requestHeartBoostAd()" style="position:fixed;z-index:20;
@@ -203,6 +234,37 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
 <div id="tense-overlay" style="position:fixed;top:0;left:0;right:0;bottom:0;z-index:5;
   background:rgba(200,0,0,0.18);pointer-events:none;opacity:0;
   transition:opacity 0.4s ease-in-out;animation:tensePulse 0.8s ease-in-out infinite;"></div>
+
+<!-- COLLECTION SCREEN -->
+<div id="s-collection" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:300;
+  background:rgba(10,5,20,0.97);flex-direction:column;align-items:stretch;">
+  <!-- Header -->
+  <div style="display:flex;align-items:center;padding:16px 18px;flex-shrink:0;
+    border-bottom:1px solid rgba(155,93,229,0.2);background:rgba(20,10,40,0.8);">
+    <button onclick="closeCollection()" style="background:rgba(255,255,255,0.1);border:none;
+      border-radius:12px;padding:10px 18px;font-family:'Fredoka One',cursive;font-size:18px;
+      color:#fff;cursor:pointer;flex-shrink:0;">← Back</button>
+    <div style="flex:1;text-align:center;font-family:'Fredoka One',cursive;font-size:24px;color:#fff;">
+      🎁 My Collection</div>
+    <div style="width:60px;"></div>
+  </div>
+  <div id="col-inner" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+  <!-- Tabs -->
+  <div style="display:flex;padding:12px 16px 0;gap:8px;flex-shrink:0;">
+    <button id="col-tab-blocks" onclick="switchCollectionTab('blocks')"
+      style="flex:1;padding:10px;border-radius:14px 14px 0 0;border:none;cursor:pointer;
+      font-family:'Fredoka One',cursive;font-size:17px;
+      background:rgba(155,93,229,0.8);color:#fff;">🧱 Blocks</button>
+    <button id="col-tab-animals" onclick="switchCollectionTab('animals')"
+      style="flex:1;padding:10px;border-radius:14px 14px 0 0;border:none;cursor:pointer;
+      font-family:'Fredoka One',cursive;font-size:17px;
+      background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);">🐾 Animals</button>
+  </div>
+  <!-- Content -->
+  <div id="col-content" style="flex:1;overflow-y:auto;padding:16px;
+    background:rgba(20,10,40,0.5);"></div>
+  </div><!-- end col-inner -->
+</div>
 
 <!-- PAUSE MENU -->
 <div id="pause-menu" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:200;
@@ -241,16 +303,15 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
       </div>
       <input id="stacky-slider" type="range" min="-5" max="5" step="0.1" value="0" style="width:100%;accent-color:#ff9955;cursor:pointer;">
     </div>
-    <!-- Block Style -->
-    <div style="margin-bottom:16px;">
-      <div style="font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;color:rgba(255,255,255,0.6);text-transform:uppercase;margin-bottom:8px;">Block Style</div>
-      <div id="block-style-selector" style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;"></div>
-    </div>
-    <!-- Animal Selector -->
-    <div style="margin-bottom:16px;">
-      <div style="font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;color:rgba(255,255,255,0.6);text-transform:uppercase;margin-bottom:8px;">Animal</div>
-      <div id="animal-selector" style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;"></div>
-    </div>
+    <!-- Collection button -->
+    <button onclick="showCollection();closePause();"
+      style="width:100%;background:linear-gradient(135deg,rgba(155,93,229,0.3),rgba(255,200,0,0.15));
+      color:#fff;font-family:'Fredoka One',cursive;font-size:18px;padding:13px;
+      border:1px solid rgba(155,93,229,0.4);border-radius:16px;cursor:pointer;margin-bottom:12px;
+      box-shadow:0 4px 16px rgba(155,93,229,0.2);">🎁 My Collection</button>
+    <!-- Hidden selectors kept for JS compat -->
+    <div id="block-style-selector" style="display:none;"></div>
+    <div id="animal-selector" style="display:none;"></div>
     <button id="pause-mute-btn"
       style="width:100%;background:rgba(255,255,255,0.12);color:#fff;font-family:'Fredoka One',cursive;
       font-size:16px;padding:10px;border:1px solid rgba(255,255,255,0.2);border-radius:12px;
@@ -302,33 +363,37 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
 <div id="s-adventure" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:100;flex-direction:column;background:#1a3a1a;">
   <!-- Top bar -->
   <div id="adv-world-tabs" style="display:flex;align-items:center;flex-shrink:0;
-    padding:10px 12px;gap:8px;background:rgba(0,0,0,0.75);z-index:20;
+    padding:8px 10px;gap:6px;background:rgba(0,0,0,0.75);z-index:20;
     border-bottom:1px solid rgba(255,255,255,0.1);">
     <button onclick="exitAdvMap()" style="background:rgba(255,255,255,0.15);border:none;
-      border-radius:12px;padding:10px 14px;font-family:'Fredoka One',cursive;
-      font-size:17px;color:#fff;cursor:pointer;flex-shrink:0;pointer-events:all;">← Back</button>
+      border-radius:12px;padding:8px 12px;font-family:'Fredoka One',cursive;
+      font-size:16px;color:#fff;cursor:pointer;flex-shrink:0;pointer-events:all;">← Back</button>
     <!-- World prev arrow -->
     <button id="adv-world-prev" onclick="advWorldNav(-1)"
       style="background:rgba(255,255,255,0.12);border:none;border-radius:12px;
-      padding:10px 16px;font-size:26px;color:#fff;cursor:pointer;
+      padding:8px 12px;font-size:22px;color:#fff;cursor:pointer;
       flex-shrink:0;pointer-events:all;">‹</button>
     <!-- World name display -->
-    <div id="adv-world-label" style="flex:1;text-align:center;">
-      <div id="adv-world-icon" style="font-size:32px;line-height:1;"></div>
-      <div id="adv-world-name" style="font-family:'Fredoka One',cursive;font-size:22px;
-        color:#fff;letter-spacing:1px;margin-top:2px;text-shadow:0 2px 8px rgba(0,0,0,0.4);white-space:nowrap;"></div>
-      <div id="adv-world-num" style="font-family:'Fredoka One',cursive;font-size:13px;
-        letter-spacing:2px;color:rgba(255,255,255,0.55);text-transform:uppercase;margin-top:1px;"></div>
+    <div id="adv-world-label" style="flex:1;text-align:center;min-width:0;">
+      <div id="adv-world-icon" style="font-size:26px;line-height:1;"></div>
+      <div id="adv-world-name" style="font-family:'Fredoka One',cursive;font-size:18px;
+        color:#fff;letter-spacing:0px;margin-top:1px;text-shadow:0 2px 8px rgba(0,0,0,0.4);
+        white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+      <div id="adv-world-num" style="font-family:'Fredoka One',cursive;font-size:11px;
+        letter-spacing:2px;color:rgba(255,255,255,0.55);text-transform:uppercase;margin-top:0;"></div>
     </div>
     <!-- World next arrow -->
     <button id="adv-world-next" onclick="advWorldNav(1)"
       style="background:rgba(255,255,255,0.12);border:none;border-radius:12px;
-      padding:10px 16px;font-size:26px;color:#fff;cursor:pointer;
+      padding:8px 12px;font-size:22px;color:#fff;cursor:pointer;
       flex-shrink:0;pointer-events:all;">›</button>
     <div id="adv-total-stars" style="font-family:'Fredoka One',cursive;
-      font-size:20px;color:#ffcc00;flex-shrink:0;">⭐0</div>
+      font-size:18px;color:#ffcc00;flex-shrink:0;">⭐0</div>
+    <button onclick="showCollection()" style="background:rgba(255,255,255,0.15);border:none;
+      border-radius:50%;width:40px;height:40px;font-size:20px;cursor:pointer;
+      pointer-events:all;flex-shrink:0;">🎁</button>
     <button onclick="openPause(true)" style="background:rgba(255,255,255,0.15);border:none;
-      border-radius:50%;width:46px;height:46px;font-size:22px;cursor:pointer;
+      border-radius:50%;width:40px;height:40px;font-size:20px;cursor:pointer;
       pointer-events:all;flex-shrink:0;">⚙️</button>
   </div>
   <!-- Scrollable map canvas area -->
@@ -448,9 +513,12 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
 
 <!-- START SCREEN -->
 <div class="screen" id="s-start">
-  <button onclick="openPause(true)" style="position:absolute;top:16px;right:16px;
-    background:rgba(255,255,255,0.22);border:none;border-radius:50%;
-    width:52px;height:52px;font-size:26px;cursor:pointer;pointer-events:all;">⚙️</button>
+  <div style="position:absolute;top:16px;right:16px;display:flex;gap:8px;">
+    <button onclick="showCollection()" style="background:rgba(255,255,255,0.22);border:none;border-radius:50%;
+      width:52px;height:52px;font-size:26px;cursor:pointer;pointer-events:all;">🎁</button>
+    <button onclick="openPause(true)" style="background:rgba(255,255,255,0.22);border:none;border-radius:50%;
+      width:52px;height:52px;font-size:26px;cursor:pointer;pointer-events:all;">⚙️</button>
+  </div>
 
   <!-- Logo area -->
   <div style="text-align:center;margin-bottom:clamp(10px,2.5vh,28px);">
@@ -475,6 +543,14 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
       padding:16px;border:none;border-radius:20px;cursor:pointer;
       box-shadow:0 5px 0 rgba(0,0,0,0.25);pointer-events:all;">
       🗺️ Adventure Mode
+    </button>
+
+    <button onclick="showCollection()"
+      style="background:linear-gradient(135deg,rgba(155,93,229,0.35),rgba(255,200,0,0.2));color:#fff;
+      font-family:'Fredoka One',cursive;font-size:clamp(18px,4.5vw,24px);
+      padding:16px;border:1px solid rgba(155,93,229,0.4);border-radius:20px;cursor:pointer;
+      box-shadow:0 5px 0 rgba(0,0,0,0.2);pointer-events:all;">
+      🎁 My Collection
     </button>
 
     <button id="startDailyBtn" onclick="startDailyChallenge()"
@@ -536,10 +612,12 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
 <!-- GAME OVER / LEADERBOARD SCREEN -->
 <div class="screen" id="s-over">
   <div class="panel" style="position:relative;">
-    <button onclick="openPause(true)" style="position:absolute;top:12px;right:12px;
-      background:rgba(155,93,229,0.35);border:1px solid rgba(155,93,229,0.5);
-      border-radius:12px;width:44px;height:44px;font-size:20px;
-      cursor:pointer;pointer-events:all;">⚙️</button>
+    <div style="position:absolute;top:12px;right:12px;display:flex;gap:6px;">
+      <button onclick="showCollection()" style="background:rgba(155,93,229,0.35);border:1px solid rgba(155,93,229,0.5);
+        border-radius:12px;width:44px;height:44px;font-size:20px;cursor:pointer;pointer-events:all;">🎁</button>
+      <button onclick="openPause(true)" style="background:rgba(155,93,229,0.35);border:1px solid rgba(155,93,229,0.5);
+        border-radius:12px;width:44px;height:44px;font-size:20px;cursor:pointer;pointer-events:all;">⚙️</button>
+    </div>
     <div id="daily-badge" style="display:none;background:#f5c842;color:#2a1a2e;font-family:'Fredoka One',cursive;font-size:13px;padding:4px 12px;border-radius:20px;margin-bottom:6px;">🗓️ DAILY CHALLENGE</div>
     <span class="go-emoji" id="go-emoji">😵</span>
     <div class="go-title" id="go-title">Dropped it!</div>
@@ -847,6 +925,180 @@ const CREDITS_DATA={
     {title:'Awake! (Megawall-10)',author:'cynicmusic',license:'CC0',url:'https://opengameart.org/content/awake-megawall-10'},
   ]
 };
+let _colCurrentTab='blocks';
+
+function showCollection(tab){
+  const screen=document.getElementById('s-collection');
+  screen.style.display='flex';
+  screen.style.animation='none'; screen.offsetHeight;
+  screen.style.animation='modalBgIn 0.25s ease-out forwards';
+  const inner=screen.querySelector('#col-inner');
+  if(inner){ inner.style.animation='none'; inner.offsetHeight; inner.style.animation='colSlideUp 0.35s cubic-bezier(0.34,1.3,0.64,1) forwards'; }
+  _colCurrentTab=tab||'blocks';
+  switchCollectionTab(_colCurrentTab, false);
+}
+
+function closeCollection(){
+  const screen=document.getElementById('s-collection');
+  const inner=screen.querySelector('#col-inner');
+  if(inner){ inner.style.animation='colSlideDown 0.25s ease-in forwards'; }
+  screen.style.animation='modalBgOut 0.3s ease-in forwards';
+  setTimeout(()=>{ screen.style.display='none'; }, 300);
+}
+
+function initCollectionSwipe(){
+  const el=document.getElementById('col-content');
+  if(!el||el._swipeInit) return;
+  el._swipeInit=true;
+  let startX=0;
+  el.addEventListener('touchstart',e=>{ startX=e.touches[0].clientX; },{passive:true});
+  el.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-startX;
+    if(Math.abs(dx)>60){
+      const cur=document.getElementById('col-tab-blocks').style.background.includes('0.8')?'blocks':'animals';
+      if(dx<0 && cur==='blocks') switchCollectionTab('animals');
+      if(dx>0 && cur==='animals') switchCollectionTab('blocks');
+    }
+  },{passive:true});
+}
+
+function switchCollectionTab(tab, animate, noCardAnim){
+  const wasTab=_colCurrentTab;
+  _colCurrentTab=tab;
+  const bBtn=document.getElementById('col-tab-blocks');
+  const aBtn=document.getElementById('col-tab-animals');
+  if(bBtn){ bBtn.style.background=tab==='blocks'?'rgba(155,93,229,0.8)':'rgba(255,255,255,0.08)'; bBtn.style.color=tab==='blocks'?'#fff':'rgba(255,255,255,0.5)'; }
+  if(aBtn){ aBtn.style.background=tab==='animals'?'rgba(155,93,229,0.8)':'rgba(255,255,255,0.08)'; aBtn.style.color=tab==='animals'?'#fff':'rgba(255,255,255,0.5)'; }
+
+  const content=document.getElementById('col-content');
+  if(!content) return;
+
+  // Slide direction: going to animals = slide left, going to blocks = slide right
+  const slideAnim=(animate===false)?'none':tab==='animals'?'colTabSlideLeft':'colTabSlideRight';
+  content.style.animation='none'; content.offsetHeight;
+  content.innerHTML='';
+
+  if(tab==='blocks') buildCollectionBlocks(content, noCardAnim);
+  else buildCollectionAnimals(content, noCardAnim);
+
+  if(slideAnim!=='none'){
+    content.style.animation=`${slideAnim} 0.3s cubic-bezier(0.25,1,0.5,1) forwards`;
+  }
+  initCollectionSwipe();
+}
+
+function buildCollectionBlocks(container, noCardAnim){
+  const sv=getSave();
+  const grid=document.createElement('div');
+  grid.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:12px;';
+  let _bi=0;
+  BLOCK_STYLES.forEach(st=>{
+    const unlocked = st.unlock==='always' ||
+      (st.unlock==='golden' && (sv.goldenUnlocked||_allMeshesUnlocked)) ||
+      (st.unlock==='mesh' && isMeshUnlocked(st.id));
+    const active=blockStyle===st.id;
+    const card=document.createElement('div');
+    card.style.cssText=`border-radius:18px;padding:16px 8px 12px;text-align:center;cursor:pointer;
+      background:${active?'rgba(155,93,229,0.4)':unlocked?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.3)'};
+      border:2px solid ${active?'#9b5de5':unlocked?'rgba(255,255,255,0.15)':'rgba(255,255,255,0.05)'};
+      opacity:0;min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      animation:${noCardAnim?'colCardIn 0.01s 0s forwards':'colCardIn 0.35s cubic-bezier(0.34,1.3,0.64,1) '+(_bi*0.04)+'s forwards'};`;
+    const emoji=st.label.split(' ')[0];
+    const name=st.label.split(' ').slice(1).join(' ');
+    const isGolden=st.id==='golden';
+    card.setAttribute('data-col-id', st.id);
+    card.innerHTML=`
+      <div style="font-size:48px;line-height:1;margin-bottom:5px;">${isGolden?'✨':emoji}</div>
+      <div style="font-family:'Fredoka One',cursive;font-size:12px;color:${unlocked?'#fff':'rgba(255,255,255,0.3)'};
+        line-height:1.2;white-space:nowrap;">${name}</div>
+      <div class="col-active-lbl" style="font-family:Fredoka One,cursive;font-size:10px;color:#ffcc00;letter-spacing:1px;margin-top:3px;visibility:${active?'visible':'hidden'};height:14px;">ACTIVE</div>
+      ${!unlocked?'<div style="font-size:16px;margin-top:3px;">🔒</div>':''}`;
+    _bi++;
+    if(unlocked){
+      card.addEventListener('click',()=>{
+        setBlockStyle(st.id);
+        // Update cards in-place — no rebuild, no flicker
+        grid.querySelectorAll('[data-col-id]').forEach(c=>{
+          const cid=c.getAttribute('data-col-id');
+          const isActive=cid===st.id;
+          c.style.background=isActive?'rgba(155,93,229,0.4)':'rgba(255,255,255,0.07)';
+          c.style.border='2px solid '+(isActive?'#9b5de5':'rgba(255,255,255,0.15)');
+          const lbl=c.querySelector('.col-active-lbl');
+          if(lbl) lbl.style.visibility=isActive?'visible':'hidden';
+        });
+      });
+    } else {
+      card.addEventListener('click',()=>{
+        const msgs={golden:'Complete all 8 Adventure worlds!',mesh:'Earn this by completing a reward level in Adventure Mode!'};
+        showUnlockRequiredPopup(msgs[st.unlock]||'Keep playing to unlock!');
+      });
+    }
+    grid.appendChild(card);
+  });
+  container.appendChild(grid);
+}
+
+function buildCollectionAnimals(container, noCardAnim){
+  const best=Math.max(getBest(),score);
+  const sv=getSave();
+  const grid=document.createElement('div');
+  grid.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:12px;';
+  let _ai=0;
+  Object.entries(ANIMALS).forEach(([key,a])=>{
+    const unlocked=a.adventureUnlock ? !!sv.pandaUnlocked : best>=a.unlockAt;
+    const active=selectedAnimal===key;
+    const card=document.createElement('div');
+    card.style.cssText=`border-radius:18px;padding:16px 8px 12px;text-align:center;cursor:pointer;
+      background:${active?'rgba(155,93,229,0.4)':unlocked?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.3)'};
+      border:2px solid ${active?'#9b5de5':unlocked?'rgba(255,255,255,0.15)':'rgba(255,255,255,0.05)'};
+      opacity:0;min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      animation:${noCardAnim?'colCardIn 0.01s 0s forwards':'colCardIn 0.35s cubic-bezier(0.34,1.3,0.64,1) '+(_ai*0.06)+'s forwards'};`;
+    _ai++;
+    const emoji=a.name.split(' ')[0];
+    const name=a.name.split(' ').slice(1).join(' ');
+    const unlockHint=a.adventureUnlock?'Complete all 8 worlds':`Score ${a.unlockAt}`;
+    card.setAttribute('data-col-id', key);
+    card.innerHTML=`
+      <div style="font-size:48px;line-height:1;margin-bottom:5px;">${emoji}</div>
+      <div style="font-family:'Fredoka One',cursive;font-size:12px;color:${unlocked?'#fff':'rgba(255,255,255,0.3)'};
+        line-height:1.2;white-space:nowrap;">${name}</div>
+      <div class="col-active-lbl" style="font-family:Fredoka One,cursive;font-size:10px;color:#ffcc00;letter-spacing:1px;margin-top:3px;visibility:${active?'visible':'hidden'};height:14px;">ACTIVE</div>
+      ${!unlocked?`<div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:3px;">${unlockHint}</div>`:''}
+      ${!unlocked?'<div style="font-size:16px;margin-top:2px;">🔒</div>':''}`;
+    if(unlocked){
+      card.addEventListener('click',()=>{
+        selectedAnimal=key;
+        const sv2=getSave(); sv2.animal=key; setSave(sv2);
+        if(state==='playing'){
+          bunnies.forEach(b=>scene.remove(b.grp));
+          const oldBunnies=[...bunnies]; bunnies=[];
+          oldBunnies.forEach(b=>{
+            const animalCol=(ANIMALS[selectedAnimal]||ANIMALS.bunny).color;
+            const col=b.isMama?animalCol:(()=>{const c=new THREE.Color(animalCol);c.r=Math.min(1,c.r+(Math.random()-0.5)*0.08);c.g=Math.min(1,c.g+(Math.random()-0.5)*0.08);c.b=Math.min(1,c.b+(Math.random()-0.5)*0.08);return c.getHex();})();
+            const grp=mkAnimal(col,b.sc);
+            grp.position.copy(b.grp.position);
+            grp.rotation.copy(b.grp.rotation);
+            bunnies.push({...b,grp});
+          });
+        }
+        // Update cards in-place
+        grid.querySelectorAll('[data-col-id]').forEach(c=>{
+          const cid=c.getAttribute('data-col-id');
+          const isActive=cid===key;
+          c.style.background=isActive?'rgba(155,93,229,0.4)':'rgba(255,255,255,0.07)';
+          c.style.border='2px solid '+(isActive?'#9b5de5':'rgba(255,255,255,0.15)');
+          const lbl=c.querySelector('.col-active-lbl');
+          if(lbl) lbl.style.visibility=isActive?'visible':'hidden';
+        });
+      });
+    } else {
+      card.addEventListener('click',()=>showUnlockRequiredPopup(`${unlockHint} to unlock ${name}!`));
+    }
+    grid.appendChild(card);
+  });
+  container.appendChild(grid);
+}
+
 function showCreditsPopup(){
   const pop=document.createElement('div');
   pop.style.cssText=`position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;
@@ -909,13 +1161,15 @@ function showUnlockRequiredPopup(message){
   pop.style.cssText=`position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;
     display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);
     animation:fadeIn 0.2s;`;
-  pop.innerHTML=`<div style="background:rgba(20,10,40,0.97);border:1px solid rgba(255,255,255,0.15);
-    border-radius:20px;padding:24px 20px;max-width:280px;width:88%;text-align:center;">
-    <div style="font-size:40px;margin-bottom:8px;">🔒</div>
-    <div style="font-family:'Fredoka One',cursive;font-size:18px;color:#fff;margin-bottom:8px;">Locked!</div>
-    <div style="font-family:'Nunito',sans-serif;font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:18px;">${message}</div>
-    <button onclick="this.closest('div[style*=fixed]').remove()" style="width:100%;background:#9b5de5;color:#fff;
-      font-family:'Fredoka One',cursive;font-size:16px;padding:10px;border:none;border-radius:12px;cursor:pointer;">Got it!</button>
+  pop.innerHTML=`<div style="background:rgba(20,10,40,0.97);border:1px solid rgba(155,93,229,0.35);
+    border-radius:28px;padding:36px 28px;max-width:340px;width:90%;text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,0.6);animation:modalCardIn 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;">
+    <div style="font-size:64px;margin-bottom:12px;">🔒</div>
+    <div style="font-family:'Fredoka One',cursive;font-size:28px;color:#fff;margin-bottom:10px;">Locked!</div>
+    <div style="font-family:'Nunito',sans-serif;font-size:17px;color:rgba(255,255,255,0.65);margin-bottom:26px;line-height:1.5;">${message}</div>
+    <button onclick="this.closest('div[style*=fixed]').remove()" style="width:100%;background:linear-gradient(135deg,#9b5de5,#6a2daa);color:#fff;
+      font-family:'Fredoka One',cursive;font-size:22px;padding:16px;border:none;border-radius:18px;cursor:pointer;
+      box-shadow:0 6px 0 #4a1a80;">Got it!</button>
   </div>`;
   document.body.appendChild(pop);
   pop.addEventListener('click',e=>{ if(e.target===pop) pop.remove(); });
@@ -4578,7 +4832,6 @@ function updatePerfectDisplay(){
 const BLOCK_STYLES=[
   {id:'default',           label:'🟦 Classic',          unlock:'always'},
   {id:'sushi',             label:'🍣 Sushi',             unlock:'always'},
-  {id:'golden',            label:'✨ Golden',            unlock:'golden'},
   {id:'strawberry',        label:'🍓 Strawberry',        unlock:'mesh'},
   {id:'tomato',            label:'🍅 Tomato',            unlock:'mesh'},
   {id:'carrot',            label:'🥕 Carrot',            unlock:'mesh'},
@@ -4594,6 +4847,7 @@ const BLOCK_STYLES=[
   {id:'pepperoni_pizza',   label:'🍕 Pepperoni Pizza',   unlock:'mesh'},
   {id:'salami',            label:'🥩 Salami',            unlock:'mesh'},
   {id:'swiss_cheese',      label:'🧀 Swiss Cheese',      unlock:'mesh'},
+  {id:'golden',            label:'✨ Golden',            unlock:'golden'},
 ];
 
 // Dev toggle — all meshes unlocked for testing
