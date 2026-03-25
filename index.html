@@ -1290,13 +1290,13 @@ const ADV_WORLDS = [
   { name:'Bamboo Beach',   icon:'🌴', color:'#4caf7d', sky:0x5a9e6a, fog:0x3a7a4a,
     boss:null,          bossLabel:'',                bossDesc:'' },
   { name:'Lava Peaks',     icon:'🌋', color:'#e05a20', sky:0x8a3a1a, fog:0x6a2810,
-    boss:'nobounce',    bossLabel:'2 Bounces Only!', bossDesc:'Block turns red on your last bounce' },
+    boss:'rotating',    bossLabel:'Spinning!',       bossDesc:'Camera revolves — 2 bounces allowed', bossBounces:2 },
   { name:'Jungle Ruins',   icon:'🌿', color:'#7ab83a', sky:0x3a6a2a, fog:0x2a5020,
-    boss:'rotating',    bossLabel:'Spinning! 1 Bounce',bossDesc:'Camera spins — one bounce left' },
+    boss:'rotating',    bossLabel:'Spinning!',       bossDesc:'Camera revolves — 1 bounce allowed', bossBounces:1 },
   { name:'Frost Spire',    icon:'❄️', color:'#7ac8e8', sky:0x4a7a9a, fog:0x3a6080,
-    boss:'earthquake',  bossLabel:'Earthquake!',     bossDesc:'Violent shaking the whole time' },
+    boss:'earthquake',  bossLabel:'Earthquake!',     bossDesc:'Violent shaking — 2 bounces allowed', bossBounces:2 },
   { name:'Shadow Keep',    icon:'🏯', color:'#7a6a9a', sky:0x2a1a3a, fog:0x1a1028,
-    boss:'lightsout',   bossLabel:'Lights Out!',     bossDesc:'Screen dims almost completely' },
+    boss:'lightsout',   bossLabel:'Lights Out!',     bossDesc:'Screen goes dark — 1 bounce allowed', bossBounces:1 },
   { name:'Cherry Garden',  icon:'🌸', color:'#e87aaa', sky:0x9a5a7a, fog:0x7a3858,
     boss:'poisonhearts', bossLabel:'Poison Hearts!', bossDesc:'Hearts shrink your block instead' },
   { name:'Storm Tower',    icon:'⚡', color:'#e8c840', sky:0x5a5a2a, fog:0x3a3a18,
@@ -1360,6 +1360,7 @@ const ADV_LEVEL_NAMES = [
 
 // Adventure state
 var advMode=false;
+var _lastAdvWorld=0, _lastAdvLevel=0; // level we came from
 var advWorld=0, advLevel=0;
 var advStartTime=0, advMisses=0;
 var advGoal=0;
@@ -1459,7 +1460,7 @@ function playAdvMapMusic(w){
   });
   _advMapMusic=a;
 }
-function showAdvMap(jumpToWorld){
+function showAdvMap(jumpToWorld, jumpToLevel){
   document.getElementById('s-start').style.display='none';
   document.getElementById('s-adv-intro').style.display='none';
   const screen=document.getElementById('s-adventure');
@@ -1467,10 +1468,9 @@ function showAdvMap(jumpToWorld){
   if(jumpToWorld!==undefined) _advMapWorld=jumpToWorld;
   else{_advMapWorld=0;for(let w=7;w>=0;w--){if(isAdvLevelUnlocked(w,0)){_advMapWorld=w;break;}}}
   buildWorldTabs();
-  // Use rAF to ensure layout is done before measuring
   requestAnimationFrame(()=>{
     requestAnimationFrame(()=>{
-      initAdvMap3D(_advMapWorld);
+      initAdvMap3D(_advMapWorld, jumpToLevel);
       playAdvMapMusic(_advMapWorld);
     });
   });
@@ -1499,10 +1499,12 @@ function advWorldNav(dir){
   const next=_advMapWorld+dir;
   if(next<0||next>7) return;
   if(dir>0&&!isAdvLevelUnlocked(next,0)) return; // can't go forward to locked world
+  // Preserve level index — clamp to what's unlocked in target world
+  const preservedLevel=Math.min(_advSelectedLevel, Math.min(getFurthestCompletedLevel(next)+1, 9));
   _advMapWorld=next;
-  _advSelectedLevel=0;
+  _advSelectedLevel=preservedLevel;
   buildWorldTabs();
-  initAdvMap3D(next);
+  initAdvMap3D(next, preservedLevel);
   stopAdvMapMusic();
   playAdvMapMusic(next);
 }
@@ -1511,7 +1513,7 @@ function getAnimalEmoji(){return{bunny:'🐰',bear:'🐻',cat:'🐱',frog:'🐸'
 function getMapNodePositions(){
   return Array.from({length:10},(_,i)=>({x:i*ADV_MAP_SPACING,y:Math.sin(i*0.7)*0.3,z:0}));
 }
-function initAdvMap3D(wi){
+function initAdvMap3D(wi, startLevel){
   _advMapWorld=wi;
   _advIsHopping=false;
   const world=ADV_WORLDS[wi];
@@ -1519,8 +1521,8 @@ function initAdvMap3D(wi){
   const screen=document.getElementById('s-adventure');
   screen.style.background=bgCols[wi];
 
-  // Determine current level BEFORE building so _placeAnimal uses it
-  const cur=Math.min(getFurthestCompletedLevel(wi)+1,9);
+  // Determine current level — use startLevel if provided, otherwise next unplayed
+  const cur=startLevel!==undefined ? startLevel : Math.min(getFurthestCompletedLevel(wi)+1,9);
   _advSelectedLevel=cur;
 
   buildAdvPathMap(wi);   // places animal at _advSelectedLevel instantly
@@ -1914,7 +1916,16 @@ function openAdvLevel(w,l){
   const bossBadge=document.getElementById('adv-intro-boss-badge');
   bossBadge.style.display=isBoss?'inline-block':'none';
   document.getElementById('adv-intro-goal').textContent=`Stack ${goal} blocks`;
-  document.getElementById('adv-intro-modifier').textContent=isBoss?`⚠️ ${world.bossLabel} — ${world.bossDesc}`:'';
+  {
+    const modEl=document.getElementById('adv-intro-modifier');
+    if(isBoss && world.bossLabel){
+      const bc=world.bossBounces;
+      const bounceNote=(bc!==undefined && bc<3)?` · ${bc} bounce${bc===1?'':'s'} only`:'';
+      modEl.textContent=`⚠️ ${world.bossLabel}${bounceNote}`;
+    } else {
+      modEl.textContent='';
+    }
+  }
   const streakReq=document.getElementById('adv-intro-streak-req');
   if(streakReq) streakReq.textContent=getAdvRequiredStreak(w,l);
   const introEl=document.getElementById('s-adv-intro');
@@ -1958,6 +1969,7 @@ function startAdvLevel(){
   advStartTime=Date.now();
   advMode=true;
   _inAdvSession=true;
+  _lastAdvWorld=advWorld; _lastAdvLevel=advLevel; // remember for map return
   // Don't auto-use reward mesh — player chooses after unlocking
   // _advGLBOverride stays as whatever the player selected in settings
   advBoss=isBoss?world.boss:null;
@@ -1997,8 +2009,9 @@ function applyAdvBoss(boss){
   if(!boss) return;
   let b=boss;
   if(b==='random'){
-    const opts=['speedsurge','nobounce','rotating','earthquake','lightsout','poisonhearts'];
-    b=opts[Math.floor(Math.random()*opts.length)];
+    // Start with first mechanic in cycle — will rotate on each zone change
+    _chaosZoneIdx=0;
+    b=_CHAOS_OPTS[0];
   }
   if(b==='all'){
     advBossEarthquake=true; advBossLightsOut=true; advBossPoisonHearts=true;
@@ -2013,17 +2026,69 @@ function applyAdvBoss(boss){
   if(b==='poisonhearts')advBossPoisonHearts=true;
 }
 
+function applyChaosMechanic(mechName){
+  // Clear all then apply one
+  advBossEarthquake=false;advBossLightsOut=false;advBossPoisonHearts=false;
+  advBossNoBounce=false;advBossSpeedSurge=false;_chaosSpinning=false;
+  // Restore mover red warning and bounce count when mechanic changes
+  if(mover && mover.mesh){ blockSetRedWarning(mover.mesh, false); mover.bounces=0; }
+  // Also clear red on the top placed block in case it was affected
+  if(placed.length>0) blockSetRedWarning(placed[placed.length-1].mesh, false);
+
+  if(mechName==='speedsurge')  advBossSpeedSurge=true;
+  if(mechName==='nobounce'){
+    advBossNoBounce=true;
+    // Immediately turn current block red
+    if(mover && mover.mesh) blockSetRedWarning(mover.mesh, true);
+  }
+  if(mechName==='rotating')    _chaosSpinning=true;
+  if(mechName==='earthquake')  advBossEarthquake=true;
+  if(mechName==='lightsout')   advBossLightsOut=true;
+  if(mechName==='poisonhearts')advBossPoisonHearts=true;
+
+  const names={speedsurge:'⚡ Speed Surge!',nobounce:'🚫 No Bounces!',rotating:'🌀 Spinning!',
+    earthquake:'🌍 Earthquake!',lightsout:'💡 Lights Out!',poisonhearts:'☠️ Poison Hearts!'};
+  advBossLabel=names[mechName]||'⚠️ Chaos!';
+
+  // Show as a standalone overlay — don't use #hint to avoid overlap with stage banner
+  const existing=document.getElementById('chaos-mechanic-pop');
+  if(existing) existing.remove();
+  const pop=document.createElement('div');
+  pop.id='chaos-mechanic-pop';
+  pop.style.cssText=`position:fixed;
+    top:calc(50% - var(--ad-bar-h,60px)/2);
+    left:0;right:0;transform:translateY(-50%);
+    z-index:60;text-align:center;pointer-events:none;
+    animation:popIn 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards;`;
+  pop.innerHTML=`<div style="font-family:'Fredoka One',cursive;font-size:36px;color:#fff;
+      text-shadow:0 2px 16px rgba(0,0,0,0.8);letter-spacing:2px;">⚡ MECHANIC CHANGE</div>
+    <div style="font-family:'Fredoka One',cursive;font-size:40px;color:#ff8888;
+      text-shadow:0 0 20px rgba(255,80,80,0.8);margin-top:4px;">
+      ${names[mechName]||'Chaos!'}</div>`;
+  document.body.appendChild(pop);
+  setTimeout(()=>{
+    pop.style.transition='opacity 0.8s';pop.style.opacity='0';
+    setTimeout(()=>pop.remove(),800);
+  },2000);
+}
+
 // Boss mechanic flags
 var advBossEarthquake=false, advBossLightsOut=false, advBossPoisonHearts=false;
 var advBossNoBounce=false, advBossRotating=false, advBossSpeedSurge=false;
+// Chaos boss (W7) — cycles mechanics per zone
+const _CHAOS_OPTS=['speedsurge','nobounce','rotating','earthquake','lightsout','poisonhearts'];
+let _chaosZoneIdx=-1; // last zone index we applied a mechanic for
+let _chaosSpinning=false; // chaos spinning is 2x speed
 var _maxBounces=3; // default: lose after 3rd bounce (turns red on 3rd)
 
 function getMaxBounces(){
   if(advMode && advLevel===9){
-    // Scale bounce limit by world — harder worlds = fewer bounces
-    // W1(0)=2, W2(1)=2, W3(2)=1, W4(3)=1, W5(4)=0, W6(5)=0, W7(6)=0, W8(7)=0
-    const bossBounces=[2,2,1,1,0,0,0,0];
-    return bossBounces[advWorld]||0;
+    // Use per-world bossBounces if defined, else default 3
+    const world=ADV_WORLDS[advWorld];
+    if(world && world.bossBounces!==undefined) return world.bossBounces;
+    // W8 'all' boss: 1 bounce (everything else is chaos)
+    if(advWorld===7) return 1;
+    return 3;
   }
   return 3; // normal levels: 3 bounces allowed
 }
@@ -2036,11 +2101,23 @@ function updateAdvBoss(){
   // camRotate for boss is handled in main loop before camera calc
   if(advBossEarthquake) shakeTmr=Math.max(shakeTmr,3);
   if(advBossLightsOut){
-    // Dim background — pulse between dark and very dark
+    // Slow dramatic wave: goes fully black then fully lit and back
     const t=Date.now()*0.001;
-    const dim=0.02+Math.abs(Math.sin(t*0.4))*0.06;
-    scene.background.setRGB(dim,dim*0.8,dim*1.2);
-    scene.fog.color.setRGB(dim*0.5,dim*0.4,dim*0.6);
+    // Use a slow sine (0.18 hz) that spends time near zero — power curve makes blackout linger
+    const raw=(Math.sin(t*1.1)+1)/2; // 0→1 sine
+    const pulse=Math.pow(raw,1.2);    // power curve: lingers at 0, peaks briefly at 1
+    ambientLight.intensity=pulse*0.55;
+    sun.intensity=pulse*0.55;
+    fill.intensity=pulse*0.3;
+    under.intensity=pulse*0.18;
+    scene.background.setRGB(pulse*0.35,pulse*0.26,pulse*0.42);
+    scene.fog.color.setRGB(pulse*0.18,pulse*0.13,pulse*0.22);
+  } else {
+    // Restore normal light intensities when not in lights-out
+    ambientLight.intensity=0.55;
+    sun.intensity=0.55;
+    fill.intensity=0.3;
+    under.intensity=0.18;
   }
   if(advBossSpeedSurge&&mover){
     // Keep speed boosted regardless of score
@@ -2127,7 +2204,7 @@ function finishAdvLevel(stars, elapsed){
   const _alreadySaved=_rewardName && getUnlockedMeshes().includes(_rewardName);
   const _isNewUnlock=_rewardName && !_alreadySaved;
   if(_rewardName) unlockMesh(_rewardName);
-  showAdvMap(savedWorld);
+  showAdvMap(savedWorld, savedLevel);
   // Pass unlock info to celebration so popup shows AFTER stars reveal
   setTimeout(()=>showMapCelebration(savedWorld,savedLevel,stars,elapsed,prevStars,_isNewUnlock?_rewardName:null),400);
 }
@@ -2324,6 +2401,17 @@ function showMapCelebration(wi,li,stars,elapsed,prevStars,rewardName){
   }
 
   function doMapTransition(){
+    const wasAlreadyCompleted = prevStars > 0;
+    // If replaying a completed level, stay on it — don't advance
+    if(wasAlreadyCompleted){
+      // Don't animate — just scroll and update panel, no animal hop
+      setTimeout(()=>{
+        scrollToNode(li);
+        updateLevelPanel(wi, li, true);
+      }, 300);
+      return;
+    }
+    // First-time completion — advance to next level
     const isBossComplete=li===9;
     const nextWorld=isBossComplete?Math.min(wi+1,7):wi;
     const nextLi=isBossComplete?0:Math.min(li+1,9);
@@ -2343,6 +2431,7 @@ function showMapCelebration(wi,li,stars,elapsed,prevStars,rewardName){
 function resetAdvBoss(){
   advBossEarthquake=false; advBossLightsOut=false; advBossPoisonHearts=false;
   advBossNoBounce=false; advBossRotating=false; advBossSpeedSurge=false;
+  _chaosZoneIdx=-1;_chaosSpinning=false;
   // Restore fog
   const st=getStage(score);
   if(!isDailyMode) scene.fog=new THREE.Fog(st.fog,16,40);
@@ -2517,8 +2606,8 @@ onResize();
 window.addEventListener('resize',onResize);
 
 // ── Lights ──
-scene.add(new THREE.AmbientLight(0xffffff,0.8));
-const sun=new THREE.DirectionalLight(0xffffff,0.75);
+const ambientLight=new THREE.AmbientLight(0xffffff,0.55); scene.add(ambientLight);
+const sun=new THREE.DirectionalLight(0xffffff,0.55);
 sun.position.set(8,18,8);sun.castShadow=true;
 sun.shadow.mapSize.set(1024,1024);
 sun.shadow.camera.near=0.5;sun.shadow.camera.far=60;
@@ -2526,10 +2615,10 @@ sun.shadow.camera.left=sun.shadow.camera.bottom=-14;
 sun.shadow.camera.right=sun.shadow.camera.top=14;
 sun.shadow.bias=-0.001;
 scene.add(sun);
-const fill=new THREE.DirectionalLight(0xfff8f0,0.5);
+const fill=new THREE.DirectionalLight(0xfff8f0,0.3);
 fill.position.set(-5,4,-5);scene.add(fill);
 // Under-fill to reduce shadow darkness on GLB models
-const under=new THREE.DirectionalLight(0xffffff,0.3);
+const under=new THREE.DirectionalLight(0xffffff,0.18);
 under.position.set(0,-8,4);scene.add(under);
 
 // Ground for shadows
@@ -2571,7 +2660,7 @@ function w2s(v3){const v=v3.clone().project(cam);return{x:(v.x+1)/2*window.inner
 function mkBlock(w,color){
   if(advMode && _advGLBOverride) return mkAdvRewardBlock(w,color);
   // Named GLB styles (selectable from pause menu)
-  const GLB_STYLES=['strawberry','tomato','carrot','cucumber','banana','lemon','orange_bell_pepper','orange'];
+  const GLB_STYLES=['strawberry','tomato','carrot','cucumber','banana','lemon','orange_bell_pepper','orange','bread','chocolate_cake','cinnamon_roll','glazed_donut','pepperoni_pizza','salami','swiss_cheese'];
   if(GLB_STYLES.includes(blockStyle)){
     const cache=_glbCache[blockStyle];
     if(cache?.glb && cache.size){
@@ -3103,9 +3192,11 @@ function loadGLB(name, path, onDone){
           const mats=Array.isArray(c.material)?c.material:[c.material];
           const newMats=mats.map(m=>{
             if(!m) return m;
+            const baseColor=m.color?m.color.clone():new THREE.Color(0xffffff);
+            baseColor.multiplyScalar(0.82); // prevent blowout under bright lights
             const lm=new THREE.MeshLambertMaterial({
               map: m.map||null,
-              color: m.color?m.color.clone():new THREE.Color(0xffffff),
+              color: baseColor,
               emissive: new THREE.Color(0),
               emissiveIntensity: 0,
               transparent: m.transparent||false,
@@ -3140,10 +3231,10 @@ function getAdvRewardModel(w, l){
     '1_4':'carrot',            '1_9':'cucumber',
     '2_4':'banana',            '2_9':'lemon',
     '3_4':'orange',            '3_9':'orange_bell_pepper',
-    '4_4':'strawberry',        '4_9':'banana',
-    '5_4':'lemon',             '5_9':'carrot',
-    '6_4':'orange',            '6_9':'tomato',
-    '7_4':'cucumber',          '7_9':'orange_bell_pepper',
+    '4_4':'pepperoni_pizza',   '4_9':'glazed_donut',
+    '5_4':'cinnamon_roll',     '5_9':'bread',
+    '6_4':'swiss_cheese',      '6_9':'salami',
+    '7_4':'chocolate_cake',    '7_9':'pepperoni_pizza',
   };
   return schedule[`${w}_${l}`]||null;
 }
@@ -3158,12 +3249,19 @@ function getAdvRewardModelPath(name){
     lemon:'Models/lemon.glb',
     orange_bell_pepper:'Models/orange_bell_pepper.glb',
     orange:'Models/orange.glb',
+    bread:'Models/bread.glb',
+    chocolate_cake:'Models/chocolate_cake.glb',
+    cinnamon_roll:'Models/cinnamon_roll.glb',
+    glazed_donut:'Models/glazed_donut.glb',
+    pepperoni_pizza:'Models/pepperoni_pizza.glb',
+    salami:'Models/salami.glb',
+    swiss_cheese:'Models/swiss_cheese.glb',
   };
   return paths[name]?resolveAssetPath(paths[name]):null;
 }
 
 // Preload all reward GLBs
-['strawberry','tomato','carrot','cucumber','banana','lemon','orange_bell_pepper','orange'].forEach(name=>{
+['strawberry','tomato','carrot','cucumber','banana','lemon','orange_bell_pepper','orange','bread','chocolate_cake','cinnamon_roll','glazed_donut','pepperoni_pizza','salami','swiss_cheese'].forEach(name=>{
   loadGLB(name, getAdvRewardModelPath(name));
 });
 
@@ -3305,8 +3403,12 @@ function spawnMover(){
   const curIdx=getStageIdx(score);
   if(curIdx!==prevIdx && score>0){
     showStageBanner();
-    // Flash the scene
     flashScene(new THREE.Color(getStage(score).block));
+    // Chaos boss (W7): rotate mechanic on every zone change
+    if(advMode && advBoss==='random' && _chaosZoneIdx>=0){
+      _chaosZoneIdx=(_chaosZoneIdx+1)%_CHAOS_OPTS.length;
+      applyChaosMechanic(_CHAOS_OPTS[_chaosZoneIdx]);
+    }
   }
 
   const st=getStage(score);
@@ -3331,6 +3433,8 @@ function spawnMover(){
   const lx=dir===1 ? -(S+w) : S;
   mesh.position.set(lx+w/2, by+getBlockH()/2, 0);
   mover={mesh,lx,w,dir,bounces:0,by,origColor:blockCol.clone()};
+  // If no-bounces is active, block starts red immediately
+  if(advMode && advBossNoBounce) blockSetRedWarning(mesh, true);
 }
 
 // Stage change flash — CSS overlay, no 3D mesh needed
@@ -3389,8 +3493,8 @@ function doDrop(){
   mover.mesh.position.set(newCx, newBy+getBlockH()/2, 0);
   mover.mesh.userData.bounceAnim=0;
 
-  // Restore original color if it was turned red from bouncing
-  if(mover.bounces>=1){
+  // Restore original color if it was turned red from bouncing or no-bounce mode
+  if(mover.bounces>=1 || advBossNoBounce){
     blockSetRedWarning(mover.mesh, false);
   }
 
@@ -3669,25 +3773,24 @@ function update(){
     mover.mesh.position.x=mover.lx+mover.w/2;
 
     // Bounce when block fully exits the opposite side
-    // Right exit: lx > S (left edge past right boundary)
-    // Left exit: lx+w < -S (right edge past left boundary)
+    const _effectiveBounceLimit = (advMode&&advBossNoBounce) ? 0 : _maxBounces;
     if(mover.lx > S+0.5){
-      if(mover.bounces>=_maxBounces){if(!countingDown){doMiss();return;}}
+      if(mover.bounces>=_effectiveBounceLimit){if(!countingDown){doMiss();return;}}
       mover.bounces++;mover.dir=-1;
       mover.lx=S+0.5;
-      // Turn red on final allowed bounce
-      if(mover.bounces>=_maxBounces) blockSetRedWarning(mover.mesh, true);
+      if(mover.bounces>=_effectiveBounceLimit) blockSetRedWarning(mover.mesh, true);
     }
     if(mover.lx+mover.w < -S-0.5){
-      if(mover.bounces>=_maxBounces){if(!countingDown){doMiss();return;}}
+      if(mover.bounces>=_effectiveBounceLimit){if(!countingDown){doMiss();return;}}
       mover.bounces++;mover.dir=1;
       mover.lx=-S-0.5-mover.w;
-      if(mover.bounces>=_maxBounces) blockSetRedWarning(mover.mesh, true);
+      if(mover.bounces>=_effectiveBounceLimit) blockSetRedWarning(mover.mesh, true);
     }
   }
 
   // ── Pulse red while bounced ──
-  if(mover && mover.bounces>=_maxBounces){
+  const _effLimit=(advMode&&advBossNoBounce)?0:_maxBounces;
+  if(mover && mover.bounces>=_effLimit){
     const pulse=0.4+Math.sin(Date.now()*0.01)*0.4;
     getAllMeshMaterials(mover.mesh).forEach(m=>{m.emissiveIntensity=pulse;});
   }
@@ -3708,25 +3811,31 @@ function update(){
 
   // ── Hearts — 2D HTML elements falling from top of screen ──
   htimer+=dt*60;
-  if(htimer>=hnext && hearts.filter(h=>!h.done).length===0){
+  // In poison mode spawn multiple hearts at once; otherwise single
+  const _poisonMode = advMode && advBossPoisonHearts;
+  const _maxActive = _poisonMode ? 3 : 1;
+  if(htimer>=hnext && hearts.filter(h=>!h.done).length<_maxActive){
     htimer=0;
-    hnext=Math.max(80,140-getStageIdx(score)*10)+Math.floor(Math.random()*80);
-    // Don't spawn if block already at max size OR already used this block
+    hnext=_poisonMode
+      ? 40+Math.floor(Math.random()*40)   // faster spawn in poison mode
+      : Math.max(80,140-getStageIdx(score)*10)+Math.floor(Math.random()*80);
     const curW=mover?mover.w:(placed.length>0?placed[placed.length-1].w:S);
     const atMax=curW>=S*0.97;
     if(!hUsed && !atMax){
-      // Create as HTML div — guaranteed visible, no 3D clipping
+      // In poison mode: 70% black poison, 30% red good
+      const isPoison=_poisonMode && Math.random()<0.70;
       const el=document.createElement('div');
-      const sx=20+Math.random()*60; // 20–80% from left
+      const sx=20+Math.random()*60;
+      const glow=isPoison?'rgba(0,0,0,0.8)':'rgba(255,50,100,0.6)';
       el.style.cssText=`position:fixed;left:${sx}%;top:-80px;z-index:30;
         font-size:64px;cursor:pointer;pointer-events:all;
         padding:20px;margin:-20px;
-        filter:drop-shadow(0 4px 12px rgba(255,50,100,0.6));
+        filter:drop-shadow(0 4px 12px ${glow});
         transition:none;user-select:none;-webkit-user-select:none;`;
-      el.textContent='❤️';
+      el.textContent=isPoison?'🖤':'❤️';
       el.setAttribute('data-heart','1');
       document.body.appendChild(el);
-      const h={el,y:-60,vy:1.8+Math.random()*1.0,sx,done:false,doneT:0,grp:null};
+      const h={el,y:-60,vy:1.8+Math.random()*1.0,sx,done:false,doneT:0,grp:null,isPoison};
       el.addEventListener('touchstart',ev=>{ev.preventDefault();ev.stopPropagation();collectHeart(h);},{passive:false});
       el.addEventListener('mousedown',ev=>{ev.stopPropagation();collectHeart(h);});
       hearts.push(h);
@@ -3748,7 +3857,8 @@ function update(){
   // In daily mode OR adv boss: slowly revolve camera
   if(state==='playing' && !countingDown && (isDailyMode || advBossRotating)){
     const stackBoost=Math.min(placed.length*0.012, 0.5);
-    camRotate=(camRotate+0.18+stackBoost)%360;
+    const spinMult=_chaosSpinning?3.0:1.0;
+    camRotate=(camRotate+(0.18+stackBoost)*spinMult)%360;
     // Disco colors only in daily mode — boss levels keep their world sky
     if(isDailyMode){
       const t=Date.now()*0.001;
@@ -4152,16 +4262,15 @@ function collectHeart(h){
     setTimeout(()=>{if(h.el){h.el.remove();h.el=null;}},300);
   }
   if(mover){
-    // Poison hearts boss — shrink instead of grow
-    if(advMode && advBossPoisonHearts){
+    // Poison hearts boss — black hearts shrink, red hearts still grow
+    if(h.isPoison){
       const shrink=mover.w*0.18;
       const nw=Math.max(mover.w-shrink, S*0.12);
       const loss=mover.w-nw;
       mover.lx+=loss/2; mover.w=nw;
       blockResize(mover.mesh,nw);
       mover.mesh.position.x=mover.lx+nw/2;
-      // Flash red to signal poison
-      blockSetEmissiveFlash(mover.mesh,0xff0000,0.8);
+      blockSetEmissiveFlash(mover.mesh,0x220000,1.0);
       return;
     }
     const ratio=mover.w/S,gp=Math.min(0.3/ratio,2);
@@ -4440,7 +4549,7 @@ function showAdvRetry(){
     el.remove(); startAdvLevel();
   });
   document.getElementById('adv-map-btn').addEventListener('click',()=>{
-    el.remove(); _fOut(_aud,()=>{_aud=null;_ct=null;}); showAdvMap();
+    el.remove(); _fOut(_aud,()=>{_aud=null;_ct=null;}); showAdvMap(_lastAdvWorld, _lastAdvLevel);
   });
 }
 
@@ -4478,6 +4587,13 @@ const BLOCK_STYLES=[
   {id:'lemon',             label:'🍋 Lemon',             unlock:'mesh'},
   {id:'orange_bell_pepper',label:'🫑 Bell Pepper',       unlock:'mesh'},
   {id:'orange',            label:'🍊 Orange',            unlock:'mesh'},
+  {id:'bread',             label:'🍞 Bread',             unlock:'mesh'},
+  {id:'chocolate_cake',    label:'🎂 Choco Cake',        unlock:'mesh'},
+  {id:'cinnamon_roll',     label:'🥐 Cinnamon Roll',     unlock:'mesh'},
+  {id:'glazed_donut',      label:'🍩 Glazed Donut',      unlock:'mesh'},
+  {id:'pepperoni_pizza',   label:'🍕 Pepperoni Pizza',   unlock:'mesh'},
+  {id:'salami',            label:'🥩 Salami',            unlock:'mesh'},
+  {id:'swiss_cheese',      label:'🧀 Swiss Cheese',      unlock:'mesh'},
 ];
 
 // Dev toggle — all meshes unlocked for testing
@@ -4631,7 +4747,7 @@ function handleTap(x,y){
 document.getElementById('c').addEventListener('touchstart',e=>{
   // Don't drop block if tapping a heart
   if(e.target && e.target.closest && e.target.closest('[data-heart]')) return;
-  if(e.target && e.target.textContent==='❤️') return;
+  if(e.target && (e.target.textContent==='❤️'||e.target.textContent==='🖤')) return;
   e.preventDefault();
   const t=e.changedTouches[0];_px=t.clientX;_py=t.clientY;
   handleTap(t.clientX,t.clientY);
@@ -4717,7 +4833,7 @@ function startGame(){
         Goal: ${advGoal} blocks</div>
       ${advBossLabel?`
       <div style="margin:8px auto 6px;height:3px;width:80%;background:rgba(255,255,255,0.3);border-radius:2px;"></div>
-      <div style="margin-top:20px;font-size:32px;color:#ff8888;font-family:'Fredoka One',cursive;line-height:1.1;white-space:nowrap;text-shadow:0 0 16px rgba(255,80,80,0.6);">⚠️ ${advBossLabel}</div>`:''}`;
+      <div style="margin-top:20px;font-size:32px;color:#ff8888;font-family:'Fredoka One',cursive;line-height:1.1;white-space:nowrap;text-shadow:0 0 16px rgba(255,80,80,0.6);">⚠️ ${advBossLabel}${(()=>{const bc=ADV_WORLDS[advWorld]?.bossBounces;return(bc!==undefined&&bc<3)?' · '+bc+' bounce'+(bc===1?'':'s'):'';})()}</div>`:''}`;
     setTimeout(()=>{hintEl.style.transition='opacity 1s';hintEl.style.opacity='0';setTimeout(()=>{hintEl.style.display='none';hintEl.className='';},1000);},4000);
   } else {
     hintEl.className='';
@@ -4853,6 +4969,10 @@ function showMeshUnlockPopup(name, onDismiss){
     carrot:'🥕 Carrot', cucumber:'🥒 Cucumber',
     banana:'🍌 Banana', lemon:'🍋 Lemon',
     orange_bell_pepper:'🫑 Bell Pepper', orange:'🍊 Orange',
+    bread:'🍞 Bread', chocolate_cake:'🎂 Chocolate Cake',
+    cinnamon_roll:'🥐 Cinnamon Roll', glazed_donut:'🍩 Glazed Donut',
+    pepperoni_pizza:'🍕 Pepperoni Pizza', salami:'🥩 Salami',
+    swiss_cheese:'🧀 Swiss Cheese',
   };
   const label=labels[name]||name;
   const pop=document.createElement('div');
