@@ -47,7 +47,7 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
 #hint.adv-hint{top:30%;transform:translate(-50%,-50%);}
 #mute{display:none;} /* removed — sound controlled via settings only */
 /* Screens */
-.screen{position:fixed;z-index:100;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;overflow-y:auto;}
+.screen{position:fixed;z-index:100;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 12px calc(var(--ad-bar-h) + 12px);overflow-y:auto;}
 #s-start{background:linear-gradient(160deg,#a8d8ea,#c5a8d8 40%,#f4c2d0 75%,#fde8d0);}
 #s-over{background:rgba(20,10,30,0.88);backdrop-filter:blur(14px);display:none;}
 .panel{background:linear-gradient(160deg,#fef9ff,#fff8f2);border-radius:24px;padding:clamp(16px,3.5vh,32px) clamp(18px,5vw,36px);text-align:center;max-width:340px;width:94%;max-height:calc(100dvh - 40px);overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.38),0 0 0 3px rgba(180,140,220,0.3);}
@@ -120,7 +120,8 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
   100%{transform:translate(-50%,-50%) scale(1);opacity:0}}
 .ad-banner{width:100%;max-width:320px;height:50px;margin:0 auto;overflow:hidden;border-radius:8px;}
 .ad-banner-inner{width:100%;height:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;font-size:11px;color:rgba(255,255,255,0.25);letter-spacing:1px;}
-#persistent-banner{position:fixed;bottom:0;left:0;right:0;z-index:100;height:60px;
+:root{--ad-bar-h:60px;}
+#persistent-banner{position:fixed;bottom:0;left:0;right:0;z-index:100;height:var(--ad-bar-h);
   background:rgba(10,5,20,0.92);border-top:1px solid rgba(255,255,255,0.08);
   display:flex;align-items:center;justify-content:center;}
 /* Adventure mode */
@@ -195,7 +196,7 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
     ❤️ Touch falling hearts to grow the block
   </div>
 </div>
-<div id="stage-progress" style="display:none;position:fixed;bottom:60px;left:0;right:0;z-index:10;
+<div id="stage-progress" style="display:none;position:fixed;bottom:calc(var(--ad-bar-h) + 4px);left:0;right:0;z-index:10;
   padding:8px 16px;font-family:'Fredoka One',cursive;font-size:14px;letter-spacing:2px;
   color:#fff;text-align:center;text-shadow:0 1px 4px rgba(0,0,0,0.5);
   pointer-events:none;transition:opacity 0.2s;"></div>
@@ -1209,7 +1210,7 @@ function activateHeartShower(){
   // Show indicator
   const ind=document.createElement('div');
   ind.id='heart-shower-hud';
-  ind.style.cssText=`position:fixed;top:80px;left:50%;transform:translateX(-50%);
+  ind.style.cssText=`position:fixed;top:calc(env(safe-area-inset-top,0px) + 74px);left:50%;transform:translateX(-50%);
     z-index:19;font-family:'Fredoka One',cursive;font-size:14px;
     color:#ff6688;pointer-events:none;text-shadow:0 1px 4px rgba(0,0,0,0.5);`;
   ind.textContent='❤️ Heart Shower Active!';
@@ -3733,8 +3734,12 @@ function update(){
   }
 
   // Camera: pan up as stack grows, keep top block in lower-center of screen
+  // Scale vertical offset by aspect ratio so it works on all screen sizes
   const topY=placed.length>0?placed[placed.length-1].by+getBlockH():0;
-  const targetLookY = topY + CAM_H*0.85 - 0.8 + stackYOffset;
+  // On tall phones (low asp) we need less offset; on wide phones more
+  // userZoom controls the frustum half-height, so use that for consistent positioning
+  const _camOffset = userZoom * (0.55 + Math.max(0, (asp - 0.5) * 0.3));
+  const targetLookY = topY + _camOffset + stackYOffset;
   camLookY+=(targetLookY-camLookY)*0.07;
   cam.position.y+=(targetLookY+camPitch-cam.position.y)*0.07;
   cam.lookAt(0,camLookY,0);
@@ -4641,6 +4646,16 @@ let gpI=null,gpLA=false;
 window.addEventListener('gamepadconnected',()=>{if(!gpI)gpI=setInterval(()=>{const p=navigator.getGamepads?.();if(p)for(const pad of p){if(!pad)continue;const a=pad.buttons[0]?.pressed;if(a&&!gpLA&&state==='playing'&&!countingDown)doDrop();gpLA=a;}},50);});
 
 // Fullscreen
+function updateAdBarHeight(){
+  const banner=document.getElementById('persistent-banner');
+  if(banner){
+    const h=banner.offsetHeight||60;
+    document.documentElement.style.setProperty('--ad-bar-h', h+'px');
+  }
+}
+window.addEventListener('resize', updateAdBarHeight);
+setTimeout(updateAdBarHeight, 500);
+
 function reqFS(){try{const e=document.documentElement;(e.requestFullscreen||e.webkitRequestFullscreen)?.call(e,{navigationUI:'hide'});}catch{}try{screen.orientation?.lock('portrait').catch(()=>{});}catch{}}
 
 function showFullscreenNudge(){
@@ -4909,7 +4924,7 @@ function confirmResetAdvProgress(){
     }
     // Show confirmation
     const toast=document.createElement('div');
-    toast.style.cssText=`position:fixed;bottom:120px;left:50%;transform:translateX(-50%);
+    toast.style.cssText=`position:fixed;bottom:calc(var(--ad-bar-h) + 56px);left:50%;transform:translateX(-50%);
       z-index:400;background:rgba(200,50,50,0.9);color:#fff;
       font-family:'Fredoka One',cursive;font-size:15px;padding:10px 24px;
       border-radius:12px;animation:popIn 0.3s ease-out;white-space:nowrap;`;
