@@ -250,15 +250,19 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
   </div>
   <div id="col-inner" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
   <!-- Tabs -->
-  <div style="display:flex;padding:12px 16px 0;gap:8px;flex-shrink:0;">
+  <div style="display:flex;padding:12px 16px 0;gap:6px;flex-shrink:0;">
     <button id="col-tab-blocks" onclick="switchCollectionTab('blocks')"
       style="flex:1;padding:10px;border-radius:14px 14px 0 0;border:none;cursor:pointer;
-      font-family:'Fredoka One',cursive;font-size:17px;
+      font-family:'Fredoka One',cursive;font-size:16px;
       background:rgba(155,93,229,0.8);color:#fff;">🧱 Blocks</button>
     <button id="col-tab-animals" onclick="switchCollectionTab('animals')"
       style="flex:1;padding:10px;border-radius:14px 14px 0 0;border:none;cursor:pointer;
-      font-family:'Fredoka One',cursive;font-size:17px;
+      font-family:'Fredoka One',cursive;font-size:16px;
       background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);">🐾 Animals</button>
+    <button id="col-tab-music" onclick="switchCollectionTab('music')"
+      style="flex:1;padding:10px;border-radius:14px 14px 0 0;border:none;cursor:pointer;
+      font-family:'Fredoka One',cursive;font-size:16px;
+      background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.5);">🎵 Music</button>
   </div>
   <!-- Content -->
   <div id="col-content" style="flex:1;overflow-y:auto;padding:16px;
@@ -453,72 +457,84 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
   </div>
 </div>
 <!-- ADVENTURE LEVEL INTRO SCREEN -->
-<div class="screen" id="s-adv-intro" style="display:none;background:rgba(0,0,0,0.82);">
-  <div id="adv-intro-card" style="background:linear-gradient(160deg,#1a0a2e,#2a1050);
-    border:1px solid rgba(155,93,229,0.35);border-radius:32px;
-    padding:36px 28px 28px;max-width:400px;width:92%;text-align:center;
-    box-shadow:0 24px 64px rgba(0,0,0,0.6),0 0 0 1px rgba(155,93,229,0.15);">
+<div class="screen" id="s-adv-intro" style="display:none;background:rgba(0,0,0,0.88);">
+  <div id="adv-intro-card" style="background:linear-gradient(170deg,#160828 0%,#1e0c3a 60%,#0e1a30 100%);
+    border:1px solid rgba(155,93,229,0.25);border-radius:32px;
+    padding:28px 26px 24px;max-width:400px;width:92%;text-align:center;
+    box-shadow:0 32px 80px rgba(0,0,0,0.7),0 0 0 1px rgba(255,255,255,0.04);">
 
-    <!-- World badge -->
-    <div id="adv-intro-world" style="display:inline-block;background:rgba(155,93,229,0.2);
-      border:1px solid rgba(155,93,229,0.4);border-radius:20px;padding:5px 16px;
-      font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:2px;
-      color:rgba(255,255,255,0.7);text-transform:uppercase;margin-bottom:14px;"></div>
+    <!-- World badge — small, top -->
+    <div id="adv-intro-world" style="display:inline-block;background:rgba(255,255,255,0.07);
+      border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:4px 14px;
+      font-family:'Nunito',sans-serif;font-size:11px;letter-spacing:3px;font-weight:700;
+      color:rgba(255,255,255,0.4);text-transform:uppercase;margin-bottom:16px;"></div>
 
-    <!-- Level number + name -->
-    <div id="adv-intro-level" style="font-family:'Fredoka One',cursive;font-size:52px;
-      color:#fff;line-height:1;margin-bottom:6px;
-      text-shadow:0 2px 20px rgba(155,93,229,0.5);"></div>
-    <div id="adv-intro-name" style="font-family:'Fredoka One',cursive;font-size:24px;
-      color:#c8a06a;margin-bottom:20px;"></div>
+    <!-- HERO: level number — dominant -->
+    <div id="adv-intro-level" style="font-family:'Fredoka One',cursive;font-size:72px;
+      color:#fff;line-height:0.9;margin-bottom:8px;
+      text-shadow:0 4px 32px rgba(155,93,229,0.6),0 0 60px rgba(155,93,229,0.2);"></div>
+
+    <!-- Level name — warm, secondary -->
+    <div id="adv-intro-name" style="font-family:'Fredoka One',cursive;font-size:20px;
+      color:rgba(255,200,120,0.75);margin-bottom:18px;letter-spacing:0.5px;"></div>
 
     <!-- Boss badge -->
-    <div id="adv-intro-boss-badge" style="display:none;background:linear-gradient(135deg,#ff4444,#aa1111);
-      color:#fff;font-family:'Fredoka One',cursive;font-size:16px;padding:6px 20px;
-      border-radius:20px;margin-bottom:14px;display:inline-block;
-      box-shadow:0 4px 12px rgba(255,0,0,0.3);">👑 BOSS LEVEL</div>
+    <div id="adv-intro-boss-badge" style="display:none;background:linear-gradient(135deg,#cc2222,#881111);
+      color:#fff;font-family:'Fredoka One',cursive;font-size:13px;padding:5px 18px;
+      border-radius:20px;margin-bottom:14px;letter-spacing:1px;
+      box-shadow:0 4px 16px rgba(200,0,0,0.35);">👑 BOSS LEVEL</div>
 
     <!-- Divider -->
-    <div style="height:1px;background:linear-gradient(to right,transparent,rgba(155,93,229,0.4),transparent);margin-bottom:20px;"></div>
+    <div style="height:1px;background:linear-gradient(to right,transparent,rgba(155,93,229,0.3),transparent);margin-bottom:18px;"></div>
 
-    <!-- Goal block -->
-    <div style="background:rgba(155,93,229,0.12);border-radius:16px;padding:16px 20px;margin-bottom:16px;">
-      <div style="font-family:'Nunito',sans-serif;font-size:13px;color:rgba(255,255,255,0.45);
-        text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;">Goal</div>
-      <div id="adv-intro-goal" style="font-family:'Fredoka One',cursive;font-size:34px;
-        color:#9b5de5;line-height:1;"></div>
+    <!-- Goal — clear, not oversized -->
+    <div style="margin-bottom:6px;">
+      <div style="font-family:'Nunito',sans-serif;font-size:11px;color:rgba(255,255,255,0.3);
+        text-transform:uppercase;letter-spacing:3px;margin-bottom:6px;">Goal</div>
+      <div id="adv-intro-goal" style="font-family:'Fredoka One',cursive;font-size:26px;
+        color:#c8a0ff;line-height:1;"></div>
     </div>
 
-    <!-- Boss modifier -->
-    <div id="adv-intro-modifier" style="font-family:'Nunito',sans-serif;font-size:16px;
-      color:rgba(255,100,100,0.9);margin-bottom:16px;min-height:0;font-weight:700;"></div>
+    <!-- Boss modifier — subtle warning -->
+    <div id="adv-intro-modifier" style="font-family:'Nunito',sans-serif;font-size:13px;
+      color:rgba(255,120,100,0.8);margin-top:8px;margin-bottom:0;min-height:0;font-weight:700;letter-spacing:0.5px;"></div>
 
-    <!-- Star criteria — centered rows -->
-    <div style="background:rgba(255,255,255,0.05);border-radius:14px;padding:14px 20px;
-      margin-bottom:24px;display:flex;flex-direction:column;gap:8px;align-items:center;">
-      <div style="font-family:'Nunito',sans-serif;font-size:15px;color:rgba(255,220,80,0.8);font-weight:700;">⭐ Complete the goal</div>
-      <div style="font-family:'Nunito',sans-serif;font-size:15px;color:rgba(255,220,80,0.8);font-weight:700;">⭐⭐ Beat the time limit</div>
-      <div style="font-family:'Nunito',sans-serif;font-size:15px;color:rgba(255,220,80,0.8);font-weight:700;">⭐⭐⭐ No misses</div>
+    <!-- Star criteria — compact horizontal chips -->
+    <div style="display:flex;gap:6px;justify-content:center;margin:16px 0 22px;flex-wrap:wrap;">
+      <div style="background:rgba(255,200,0,0.1);border:1px solid rgba(255,200,0,0.2);
+        border-radius:20px;padding:5px 12px;font-family:'Nunito',sans-serif;
+        font-size:12px;color:rgba(255,220,80,0.7);font-weight:700;white-space:nowrap;">⭐ Goal</div>
+      <div style="background:rgba(255,200,0,0.1);border:1px solid rgba(255,200,0,0.2);
+        border-radius:20px;padding:5px 12px;font-family:'Nunito',sans-serif;
+        font-size:12px;color:rgba(255,220,80,0.7);font-weight:700;white-space:nowrap;">⭐⭐ Time</div>
+      <div style="background:rgba(255,200,0,0.1);border:1px solid rgba(255,200,0,0.2);
+        border-radius:20px;padding:5px 12px;font-family:'Nunito',sans-serif;
+        font-size:12px;color:rgba(255,220,80,0.7);font-weight:700;white-space:nowrap;">⭐⭐⭐ No misses</div>
     </div>
 
-    <!-- CTA button -->
+    <!-- CTA — big, clear, singular focus -->
     <button id="adv-intro-start" style="width:100%;
       background:linear-gradient(135deg,#9b5de5,#6a2daa);color:#fff;
-      font-family:'Fredoka One',cursive;font-size:28px;padding:18px;
-      border:none;border-radius:20px;cursor:pointer;pointer-events:all;
-      box-shadow:0 6px 0 #4a1a80,0 10px 24px rgba(155,93,229,0.4);">
+      font-family:'Fredoka One',cursive;font-size:26px;padding:17px;
+      border:none;border-radius:18px;cursor:pointer;pointer-events:all;
+      box-shadow:0 6px 0 #4a1a80,0 12px 28px rgba(155,93,229,0.45);
+      letter-spacing:0.5px;">
       Let's Go! 🍣
     </button>
-    <!-- Heart shower start button -->
-    <button onclick="startAdvWithHeartShower()" style="width:100%;margin-top:10px;
-      background:linear-gradient(135deg,rgba(255,80,120,0.35),rgba(255,150,50,0.25));color:#fff;
-      font-family:'Fredoka One',cursive;font-size:18px;padding:13px;
-      border:1px solid rgba(255,80,120,0.45);border-radius:16px;cursor:pointer;pointer-events:all;">
-      📺 Start with ❤️ Heart Shower!
+
+    <!-- Heart shower — small, secondary -->
+    <button onclick="startAdvWithHeartShower()" style="width:100%;margin-top:8px;
+      background:transparent;color:rgba(255,120,150,0.65);
+      font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;padding:10px;
+      border:1px solid rgba(255,80,120,0.2);border-radius:14px;cursor:pointer;pointer-events:all;
+      letter-spacing:0.3px;">
+      📺 Start with ❤️ Heart Shower
     </button>
-    <button onclick="closeAdvIntro()" style="width:100%;margin-top:10px;background:transparent;
-      color:rgba(255,255,255,0.35);font-family:'Fredoka One',cursive;font-size:17px;
-      padding:10px;border:none;cursor:pointer;pointer-events:all;">← Back to Map</button>
+
+    <!-- Back — ghost -->
+    <button onclick="closeAdvIntro()" style="width:100%;margin-top:6px;background:transparent;
+      color:rgba(255,255,255,0.25);font-family:'Nunito',sans-serif;font-size:14px;font-weight:600;
+      padding:8px;border:none;cursor:pointer;pointer-events:all;">← Back to Map</button>
   </div>
 </div>
 
@@ -625,6 +641,8 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
     <div class="go-title" id="go-title">Dropped it!</div>
     <div class="go-score-lbl">Your Score</div>
     <div class="go-score" id="go-score">0</div>
+    <div id="go-streak" style="display:none;font-family:'Fredoka One',cursive;font-size:16px;
+      color:#ff9944;margin-top:4px;margin-bottom:2px;"></div>
     <div id="name-entry" style="display:none;margin-top:10px;">
       <div class="go-score-lbl" style="color:#9b5de5;">🏆 Enter your name</div>
       <input id="name-input" type="text" maxlength="12" placeholder="Your name..."
@@ -639,6 +657,10 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
     <div class="btns">
       <button class="btn-p" id="retryBtn">🍣 Try Again</button>
       <button class="btn-s" id="dailyBtn">🗓️ Daily Challenge</button>
+      <button onclick="shareScore()" style="width:100%;background:rgba(255,255,255,0.12);color:#fff;
+        font-family:'Fredoka One',cursive;font-size:17px;padding:11px;
+        border:1px solid rgba(255,255,255,0.2);border-radius:14px;cursor:pointer;
+        margin-top:2px;">📤 Share My Score</button>
     </div>
   </div>
 </div>
@@ -787,8 +809,31 @@ const setBest=s=>{
     d.best=s;
     setSave(d);
     checkAnimalUnlocks(prevBest, s);
+    if(prevBest>0) _showPersonalBestCelebration(s, prevBest); // celebrate improvement
   }
 };
+
+function _showPersonalBestCelebration(newBest, oldBest){
+  // Brief floating banner — non-blocking
+  const el=document.createElement('div');
+  el.style.cssText=`position:fixed;top:20%;left:50%;transform:translateX(-50%);
+    z-index:400;text-align:center;pointer-events:none;
+    animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;`;
+  el.innerHTML=`<div style="background:linear-gradient(135deg,rgba(255,200,0,0.95),rgba(255,140,0,0.95));
+    border-radius:20px;padding:16px 28px;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+    <div style="font-family:'Fredoka One',cursive;font-size:13px;color:rgba(0,0,0,0.6);letter-spacing:2px;text-transform:uppercase;">New Personal Best!</div>
+    <div style="font-family:'Fredoka One',cursive;font-size:44px;color:#fff;line-height:1;
+      text-shadow:0 2px 8px rgba(0,0,0,0.3);">🏆 ${newBest}</div>
+    <div style="font-family:'Nunito',sans-serif;font-size:13px;color:rgba(0,0,0,0.5);margin-top:2px;">Previous best: ${oldBest}</div>
+  </div>`;
+  document.body.appendChild(el);
+  setTimeout(()=>{
+    el.style.transition='transform 0.5s ease-in, opacity 0.5s ease-in';
+    el.style.transform='translateX(-50%) translateY(-30px)';
+    el.style.opacity='0';
+    setTimeout(()=>el.remove(), 500);
+  }, 2800);
+}
 function checkAnimalUnlocks(prevBest, newBest){
   Object.entries(ANIMALS).forEach(([key,a])=>{
     if(a.unlockAt>0 && newBest>=a.unlockAt && prevBest<a.unlockAt){
@@ -930,6 +975,7 @@ const CREDITS_DATA={
 let _colCurrentTab='blocks';
 
 function showCollection(tab){
+  if(state==='playing') paused=true;
   const screen=document.getElementById('s-collection');
   screen.style.display='flex';
   screen.style.animation='none'; screen.offsetHeight;
@@ -941,6 +987,7 @@ function showCollection(tab){
 }
 
 function closeCollection(){
+  paused=false;
   const screen=document.getElementById('s-collection');
   const inner=screen.querySelector('#col-inner');
   if(inner){ inner.style.animation='colSlideDown 0.25s ease-in forwards'; }
@@ -957,9 +1004,11 @@ function initCollectionSwipe(){
   el.addEventListener('touchend',e=>{
     const dx=e.changedTouches[0].clientX-startX;
     if(Math.abs(dx)>60){
-      const cur=document.getElementById('col-tab-blocks').style.background.includes('0.8')?'blocks':'animals';
-      if(dx<0 && cur==='blocks') switchCollectionTab('animals');
-      if(dx>0 && cur==='animals') switchCollectionTab('blocks');
+      const tabs=['blocks','animals','music'];
+      const cur=tabs.find(t=>{ const b=document.getElementById('col-tab-'+t); return b&&b.style.background.includes('0.8'); })||'blocks';
+      const ci=tabs.indexOf(cur);
+      if(dx<0 && ci<tabs.length-1) switchCollectionTab(tabs[ci+1]);
+      if(dx>0 && ci>0) switchCollectionTab(tabs[ci-1]);
     }
   },{passive:true});
 }
@@ -969,8 +1018,10 @@ function switchCollectionTab(tab, animate, noCardAnim){
   _colCurrentTab=tab;
   const bBtn=document.getElementById('col-tab-blocks');
   const aBtn=document.getElementById('col-tab-animals');
+  const mBtn=document.getElementById('col-tab-music');
   if(bBtn){ bBtn.style.background=tab==='blocks'?'rgba(155,93,229,0.8)':'rgba(255,255,255,0.08)'; bBtn.style.color=tab==='blocks'?'#fff':'rgba(255,255,255,0.5)'; }
   if(aBtn){ aBtn.style.background=tab==='animals'?'rgba(155,93,229,0.8)':'rgba(255,255,255,0.08)'; aBtn.style.color=tab==='animals'?'#fff':'rgba(255,255,255,0.5)'; }
+  if(mBtn){ mBtn.style.background=tab==='music'?'rgba(155,93,229,0.8)':'rgba(255,255,255,0.08)'; mBtn.style.color=tab==='music'?'#fff':'rgba(255,255,255,0.5)'; }
 
   const content=document.getElementById('col-content');
   if(!content) return;
@@ -981,7 +1032,8 @@ function switchCollectionTab(tab, animate, noCardAnim){
   content.innerHTML='';
 
   if(tab==='blocks') buildCollectionBlocks(content, noCardAnim);
-  else buildCollectionAnimals(content, noCardAnim);
+  else if(tab==='animals') buildCollectionAnimals(content, noCardAnim);
+  else buildCollectionMusic(content);
 
   if(slideAnim!=='none'){
     content.style.animation=`${slideAnim} 0.3s cubic-bezier(0.25,1,0.5,1) forwards`;
@@ -1014,7 +1066,8 @@ function buildCollectionBlocks(container, noCardAnim){
       <div style="font-family:'Fredoka One',cursive;font-size:12px;color:${unlocked?'#fff':'rgba(255,255,255,0.3)'};
         line-height:1.2;white-space:nowrap;">${name}</div>
       <div class="col-active-lbl" style="font-family:Fredoka One,cursive;font-size:10px;color:#ffcc00;letter-spacing:1px;margin-top:3px;visibility:${active?'visible':'hidden'};height:14px;">ACTIVE</div>
-      ${!unlocked?'<div style="font-size:16px;margin-top:3px;">🔒</div>':''}`;
+      ${(!unlocked&&st.unlock==='mesh')?'<div style="font-family:Fredoka One,cursive;font-size:10px;color:rgba(255,150,80,0.8);margin-top:3px;">📺 Try free</div>':''}
+      ${(!unlocked&&st.unlock!=='mesh')?'<div style="font-size:16px;margin-top:3px;">🔒</div>':''}`;
     _bi++;
     if(unlocked){
       card.addEventListener('click',()=>{
@@ -1031,13 +1084,125 @@ function buildCollectionBlocks(container, noCardAnim){
       });
     } else {
       card.addEventListener('click',()=>{
-        const msgs={golden:'Complete all 8 Adventure worlds!',mesh:'Earn this by completing a reward level in Adventure Mode!'};
-        showUnlockRequiredPopup(msgs[st.unlock]||'Keep playing to unlock!');
+        if(st.unlock==='mesh'){
+          showMeshPreviewOffer(st.id, st.label);
+        } else {
+          // Golden — only via adventure
+          showUnlockRequiredPopup('Complete all 8 Adventure worlds to unlock Golden Blocks! ✨');
+        }
       });
     }
     grid.appendChild(card);
   });
   container.appendChild(grid);
+}
+
+function buildCollectionMusic(container){
+  const activePack=getSave().musicPack||'default';
+  const grid=document.createElement('div');
+  grid.style.cssText='display:grid;grid-template-columns:repeat(1,1fr);gap:14px;';
+  let _mi=0;
+  Object.values(MUSIC_PACKS).forEach(pack=>{
+    const unlocked=isMusicPackUnlocked(pack.id);
+    const active=activePack===pack.id;
+    const card=document.createElement('div');
+    card.style.cssText=`border-radius:18px;padding:18px 20px;text-align:left;cursor:pointer;
+      display:flex;align-items:center;gap:16px;
+      background:${active?'rgba(155,93,229,0.4)':unlocked?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.3)'};
+      border:2px solid ${active?'#9b5de5':unlocked?'rgba(255,255,255,0.15)':'rgba(255,255,255,0.05)'};
+      opacity:0;
+      animation:colCardIn 0.35s cubic-bezier(0.34,1.3,0.64,1) ${_mi*0.08}s forwards;`;
+    _mi++;
+    const emoji=pack.label.split(' ')[0];
+    const name=pack.label.split(' ').slice(1).join(' ');
+    card.innerHTML=`
+      <div style="font-size:52px;line-height:1;flex-shrink:0;">${emoji}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-family:'Fredoka One',cursive;font-size:20px;color:${unlocked?'#fff':'rgba(255,255,255,0.3)'};
+          white-space:nowrap;">${name}</div>
+        <div style="font-family:'Nunito',sans-serif;font-size:13px;color:rgba(255,255,255,0.4);margin-top:3px;">
+          ${pack.tracks.length} tracks</div>
+        <div class="col-active-lbl" style="font-family:Fredoka One,cursive;font-size:11px;color:#ffcc00;
+          letter-spacing:1px;margin-top:4px;visibility:${active?'visible':'hidden'};height:14px;">NOW PLAYING</div>
+      </div>
+      <div style="font-size:28px;">${unlocked?(active?'▶️':'⏸'):'🔒'}</div>`;
+    card.setAttribute('data-col-id', pack.id);
+    if(unlocked){
+      card.addEventListener('click',()=>{
+        const sv=getSave(); sv.musicPack=pack.id; setSave(sv);
+        // Update all cards in-place
+        grid.querySelectorAll('[data-col-id]').forEach(c=>{
+          const cid=c.getAttribute('data-col-id');
+          const isA=cid===pack.id;
+          c.style.background=isA?'rgba(155,93,229,0.4)':'rgba(255,255,255,0.07)';
+          c.style.border='2px solid '+(isA?'#9b5de5':'rgba(255,255,255,0.15)');
+          const lbl=c.querySelector('.col-active-lbl');
+          if(lbl) lbl.style.visibility=isA?'visible':'hidden';
+          const ico=c.querySelector('div:last-child');
+          if(ico) ico.textContent=isA?'▶️':'⏸';
+        });
+        // If playing during a level, switch music immediately
+        if(state==='playing'){
+          _ct=null; // force playMusic to not skip
+          playMusic(isDailyMode?'daily':advMode?_advLevelMusicKey:'game');
+        }
+      });
+    } else {
+      card.addEventListener('click',()=>showMusicPackOffer(pack));
+    }
+    grid.appendChild(card);
+  });
+  container.appendChild(grid);
+}
+
+function showMusicPackOffer(pack){
+  const emoji=pack.label.split(' ')[0];
+  const name=pack.label.split(' ').slice(1).join(' ');
+  const pop=document.createElement('div');
+  pop.style.cssText=`position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.75);animation:modalBgIn 0.2s ease-out forwards;`;
+  pop.innerHTML=`
+    <div style="background:rgba(20,10,40,0.97);border:1px solid rgba(155,93,229,0.35);
+      border-radius:28px;padding:32px 24px;max-width:320px;width:90%;text-align:center;
+      animation:modalCardIn 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;">
+      <div style="font-size:64px;line-height:1;margin-bottom:10px;">${emoji}</div>
+      <div style="font-family:'Fredoka One',cursive;font-size:26px;color:#fff;margin-bottom:6px;">${name} Pack</div>
+      <div style="font-family:'Nunito',sans-serif;font-size:15px;color:rgba(255,255,255,0.55);
+        margin-bottom:22px;line-height:1.5;">${pack.tracks.length} tracks unlocked forever.<br>Watch a short ad to unlock!</div>
+      <button id="music-unlock-yes" style="width:100%;background:linear-gradient(135deg,#9b5de5,#6a2daa);
+        color:#fff;font-family:'Fredoka One',cursive;font-size:19px;padding:14px;
+        border:none;border-radius:14px;cursor:pointer;box-shadow:0 5px 0 #4a1a80;margin-bottom:10px;">
+        📺 Watch Ad to Unlock!</button>
+      <button id="music-unlock-no" style="width:100%;background:transparent;
+        color:rgba(255,255,255,0.35);font-family:'Fredoka One',cursive;font-size:15px;
+        padding:8px;border:none;cursor:pointer;">Not now</button>
+    </div>`;
+  document.body.appendChild(pop);
+  document.getElementById('music-unlock-yes').onclick=()=>{
+    admobShowRewarded('musicpack',
+      ()=>{
+        // Permanently unlock
+        const sv=getSave(); sv['musicPack_'+pack.id]=true; sv.musicPack=pack.id; setSave(sv);
+        pop.style.animation='modalBgOut 0.2s ease-in forwards';
+        setTimeout(()=>{ pop.remove(); buildCollectionMusic(document.getElementById('col-content').firstChild||document.getElementById('col-content')); switchCollectionTab('music',false,true); },200);
+        // Toast
+        const t=document.createElement('div');
+        t.style.cssText=`position:fixed;bottom:calc(var(--ad-bar-h,60px)+16px);left:50%;
+          transform:translateX(-50%);z-index:600;background:rgba(155,93,229,0.95);
+          color:#fff;font-family:'Fredoka One',cursive;font-size:15px;
+          padding:10px 24px;border-radius:12px;white-space:nowrap;animation:popIn 0.3s ease-out;`;
+        t.textContent=`${emoji} ${name} Pack unlocked!`;
+        document.body.appendChild(t);
+        setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity 0.4s';setTimeout(()=>t.remove(),400);},2500);
+      },
+      ()=>{ pop.style.animation='modalBgOut 0.2s ease-in forwards'; setTimeout(()=>pop.remove(),200); }
+    );
+  };
+  document.getElementById('music-unlock-no').onclick=()=>{
+    pop.style.animation='modalBgOut 0.2s ease-in forwards';
+    setTimeout(()=>pop.remove(), 200);
+  };
 }
 
 function buildCollectionAnimals(container, noCardAnim){
@@ -1101,6 +1266,101 @@ function buildCollectionAnimals(container, noCardAnim){
   container.appendChild(grid);
 }
 
+function showMeshPreviewOffer(meshId, label){
+  const emoji=label.split(' ')[0];
+  const name=label.split(' ').slice(1).join(' ');
+  const pop=document.createElement('div');
+  pop.style.cssText=`position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.75);animation:modalBgIn 0.2s ease-out forwards;`;
+  pop.innerHTML=`
+    <div style="background:rgba(20,10,40,0.97);border:1px solid rgba(255,150,50,0.3);
+      border-radius:28px;padding:32px 24px;max-width:320px;width:90%;text-align:center;
+      animation:modalCardIn 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;">
+      <div style="font-size:64px;line-height:1;margin-bottom:10px;">${emoji}</div>
+      <div style="font-family:'Fredoka One',cursive;font-size:24px;color:#fff;margin-bottom:6px;">Try ${name}!</div>
+      <div style="font-family:'Nunito',sans-serif;font-size:15px;color:rgba(255,255,255,0.55);
+        margin-bottom:22px;line-height:1.5;">Watch a short ad to use <b style="color:#fff">${name}</b> for your next level.<br><br>
+        <span style="color:rgba(255,200,80,0.8);font-size:13px;">🏆 Earn it permanently by completing its reward level in Adventure Mode.</span></div>
+      <button id="mesh-preview-yes" style="width:100%;background:linear-gradient(135deg,#ff9944,#e06010);
+        color:#fff;font-family:'Fredoka One',cursive;font-size:19px;padding:14px;
+        border:none;border-radius:14px;cursor:pointer;box-shadow:0 5px 0 #a04008;margin-bottom:10px;">
+        📺 Watch Ad & Try It!</button>
+      <button id="mesh-preview-no" style="width:100%;background:transparent;
+        color:rgba(255,255,255,0.35);font-family:'Fredoka One',cursive;font-size:15px;
+        padding:8px;border:none;cursor:pointer;">Not now</button>
+    </div>`;
+  document.body.appendChild(pop);
+  document.getElementById('mesh-preview-yes').onclick=()=>{
+    admobShowRewarded('preview',
+      ()=>{
+        // Grant one-level preview
+        pop.style.animation='modalBgOut 0.2s ease-in forwards';
+        setTimeout(()=>pop.remove(), 200);
+        _meshPreviewId=meshId;
+        // Apply immediately as active block style
+        setBlockStyle(meshId);
+        switchCollectionTab('blocks', false, true);
+        // Show confirmation
+        const t=document.createElement('div');
+        t.style.cssText=`position:fixed;bottom:calc(var(--ad-bar-h,60px)+16px);left:50%;
+          transform:translateX(-50%);z-index:600;background:rgba(255,150,50,0.95);
+          color:#fff;font-family:'Fredoka One',cursive;font-size:15px;
+          padding:10px 24px;border-radius:12px;white-space:nowrap;animation:popIn 0.3s ease-out;`;
+        t.textContent=`${emoji} ${name} active for this level!`;
+        document.body.appendChild(t);
+        setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity 0.4s';
+          setTimeout(()=>t.remove(),400);},2500);
+      },
+      ()=>{ pop.style.animation='modalBgOut 0.2s ease-in forwards'; setTimeout(()=>pop.remove(),200); }
+    );
+  };
+  document.getElementById('mesh-preview-no').onclick=()=>{
+    pop.style.animation='modalBgOut 0.2s ease-in forwards';
+    setTimeout(()=>pop.remove(), 200);
+  };
+}
+
+// Track preview mesh — resets after one level
+let _meshPreviewId=null;
+
+function shareScore(){
+  const sc=parseInt(document.getElementById('go-score').textContent)||score;
+  const isDly=isDailyMode;
+  const text=isDly
+    ? `🗓️ I scored ${sc} on today's Daily Challenge in Sushi Stack! Can you beat me? 🍣`
+    : `🍣 I just stacked ${sc} blocks in Sushi Stack! Can you beat me?`;
+  _doShare(text);
+}
+
+function shareAdvResult(wi, li, stars){
+  const world=ADV_WORLDS[wi];
+  const levelName=ADV_LEVEL_NAMES[wi][li];
+  const starStr=['','⭐','⭐⭐','⭐⭐⭐'][stars]||'';
+  const text=`${starStr} Just beat ${world.name} – ${levelName} in Sushi Stack! 🍣 Think you can do it?`;
+  _doShare(text);
+}
+
+function _doShare(text){
+  const url='https://sushistack.game'; // update with real URL before launch
+  if(navigator.share){
+    navigator.share({ title:'Sushi Stack', text, url }).catch(()=>{});
+  } else {
+    // Fallback: copy to clipboard
+    navigator.clipboard?.writeText(text+' '+url).then(()=>{
+      const t=document.createElement('div');
+      t.style.cssText=`position:fixed;bottom:calc(var(--ad-bar-h,60px)+16px);left:50%;
+        transform:translateX(-50%);z-index:600;background:rgba(76,175,125,0.95);
+        color:#fff;font-family:'Fredoka One',cursive;font-size:15px;
+        padding:10px 24px;border-radius:12px;white-space:nowrap;animation:popIn 0.3s ease-out;`;
+      t.textContent='✓ Copied to clipboard!';
+      document.body.appendChild(t);
+      setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity 0.4s';
+        setTimeout(()=>t.remove(),400);},2000);
+    });
+  }
+}
+
 function showCreditsPopup(){
   const pop=document.createElement('div');
   pop.style.cssText=`position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;
@@ -1154,7 +1414,7 @@ function goToTitle(){
   reqFS();
   showFullscreenNudge();
   showScreenAds('start');
-  playMusic('menu');
+  playMusic('title');
 }
 
 // ── UNLOCK REQUIRED POPUP ──
@@ -2457,6 +2717,7 @@ function finishAdvLevel(stars, elapsed){
   const savedWorld=advWorld, savedLevel=advLevel;
   advMode=false;
   _inAdvSession=false;
+  if(_meshPreviewId){ _meshPreviewId=null; setBlockStyle('default'); }
   resetAdvBoss();
   // Capture previous stars BEFORE saving so celebration knows what's new
   const prevStars=getAdvLevelData(savedWorld,savedLevel).stars||0;
@@ -2603,6 +2864,17 @@ function showMapCelebration(wi,li,stars,elapsed,prevStars,rewardName){
   card.appendChild(hint);
   setTimeout(()=>hint.style.opacity='1', statsDelay+400);
 
+  // Share button on celebration
+  const shareBtn=document.createElement('button');
+  shareBtn.style.cssText=`width:100%;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);
+    font-family:'Fredoka One',cursive;font-size:15px;padding:10px;
+    border:1px solid rgba(255,255,255,0.15);border-radius:12px;cursor:pointer;
+    margin-top:10px;opacity:0;transition:opacity 0.5s;pointer-events:all;`;
+  shareBtn.textContent='📤 Share Result';
+  shareBtn.addEventListener('click', e=>{ e.stopPropagation(); shareAdvResult(wi,li,stars); });
+  card.appendChild(shareBtn);
+  setTimeout(()=>shareBtn.style.opacity='1', statsDelay+600);
+
   // Tap to skip / auto-continue
   let proceeded=false;
   function proceed(){
@@ -2634,6 +2906,8 @@ function showMapCelebration(wi,li,stars,elapsed,prevStars,rewardName){
         const sv=getSave(); sv.pandaUnlocked=true; sv.goldenUnlocked=true; setSave(sv);
         buildAnimalSelector();
       }
+      // Check for world 3-star completion
+      _checkWorldStarReward(p.world);
     }
 
     // If there's a reward, show it immediately before any map transition
@@ -2794,11 +3068,42 @@ function resolveAssetPath(relativePath){
   console.log('Local asset path:',base+relativePath);
   return base+relativePath;
 }
+const MUSIC_PACKS={
+  default:{
+    id:'default', label:'🎵 Classic', unlocked:true,
+    tracks:['Music/bgm_01.mp3','Music/bgm_02.mp3','Music/bgm_03.mp3','Music/bgm_04.mp3'].map(resolveAssetPath),
+  },
+  happy:{
+    id:'happy', label:'😊 Happy', unlocked:false,
+    tracks:['Music/Packs/Happy_01/bgm_happy_01.mp3','Music/Packs/Happy_01/bgm_happy_02.mp3',
+            'Music/Packs/Happy_01/bgm_happy_03.mp3','Music/Packs/Happy_01/bgm_happy_04.mp3',
+            'Music/Packs/Happy_01/bgm_happy_05.mp3'].map(resolveAssetPath),
+  },
+  kpop:{
+    id:'kpop', label:'🎤 K-Pop', unlocked:false,
+    tracks:['Music/Packs/Kpop_01/bgm_kpop_01.mp3','Music/Packs/Kpop_01/bgm_kpop_02.mp3',
+            'Music/Packs/Kpop_01/bgm_kpop_03.mp3','Music/Packs/Kpop_01/bgm_kpop_04.mp3',
+            'Music/Packs/Kpop_01/bgm_kpop_05.mp3'].map(resolveAssetPath),
+  },
+};
+
+function getActivePack(){
+  const id=getSave().musicPack||'default';
+  return MUSIC_PACKS[id]||MUSIC_PACKS.default;
+}
+
+function isMusicPackUnlocked(id){
+  if(id==='default') return true;
+  const sv=getSave();
+  return !!(sv['musicPack_'+id] || _allMeshesUnlocked);
+}
+
 const MT={
+  title:resolveAssetPath('Music/bgm_title.mp3'),
   menu:resolveAssetPath('Music/bgm_menu.mp3'),
   fanfare:resolveAssetPath('Music/bgm_fanfare.mp3'),
   daily:resolveAssetPath('Music/bgm_tense_01.mp3'),
-  game:['Music/bgm_01.mp3','Music/bgm_02.mp3','Music/bgm_03.mp3','Music/bgm_04.mp3'].map(resolveAssetPath),
+  get game(){ return getActivePack().tracks; },
   world:['Music/World_01.mp3','Music/World_02.mp3','Music/World_03.mp3','Music/World_04.mp3',
          'Music/World_05.mp3','Music/World_06.mp3','Music/World_07.mp3','Music/World_08.mp3'].map(resolveAssetPath),
 };
@@ -2807,17 +3112,51 @@ try{_muted=localStorage.getItem('ssMuted')==='1';}catch{}
 const _cA=(src,lp=true)=>{const a=new Audio(src);a.loop=lp;a.volume=0;return a;};
 function _fIn(a,tv=0.5){let i=0;const t=setInterval(()=>{a.volume=Math.min(tv,a.volume+tv/20);if(++i>=20)clearInterval(t);},40);}
 function _fOut(a,cb){if(!a){cb?.();return;}let i=0;const sv=a.volume,t=setInterval(()=>{a.volume=Math.max(0,a.volume-sv/20);if(++i>=20){clearInterval(t);a.pause();cb?.();}},30);}
+// Warm up audio on load — create a silent audio element immediately
+// so the browser considers audio "started" and allows volume changes later
+let _warmAud=null;
+(function(){
+  try{
+    _warmAud=new Audio(MT.title);
+    _warmAud.loop=true;
+    _warmAud.volume=0;
+    const p=_warmAud.play();
+    if(p) p.then(()=>{
+      // Silent play succeeded — fade in immediately
+      if(!_muted){ let i=0; const t=setInterval(()=>{ _warmAud.volume=Math.min(0.5,_warmAud.volume+0.5/20); if(++i>=20)clearInterval(t); },40); }
+      _aud=_warmAud; _ct=MT.title; _warmAud=null;
+    }).catch(()=>{ /* blocked — will retry on interaction */ });
+  }catch(e){}
+})();
+
+let _pendingMusicKey=null;
 function playMusic(k){
   if(_muted)return;
+  _pendingMusicKey=k;
   const ff=k==='fanfare';
   let src;
-  if(k==='menu') src=MT.menu;
+  if(k==='title') src=MT.title;
+  else if(k==='menu') src=MT.menu;
   else if(k==='fanfare') src=MT.fanfare;
   else if(k==='daily') src=MT.daily;
   else if(k==='world') src=MT.world[advWorld]||MT.world[0];
   else src=MT.game[Math.floor(Math.random()*MT.game.length)];
   if(_ct===src&&_aud&&!_aud.paused&&!ff)return;
-  _ct=src;_fOut(_aud,()=>{_aud=_cA(src,!ff);_aud.play().then(()=>_fIn(_aud,ff?0.7:0.5)).catch(()=>{});});
+  _ct=src;_fOut(_aud,()=>{
+    _aud=_cA(src,!ff);
+    _aud.play().then(()=>{_pendingMusicKey=null;_fIn(_aud,ff?0.7:0.5);}).catch(()=>{
+      // Autoplay blocked — will retry on next user interaction
+    });
+  });
+}
+
+function _retryPendingMusic(){
+  if(_pendingMusicKey && !_muted){
+    const k=_pendingMusicKey;
+    _pendingMusicKey=null;
+    _ct=null; // force replay
+    playMusic(k);
+  }
 }
 function toggleMute(){
   _muted=!_muted;try{localStorage.setItem('ssMuted',_muted?'1':'0');}catch{}
@@ -3482,10 +3821,11 @@ function loadGLB(name, path, onDone){
           loading:false
         };
         console.log(`GLB loaded: ${name}`);
+        _updateGLBLoadingUI();
         onDone?.(_glbCache[name]);
       },
       null,
-      err=>{ console.warn(`GLB failed: ${name}`,err); _glbCache[name].loading=false; }
+      err=>{ console.warn(`GLB failed: ${name}`,err); _glbCache[name].loading=false; _updateGLBLoadingUI(); }
     );
   }catch(e){ console.warn(`GLB exception: ${name}`,e); _glbCache[name].loading=false; }
 }
@@ -3529,9 +3869,46 @@ function getAdvRewardModelPath(name){
 }
 
 // Preload all reward GLBs
+// Loading overlay for GLB models
+function _showGLBLoader(){
+  if(document.getElementById('glb-loader')) return;
+  const el=document.createElement('div');
+  el.id='glb-loader';
+  el.style.cssText=`position:fixed;bottom:calc(var(--ad-bar-h,60px)+12px);right:14px;
+    z-index:50;background:rgba(20,10,40,0.85);border:1px solid rgba(155,93,229,0.3);
+    border-radius:14px;padding:8px 14px;display:flex;align-items:center;gap:8px;
+    font-family:'Fredoka One',cursive;font-size:13px;color:rgba(255,255,255,0.7);
+    pointer-events:none;animation:fadeIn 0.3s ease-out;`;
+  el.innerHTML=`<div style="width:16px;height:16px;border:2px solid rgba(155,93,229,0.4);
+    border-top-color:#9b5de5;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+    <span id="glb-loader-txt">Loading models…</span>`;
+  document.body.appendChild(el);
+}
+
+function _updateGLBLoadingUI(){
+  const total=['strawberry','tomato','carrot','cucumber','banana','lemon','orange_bell_pepper','orange','bread','chocolate_cake','cinnamon_roll','glazed_donut','pepperoni_pizza','salami','swiss_cheese'].length;
+  const done=Object.values(_glbCache).filter(c=>c.glb||(!c.loading&&!c.glb)).length;
+  const el=document.getElementById('glb-loader');
+  if(done>=total){
+    if(el){ el.style.transition='opacity 0.5s'; el.style.opacity='0'; setTimeout(()=>el?.remove(),500); }
+  } else {
+    if(!el) _showGLBLoader();
+    const txt=document.getElementById('glb-loader-txt');
+    if(txt) txt.textContent=`Loading models… ${done}/${total}`;
+  }
+}
+
+// Add spin keyframe to CSS
+(function(){
+  const s=document.createElement('style');
+  s.textContent='@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}';
+  document.head.appendChild(s);
+})();
+
 ['strawberry','tomato','carrot','cucumber','banana','lemon','orange_bell_pepper','orange','bread','chocolate_cake','cinnamon_roll','glazed_donut','pepperoni_pizza','salami','swiss_cheese'].forEach(name=>{
   loadGLB(name, getAdvRewardModelPath(name));
 });
+_showGLBLoader();
 
 // Current adv block model override (null = use blockStyle)
 let _advGLBOverride=null; // name string or null
@@ -4550,13 +4927,24 @@ function collectHeart(h){
     mover.lx-=grow/2; mover.w=nw;
     blockResize(mover.mesh,nw);
     mover.mesh.position.x=mover.lx+nw/2;
-    // Reclamp all riding bunnies to new larger block
     clampBunniesToMover();
     if(mover.bounces>=1){
       mover.bounces=0;
       blockSetRedWarning(mover.mesh, false);
       mover.origColor=mover.origColor||new THREE.Color(getStage(score).block);
       blockSetColor(mover.mesh, mover.origColor);
+    }
+    // Extra impact during heart shower — screen flash + higher pitch sound
+    if(adState.heartShowerActive){
+      flashScene(new THREE.Color(0xff2266));
+      const ac=getAC();
+      const o=ac.createOscillator(), g=ac.createGain();
+      o.type='sine'; o.frequency.setValueAtTime(880,ac.currentTime);
+      o.frequency.exponentialRampToValueAtTime(1320,ac.currentTime+0.12);
+      g.gain.setValueAtTime(0.18,ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.25);
+      o.connect(g); g.connect(ac.destination);
+      o.start(); o.stop(ac.currentTime+0.25);
     }
   }
 }
@@ -4637,7 +5025,6 @@ function showGameOver(){
     setTimeout(()=>{
       if(canRevive) showAdvReviveOffer(); else showAdvRetry();
     }, 1800);
-    playMusic('menu');
     return;
   }
   _wasDaily=isDailyMode; // MUST be first — save before anything resets it
@@ -4650,6 +5037,10 @@ function showGameOver(){
   document.getElementById('go-emoji').textContent=emoji;
   document.getElementById('go-title').textContent=title;
   document.getElementById('go-score').textContent=score;
+  // Show daily streak if applicable
+  const _streak=getDailyStreak();
+  const _streakEl=document.getElementById('go-streak');
+  if(_streakEl){ _streakEl.textContent=isDailyMode&&_streak>1?`🔥 ${_streak}-day streak!`:''; _streakEl.style.display=isDailyMode&&_streak>1?'block':'none'; }
   document.getElementById('ao-emoji').textContent=emoji;
   document.getElementById('ao-title').textContent=title;
   document.getElementById('ao-score').textContent=score;
@@ -4702,7 +5093,7 @@ function showGameOver(){
     showLeaderboardScreen();
   }
 
-  playMusic('menu');
+  playMusic('title');
   // Only reset camera rotation if NOT daily (daily revive needs camRotate intact)
   if(!_wasDaily) camRotate=parseFloat(getSave().rotate||45);
   isDailyMode=false;
@@ -4999,9 +5390,137 @@ function checkDailyPlayed(){
 }
 
 function markDailyPlayed(score){
-  const sv=getSave();sv.dailyDate=getDailyDate();sv.dailyScore=score;setSave(sv);
+  const sv=getSave();
+  const today=getDailyDate();
+  const yesterday=new Date(); yesterday.setDate(yesterday.getDate()-1);
+  const yStr=yesterday.toISOString().slice(0,10).replace(/-/g,'');
+  // Streak: if played yesterday, increment; if today already, keep; else reset to 1
+  if(sv.dailyDate===today){ /* already counted today */ }
+  else if(sv.dailyDate===yStr){ sv.dailyStreak=(sv.dailyStreak||1)+1; }
+  else { sv.dailyStreak=1; }
+  sv.dailyDate=today; sv.dailyScore=score;
+  setSave(sv);
+  _checkStreakReward(sv.dailyStreak);
+  // Ask for notification permission after first daily play
+  const _sv2=getSave();
+  if(!_sv2.notifyAsked) setupNotifications();
+  else if(_sv2.notifyDaily && Notification.permission==='granted') scheduleNextDailyNotification();
+}
+
+function _checkWorldStarReward(wi){
+  // Check if this world is fully 3-starred
+  let allThree=true;
+  for(let l=0;l<10;l++){ if((getAdvLevelData(wi,l).stars||0)<3){ allThree=false; break; } }
+  if(!allThree) return;
+  const sv=getSave();
+  const key='world3star_'+wi;
+  if(sv[key]) return; // already celebrated
+  sv[key]=true; setSave(sv);
+  const world=ADV_WORLDS[wi];
+  setTimeout(()=>_showWorldThreeStarCelebration(world),800);
+}
+
+function _showWorldThreeStarCelebration(world){
+  const pop=document.createElement('div');
+  pop.style.cssText=`position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.75);animation:modalBgIn 0.2s ease-out forwards;`;
+  pop.innerHTML=`
+    <div style="background:rgba(20,10,40,0.97);border:1px solid rgba(255,200,0,0.4);
+      border-radius:28px;padding:36px 28px;max-width:330px;width:90%;text-align:center;
+      animation:modalCardIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;">
+      <div style="font-size:56px;margin-bottom:6px;">${world.icon}</div>
+      <div style="font-size:32px;margin-bottom:10px;">⭐⭐⭐</div>
+      <div style="font-family:'Fredoka One',cursive;font-size:26px;color:#f5c842;margin-bottom:6px;">Perfect World!</div>
+      <div style="font-family:'Fredoka One',cursive;font-size:20px;color:#fff;margin-bottom:8px;">${world.name}</div>
+      <div style="font-family:'Nunito',sans-serif;font-size:15px;color:rgba(255,255,255,0.55);
+        margin-bottom:24px;line-height:1.5;">You 3-starred every level in this world. Incredible! 🍣</div>
+      <button onclick="this.closest('div[style*=fixed]').remove()"
+        style="width:100%;background:linear-gradient(135deg,#f5c842,#e09010);color:#fff;
+        font-family:'Fredoka One',cursive;font-size:20px;padding:14px;
+        border:none;border-radius:16px;cursor:pointer;box-shadow:0 5px 0 #a06008;">
+        Amazing! ⭐</button>
+    </div>`;
+  document.body.appendChild(pop);
+  pop.addEventListener('click',e=>{ if(e.target===pop) pop.remove(); });
+}
+
+function getDailyStreak(){ return getSave().dailyStreak||0; }
+
+function _checkStreakReward(streak){
+  const milestones={3:'🔥 3-Day Streak!',7:'🔥🔥 7-Day Streak!',14:'🔥🔥🔥 14-Day Streak!',30:'👑 30-Day Streak!'};
+  if(milestones[streak]){
+    setTimeout(()=>_showStreakCelebration(streak, milestones[streak]),1200);
+  }
+}
+
+function _showStreakCelebration(streak, label){
+  const pop=document.createElement('div');
+  pop.style.cssText=`position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.75);animation:modalBgIn 0.2s ease-out forwards;`;
+  pop.innerHTML=`
+    <div style="background:rgba(20,10,40,0.97);border:1px solid rgba(255,160,0,0.4);
+      border-radius:28px;padding:36px 28px;max-width:320px;width:90%;text-align:center;
+      animation:modalCardIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;">
+      <div style="font-size:64px;margin-bottom:10px;">🔥</div>
+      <div style="font-family:'Fredoka One',cursive;font-size:28px;color:#ff9944;margin-bottom:6px;">${label}</div>
+      <div style="font-family:'Nunito',sans-serif;font-size:16px;color:rgba(255,255,255,0.6);margin-bottom:24px;line-height:1.5;">
+        You've played ${streak} days in a row!<br>Keep the streak alive! 🍣</div>
+      <button onclick="this.closest('div[style*=fixed]').remove()"
+        style="width:100%;background:linear-gradient(135deg,#ff9944,#e06010);color:#fff;
+        font-family:'Fredoka One',cursive;font-size:20px;padding:14px;
+        border:none;border-radius:16px;cursor:pointer;box-shadow:0 5px 0 #a04008;">
+        Let's Go! 🔥</button>
+    </div>`;
+  document.body.appendChild(pop);
+  pop.addEventListener('click',e=>{ if(e.target===pop) pop.remove(); });
 }
 let _px=null,_py=null;
+
+// ── PUSH NOTIFICATIONS ──
+async function requestNotificationPermission(){
+  if(!('Notification' in window)) return false;
+  if(Notification.permission==='granted') return true;
+  const result=await Notification.requestPermission();
+  return result==='granted';
+}
+
+function scheduleNextDailyNotification(){
+  // Store intent — actual scheduling happens via service worker if available
+  const sv=getSave();
+  sv.notifyDaily=true;
+  setSave(sv);
+  // For web: use setTimeout to next midnight (works while tab is open)
+  const now=new Date();
+  const tomorrow=new Date(now);
+  tomorrow.setDate(tomorrow.getDate()+1);
+  tomorrow.setHours(9,0,0,0); // 9am
+  const msUntil=tomorrow-now;
+  if(msUntil<86400000*2){ // within 2 days
+    setTimeout(()=>{
+      if(Notification.permission==='granted'){
+        new Notification('🍣 Sushi Stack Daily Challenge',{
+          body:"Today's challenge is ready! How far can you stack?",
+          icon:'favicon.ico',
+          tag:'daily-challenge'
+        });
+      }
+    }, msUntil);
+  }
+}
+
+async function setupNotifications(){
+  // Ask after first daily challenge completion
+  const sv=getSave();
+  if(sv.notifyAsked) return;
+  sv.notifyAsked=true; setSave(sv);
+  // Small delay so it doesn't interrupt game over screen
+  setTimeout(async()=>{
+    const granted=await requestNotificationPermission();
+    if(granted) scheduleNextDailyNotification();
+  }, 3000);
+}
 
 function loop(){
   requestAnimationFrame(loop);
@@ -5409,7 +5928,7 @@ document.getElementById('quitBtn').addEventListener('click',()=>{
   setTenseMode(false);
   hearts.forEach(h=>{if(h.el){h.el.remove();h.el=null;}});
   hearts=[];
-  playMusic('menu');
+  playMusic('title');
   showScreenAds('start');
 });
 document.getElementById('zoom-slider').addEventListener('input',e=>{
@@ -5496,14 +6015,24 @@ applyRotate(camRotate);
 document.getElementById('zoom-slider').value=userZoom;
 // Fullscreen on first user interaction
 (function(){
+  let _titleMusicStarted=false;
   function tryFS(){
     reqFS();
+    if(!_titleMusicStarted){
+      _titleMusicStarted=true;
+      const ss=document.getElementById('s-start');
+      if(ss && ss.style.display!=='none'){
+        _ct=null; // force start
+        playMusic('title');
+      }
+    } else {
+      _retryPendingMusic();
+    }
     document.removeEventListener('touchstart',tryFS);
     document.removeEventListener('click',tryFS);
   }
   document.addEventListener('touchstart',tryFS,{once:true,passive:true});
   document.addEventListener('click',tryFS,{once:true});
-  // Also try immediately in case page was already interacted with
   reqFS();
 })();
 // Show fullscreen nudge on initial load if not already fullscreen
