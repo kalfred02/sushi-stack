@@ -1443,7 +1443,7 @@ function _doShare(text){
 }
 
 // ── GAME VERSION ──
-const GAME_VERSION = '0.650005';
+const GAME_VERSION = '0.650006';
 
 function showAboutPopup(){
   const pop=document.createElement('div');
@@ -3437,13 +3437,18 @@ function _playWhenReady(a, onPlay){
     onPlay();
     return;
   }
+  _showMusicLoader('Loading music…');
   let done=false;
-  const go=()=>{ if(done) return; done=true; onPlay(); };
+  const go=()=>{
+    if(done) return; done=true;
+    _hideMusicLoader();
+    onPlay();
+  };
   a.addEventListener('canplaythrough', go, {once:true});
   a.addEventListener('canplay', go, {once:true});
-  // Fallback: try anyway after 2s regardless
-  setTimeout(go, 2000);
-  a.load(); // trigger buffering
+  a.addEventListener('error', ()=>{ _hideMusicLoader(); }, {once:true});
+  setTimeout(go, 3000);
+  a.load();
 }
 function _fIn(a,tv=0.5){let i=0;const t=setInterval(()=>{a.volume=Math.min(tv,a.volume+tv/20);if(++i>=20)clearInterval(t);},40);}
 function _fOut(a,cb){if(!a){cb?.();return;}let i=0;const sv=a.volume,t=setInterval(()=>{a.volume=Math.max(0,a.volume-sv/20);if(++i>=20){clearInterval(t);a.pause();cb?.();}},30);}
@@ -4209,6 +4214,30 @@ function getAdvRewardModelPath(name){
 
 // Preload all reward GLBs
 // Loading overlay for GLB models
+function _showMusicLoader(text){
+  let el=document.getElementById('music-loader-bar');
+  if(!el){
+    el=document.createElement('div');
+    el.id='music-loader-bar';
+    el.style.cssText=`position:fixed;bottom:calc(var(--ad-bar-h,60px)+12px);left:14px;
+      z-index:50;background:rgba(20,10,40,0.85);border:1px solid rgba(155,93,229,0.3);
+      border-radius:14px;padding:8px 14px;display:flex;align-items:center;gap:8px;
+      font-family:'Fredoka One',cursive;font-size:13px;color:rgba(255,255,255,0.7);
+      pointer-events:none;animation:fadeIn 0.3s ease-out;`;
+    el.innerHTML=`<div style="width:16px;height:16px;border:2px solid rgba(155,93,229,0.4);
+      border-top-color:#9b5de5;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+      <span id="music-loader-txt">Loading music…</span>`;
+    document.body.appendChild(el);
+  }
+  const txt=document.getElementById('music-loader-txt');
+  if(txt && text) txt.textContent=text;
+}
+
+function _hideMusicLoader(){
+  const el=document.getElementById('music-loader-bar');
+  if(el){ el.style.transition='opacity 0.5s'; el.style.opacity='0'; setTimeout(()=>el?.remove(),500); }
+}
+
 function _showGLBLoader(){
   if(document.getElementById('glb-loader')) return;
   const el=document.createElement('div');
