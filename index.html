@@ -347,6 +347,10 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
       style="width:100%;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);
       font-family:'Fredoka One',cursive;font-size:14px;padding:9px;
       border:1px solid rgba(255,255,255,0.1);border-radius:12px;cursor:pointer;margin-bottom:8px;">🎵 Credits</button>
+    <button onclick="showAboutPopup()"
+      style="width:100%;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);
+      font-family:'Fredoka One',cursive;font-size:14px;padding:9px;
+      border:1px solid rgba(255,255,255,0.1);border-radius:12px;cursor:pointer;margin-bottom:8px;">ℹ️ About</button>
     <!-- Dev options toggle -->
     <button onclick="toggleDevPanel()"
       style="width:100%;background:rgba(100,80,140,0.2);color:rgba(200,180,255,0.6);
@@ -1377,6 +1381,40 @@ function _doShare(text){
         setTimeout(()=>t.remove(),400);},2000);
     });
   }
+}
+
+// ── GAME VERSION ──
+const GAME_VERSION = '0.65';
+
+function showAboutPopup(){
+  const pop=document.createElement('div');
+  pop.style.cssText=`position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.75);animation:modalBgIn 0.2s ease-out forwards;`;
+  pop.innerHTML=`
+    <div style="background:rgba(20,10,40,0.97);border:1px solid rgba(155,93,229,0.3);
+      border-radius:28px;padding:36px 28px;max-width:320px;width:90%;text-align:center;
+      animation:modalCardIn 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;">
+      <div style="font-size:64px;line-height:1;margin-bottom:12px;">🍣</div>
+      <div style="font-family:'Fredoka One',cursive;font-size:30px;color:#fff;margin-bottom:4px;">Sushi Stack</div>
+      <div style="font-family:'Nunito',sans-serif;font-size:13px;color:rgba(255,255,255,0.35);
+        letter-spacing:3px;text-transform:uppercase;margin-bottom:24px;">Stack it. Don't drop it.</div>
+      <div style="height:1px;background:rgba(255,255,255,0.08);margin-bottom:20px;"></div>
+      <div style="font-family:'Fredoka One',cursive;font-size:18px;color:#9b5de5;margin-bottom:6px;">
+        Version ${GAME_VERSION}</div>
+      <div style="font-family:'Nunito',sans-serif;font-size:13px;color:rgba(255,255,255,0.4);
+        margin-bottom:24px;line-height:1.6;">
+        Early Access Build<br>
+        © 2025 All rights reserved
+      </div>
+      <button onclick="this.closest('div[style*=fixed]').remove()"
+        style="width:100%;background:linear-gradient(135deg,#9b5de5,#6a2daa);color:#fff;
+        font-family:'Fredoka One',cursive;font-size:18px;padding:13px;
+        border:none;border-radius:14px;cursor:pointer;box-shadow:0 5px 0 #4a1a80;">
+        Close</button>
+    </div>`;
+  document.body.appendChild(pop);
+  pop.addEventListener('click',e=>{ if(e.target===pop) pop.remove(); });
 }
 
 function showCreditsPopup(){
