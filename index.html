@@ -1006,11 +1006,14 @@ function _previewPack(packId){
   const pack=MUSIC_PACKS[packId];
   if(!pack||!pack.tracks||!pack.tracks.length) return;
   const src=pack.tracks[Math.floor(Math.random()*pack.tracks.length)];
-  const a=new Audio(src); a.loop=true; a.volume=0;
-  a.play().then(()=>{
-    _previewAud=a; _previewPackId=packId;
-    let i=0; const t=setInterval(()=>{ a.volume=Math.min(0.5,a.volume+0.5/20); if(++i>=20)clearInterval(t); },40);
-  }).catch(()=>{});
+  const a=new Audio(src); a.loop=true; a.volume=0; a.preload='auto';
+  _previewAud=a; _previewPackId=packId;
+  _playWhenReady(a,()=>{
+    if(_previewAud!==a) return;
+    a.play().then(()=>{
+      let i=0; const t=setInterval(()=>{ a.volume=Math.min(0.5,a.volume+0.5/20); if(++i>=20)clearInterval(t); },40);
+    }).catch(()=>{});
+  });
 }
 
 function showCollection(tab){
@@ -1440,7 +1443,7 @@ function _doShare(text){
 }
 
 // ── GAME VERSION ──
-const GAME_VERSION = '0.650004';
+const GAME_VERSION = '0.650005';
 
 function showAboutPopup(){
   const pop=document.createElement('div');
@@ -3421,7 +3424,27 @@ const MT={
 };
 let _aud=null,_ct=null,_muted=false,_mu=false;
 try{_muted=localStorage.getItem('ssMuted')==='1';}catch{}
-const _cA=(src,lp=true)=>{const a=new Audio(src);a.loop=lp;a.volume=0;return a;};
+const _cA=(src,lp=true)=>{
+  const a=new Audio(src);
+  a.loop=lp; a.volume=0;
+  a.preload='auto'; // tell browser to buffer aggressively
+  return a;
+};
+
+// Play audio only when it has enough data buffered, with timeout fallback
+function _playWhenReady(a, onPlay){
+  if(a.readyState>=3){ // HAVE_FUTURE_DATA or better
+    onPlay();
+    return;
+  }
+  let done=false;
+  const go=()=>{ if(done) return; done=true; onPlay(); };
+  a.addEventListener('canplaythrough', go, {once:true});
+  a.addEventListener('canplay', go, {once:true});
+  // Fallback: try anyway after 2s regardless
+  setTimeout(go, 2000);
+  a.load(); // trigger buffering
+}
 function _fIn(a,tv=0.5){let i=0;const t=setInterval(()=>{a.volume=Math.min(tv,a.volume+tv/20);if(++i>=20)clearInterval(t);},40);}
 function _fOut(a,cb){if(!a){cb?.();return;}let i=0;const sv=a.volume,t=setInterval(()=>{a.volume=Math.max(0,a.volume-sv/20);if(++i>=20){clearInterval(t);a.pause();cb?.();}},30);}
 // Warm up audio on load — create a silent audio element immediately
@@ -3455,9 +3478,13 @@ function playMusic(k){
   else src=MT.game[Math.floor(Math.random()*MT.game.length)];
   if(_ct===src&&_aud&&!_aud.paused&&!ff)return;
   _ct=src;_fOut(_aud,()=>{
-    _aud=_cA(src,!ff);
-    _aud.play().then(()=>{_pendingMusicKey=null;_fIn(_aud,ff?0.7:0.5);}).catch(()=>{
-      // Autoplay blocked — will retry on next user interaction
+    const a=_cA(src,!ff);
+    _aud=a;
+    _playWhenReady(a,()=>{
+      if(_aud!==a) return; // another track started before this one buffered
+      a.play().then(()=>{_pendingMusicKey=null;_fIn(a,ff?0.7:0.5);}).catch(()=>{
+        // Autoplay blocked — will retry on next user interaction
+      });
     });
   });
 }
