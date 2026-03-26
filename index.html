@@ -992,8 +992,33 @@ const CREDITS_DATA={
 };
 let _colCurrentTab='blocks';
 
+let _previewAud=null; // preview audio element
+let _previewPackId=null; // which pack is being previewed
+let _previewRestoreKey=null; // music key to restore on close
+
+function _stopPreview(){
+  if(_previewAud){ _previewAud.pause(); _previewAud=null; }
+  _previewPackId=null;
+}
+
+function _previewPack(packId){
+  _stopPreview();
+  const pack=MUSIC_PACKS[packId];
+  if(!pack||!pack.tracks||!pack.tracks.length) return;
+  const src=pack.tracks[Math.floor(Math.random()*pack.tracks.length)];
+  const a=new Audio(src); a.loop=true; a.volume=0;
+  a.play().then(()=>{
+    _previewAud=a; _previewPackId=packId;
+    let i=0; const t=setInterval(()=>{ a.volume=Math.min(0.5,a.volume+0.5/20); if(++i>=20)clearInterval(t); },40);
+  }).catch(()=>{});
+}
+
 function showCollection(tab){
   if(state==='playing') paused=true;
+  // Remember what's currently playing so we can restore it on close
+  if(state==='playing'){ _previewRestoreKey=isDailyMode?'daily':advMode?_advLevelMusicKey:'game'; }
+  else if(document.getElementById('s-adventure')?.style.display!=='none'){ _previewRestoreKey='world'; }
+  else { _previewRestoreKey='title'; }
   const screen=document.getElementById('s-collection');
   screen.style.display='flex';
   screen.style.animation='none'; screen.offsetHeight;
@@ -1006,6 +1031,20 @@ function showCollection(tab){
 
 function closeCollection(){
   paused=false;
+  // Stop any preview playing
+  _stopPreview();
+  // Restore previous music
+  if(_previewRestoreKey){
+    if(_previewRestoreKey==='world'){
+      // World map — playAdvMapMusic handles its own audio, just ensure _aud isn't fighting it
+      if(_aud){try{_aud.pause();}catch(e){} _aud=null; _ct=null;}
+    } else if(_previewRestoreKey==='title'){
+      _ct=null; playMusic('title');
+    } else {
+      _ct=null; playMusic(_previewRestoreKey);
+    }
+    _previewRestoreKey=null;
+  }
   const screen=document.getElementById('s-collection');
   const inner=screen.querySelector('#col-inner');
   if(inner){ inner.style.animation='colSlideDown 0.25s ease-in forwards'; }
@@ -1051,7 +1090,18 @@ function switchCollectionTab(tab, animate, noCardAnim){
 
   if(tab==='blocks') buildCollectionBlocks(content, noCardAnim);
   else if(tab==='animals') buildCollectionAnimals(content, noCardAnim);
-  else buildCollectionMusic(content);
+  else {
+    buildCollectionMusic(content);
+    // Auto-preview the currently selected pack when entering music tab
+    if(state!=='playing'){
+      const activeId=getSave().musicPack||'default';
+      if(_previewPackId!==activeId){
+        if(_aud){try{_aud.pause();}catch(e){} _aud=null; _ct=null;}
+        if(_advMapMusic) _advMapMusic.pause();
+        _previewPack(activeId);
+      }
+    }
+  }
 
   if(slideAnim!=='none'){
     content.style.animation=`${slideAnim} 0.3s cubic-bezier(0.25,1,0.5,1) forwards`;
@@ -1161,10 +1211,15 @@ function buildCollectionMusic(container){
           const ico=c.querySelector('div:last-child');
           if(ico) ico.textContent=isA?'▶️':'⏸';
         });
-        // If playing during a level, switch music immediately
         if(state==='playing'){
-          _ct=null; // force playMusic to not skip
+          // In-game: switch immediately, no preview needed
+          _ct=null;
           playMusic(isDailyMode?'daily':advMode?_advLevelMusicKey:'game');
+        } else {
+          // Not in game: preview this pack, pause whatever was playing
+          if(_aud){try{_aud.pause();}catch(e){} _aud=null; _ct=null;}
+          if(_advMapMusic){_advMapMusic.pause();}
+          _previewPack(pack.id);
         }
       });
     } else {
@@ -1316,11 +1371,11 @@ function showMeshPreviewOffer(meshId, label){
   document.getElementById('mesh-preview-yes').onclick=()=>{
     admobShowRewarded('preview',
       ()=>{
-        // Grant one-level preview
+        // Grant one-level preview — save current style to restore after
         pop.style.animation='modalBgOut 0.2s ease-in forwards';
         setTimeout(()=>pop.remove(), 200);
         _meshPreviewId=meshId;
-        // Apply immediately as active block style
+        _meshPreviewPrevStyle=blockStyle; // remember what to restore
         setBlockStyle(meshId);
         switchCollectionTab('blocks', false, true);
         // Show confirmation
@@ -1345,6 +1400,7 @@ function showMeshPreviewOffer(meshId, label){
 
 // Track preview mesh — resets after one level
 let _meshPreviewId=null;
+let _meshPreviewPrevStyle='sushi'; // style to restore after preview ends
 
 function shareScore(){
   const sc=parseInt(document.getElementById('go-score').textContent)||score;
@@ -1384,7 +1440,7 @@ function _doShare(text){
 }
 
 // ── GAME VERSION ──
-const GAME_VERSION = '0.65';
+const GAME_VERSION = '0.650004';
 
 function showAboutPopup(){
   const pop=document.createElement('div');
@@ -2906,7 +2962,7 @@ function finishAdvLevel(stars, elapsed){
   const savedWorld=advWorld, savedLevel=advLevel;
   advMode=false;
   _inAdvSession=false;
-  if(_meshPreviewId){ _meshPreviewId=null; setBlockStyle('default'); }
+  if(_meshPreviewId){ _meshPreviewId=null; setBlockStyle(_meshPreviewPrevStyle||'sushi'); _meshPreviewPrevStyle='sushi'; }
   resetAdvBoss();
   // Capture previous stars BEFORE saving so celebration knows what's new
   const prevStars=getAdvLevelData(savedWorld,savedLevel).stars||0;
