@@ -330,6 +330,11 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
         font-family:'Fredoka One',cursive;font-size:13px;padding:8px;
         border:1px solid rgba(200,50,50,0.25);border-radius:12px;cursor:pointer;margin-bottom:8px;">
         🗑️ Reset World Progress</button>
+      <button onclick="devUnlockAllLevels()"
+        style="width:100%;background:rgba(0,180,255,0.15);color:rgba(0,220,255,0.8);
+        font-family:'Fredoka One',cursive;font-size:13px;padding:8px;
+        border:1px solid rgba(0,180,255,0.25);border-radius:12px;cursor:pointer;margin-bottom:8px;">
+        🔓 Dev: Unlock All Levels</button>
       <div style="height:1px;background:rgba(255,255,255,0.08);margin:4px 0 14px;"></div>
     </div>
 
@@ -375,41 +380,49 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
 <div id="s-adventure" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:100;flex-direction:column;background:#1a3a1a;">
   <!-- Top bar -->
   <div id="adv-world-tabs" style="display:flex;align-items:center;flex-shrink:0;
-    padding:8px 10px;gap:6px;background:rgba(0,0,0,0.75);z-index:20;
+    padding:8px 8px;gap:4px;background:rgba(0,0,0,0.75);z-index:20;
     border-bottom:1px solid rgba(255,255,255,0.1);">
     <button onclick="exitAdvMap()" style="background:rgba(255,255,255,0.15);border:none;
-      border-radius:12px;padding:8px 12px;font-family:'Fredoka One',cursive;
-      font-size:16px;color:#fff;cursor:pointer;flex-shrink:0;pointer-events:all;">← Back</button>
+      border-radius:12px;padding:8px 10px;font-family:'Fredoka One',cursive;
+      font-size:14px;color:#fff;cursor:pointer;flex-shrink:0;pointer-events:all;">← Back</button>
     <!-- World prev arrow -->
     <button id="adv-world-prev" onclick="advWorldNav(-1)"
       style="background:rgba(255,255,255,0.12);border:none;border-radius:12px;
-      padding:8px 12px;font-size:22px;color:#fff;cursor:pointer;
+      padding:8px 10px;font-size:20px;color:#fff;cursor:pointer;
       flex-shrink:0;pointer-events:all;">‹</button>
-    <!-- World name display -->
-    <div id="adv-world-label" style="flex:1;text-align:center;min-width:0;">
-      <div id="adv-world-icon" style="font-size:26px;line-height:1;"></div>
-      <div id="adv-world-name" style="font-family:'Fredoka One',cursive;font-size:18px;
-        color:#fff;letter-spacing:0px;margin-top:1px;text-shadow:0 2px 8px rgba(0,0,0,0.4);
-        white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
-      <div id="adv-world-num" style="font-family:'Fredoka One',cursive;font-size:11px;
-        letter-spacing:2px;color:rgba(255,255,255,0.55);text-transform:uppercase;margin-top:0;"></div>
+    <!-- World name display — scales to fit -->
+    <div id="adv-world-label" style="flex:1;text-align:center;min-width:0;padding:0 2px;">
+      <div id="adv-world-icon" style="font-size:22px;line-height:1;"></div>
+      <div id="adv-world-name" style="font-family:'Fredoka One',cursive;
+        font-size:clamp(12px,3.8vw,18px);
+        color:#fff;margin-top:1px;text-shadow:0 2px 8px rgba(0,0,0,0.4);
+        white-space:normal;word-break:break-word;line-height:1.1;"></div>
+      <div id="adv-world-num" style="font-family:'Fredoka One',cursive;font-size:10px;
+        letter-spacing:1px;color:rgba(255,255,255,0.55);text-transform:uppercase;margin-top:1px;"></div>
     </div>
     <!-- World next arrow -->
     <button id="adv-world-next" onclick="advWorldNav(1)"
       style="background:rgba(255,255,255,0.12);border:none;border-radius:12px;
-      padding:8px 12px;font-size:22px;color:#fff;cursor:pointer;
+      padding:8px 10px;font-size:20px;color:#fff;cursor:pointer;
       flex-shrink:0;pointer-events:all;">›</button>
-    <div id="adv-total-stars" style="font-family:'Fredoka One',cursive;
-      font-size:18px;color:#ffcc00;flex-shrink:0;">⭐0</div>
-    <button onclick="showCollection()" style="background:rgba(255,255,255,0.15);border:none;
-      border-radius:50%;width:40px;height:40px;font-size:20px;cursor:pointer;
-      pointer-events:all;flex-shrink:0;">🎁</button>
-    <button onclick="openPause(true)" style="background:rgba(255,255,255,0.15);border:none;
-      border-radius:50%;width:40px;height:40px;font-size:20px;cursor:pointer;
-      pointer-events:all;flex-shrink:0;">⚙️</button>
+    <!-- Icons -->
+    <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+      <button onclick="showCollection()" style="background:rgba(255,255,255,0.15);border:none;
+        border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;
+        pointer-events:all;">🎁</button>
+      <button onclick="openPause(true)" style="background:rgba(255,255,255,0.15);border:none;
+        border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;
+        pointer-events:all;">⚙️</button>
+    </div>
   </div>
-  <!-- Scrollable map canvas area -->
-  <div style="flex:1;overflow:hidden;position:relative;display:flex;align-items:center;">
+  <!-- Stars badge — right-aligned under top bar -->
+  <div style="position:relative;z-index:10;text-align:right;padding:4px 12px 0;flex-shrink:0;">
+    <div id="adv-total-stars" style="display:inline-block;font-family:'Fredoka One',cursive;
+      font-size:14px;color:#ffcc00;background:rgba(0,0,0,0.45);
+      border-radius:20px;padding:3px 10px;">⭐0</div>
+  </div>
+  <!-- Scrollable map canvas area — fixed height, panel overlays on top -->
+  <div style="flex:1;overflow:hidden;position:relative;display:flex;align-items:center;min-height:0;">
     <!-- Left arrow -->
     <button id="adv-arrow-left" onclick="advMapNav(-1)"
       style="position:absolute;left:0;top:0;bottom:0;z-index:50;
@@ -434,7 +447,7 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
     </button>
   </div><!-- end map row -->
   <!-- Bottom panel — level info + play button -->
-  <div id="adv-level-panel" style="flex-shrink:0;padding:16px 20px 20px;
+  <div id="adv-level-panel" style="position:relative;flex-shrink:0;padding:16px 20px 20px;
     text-align:center;background:linear-gradient(to top,rgba(0,0,0,0.95),rgba(0,0,0,0.82));
     border-top:1px solid rgba(155,93,229,0.25);
     opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:20;">
@@ -449,9 +462,7 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
       style="background:linear-gradient(135deg,#9b5de5,#6a2daa);color:#fff;
       font-family:'Fredoka One',cursive;font-size:26px;padding:16px;
       border:none;border-radius:22px;cursor:pointer;pointer-events:all;width:100%;
-      box-shadow:0 6px 0 #4a1a80,0 10px 24px rgba(155,93,229,0.35);display:none;">▶ Play</button>
-    <div id="adv-panel-locked" style="font-family:'Nunito',sans-serif;font-size:16px;
-      color:rgba(255,255,255,0.45);display:none;">🔒 Complete previous level to unlock</div>
+      box-shadow:0 6px 0 #4a1a80,0 10px 24px rgba(155,93,229,0.35);">▶ Play</button>
     <div id="adv-panel-boss-label" style="font-family:'Nunito',sans-serif;
       font-size:16px;color:#ff8888;margin-top:4px;font-weight:700;display:none;"></div>
   </div>
@@ -1076,13 +1087,15 @@ function buildCollectionBlocks(container, noCardAnim){
         grid.querySelectorAll('[data-col-id]').forEach(c=>{
           const cid=c.getAttribute('data-col-id');
           const isActive=cid===st.id;
-          c.style.background=isActive?'rgba(155,93,229,0.4)':'rgba(255,255,255,0.07)';
-          c.style.border='2px solid '+(isActive?'#9b5de5':'rgba(255,255,255,0.15)');
+          const cLocked=c.getAttribute('data-locked')==='1';
+          if(!cLocked) c.style.background=isActive?'rgba(155,93,229,0.4)':'rgba(255,255,255,0.07)';
+          if(!cLocked) c.style.border='2px solid '+(isActive?'#9b5de5':'rgba(255,255,255,0.15)');
           const lbl=c.querySelector('.col-active-lbl');
           if(lbl) lbl.style.visibility=isActive?'visible':'hidden';
         });
       });
     } else {
+      card.setAttribute('data-locked','1');
       card.addEventListener('click',()=>{
         if(st.unlock==='mesh'){
           showMeshPreviewOffer(st.id, st.label);
@@ -1252,13 +1265,15 @@ function buildCollectionAnimals(container, noCardAnim){
         grid.querySelectorAll('[data-col-id]').forEach(c=>{
           const cid=c.getAttribute('data-col-id');
           const isActive=cid===key;
-          c.style.background=isActive?'rgba(155,93,229,0.4)':'rgba(255,255,255,0.07)';
-          c.style.border='2px solid '+(isActive?'#9b5de5':'rgba(255,255,255,0.15)');
+          const cLocked=c.getAttribute('data-locked')==='1';
+          if(!cLocked) c.style.background=isActive?'rgba(155,93,229,0.4)':'rgba(255,255,255,0.07)';
+          if(!cLocked) c.style.border='2px solid '+(isActive?'#9b5de5':'rgba(255,255,255,0.15)');
           const lbl=c.querySelector('.col-active-lbl');
           if(lbl) lbl.style.visibility=isActive?'visible':'hidden';
         });
       });
     } else {
+      card.setAttribute('data-locked','1');
       card.addEventListener('click',()=>showUnlockRequiredPopup(`${unlockHint} to unlock ${name}!`));
     }
     grid.appendChild(card);
@@ -1395,10 +1410,11 @@ function showCreditsPopup(){
 
 // ── GO TO TITLE ──
 function goToTitle(){
-  // Reset all game state cleanly
+  clearCountdown();
   state='idle';
   advMode=false;
   isDailyMode=false;
+  clearCountdown();
   resetAdvBoss();
   stopAdvMapMusic();
   setTenseMode(false);
@@ -1622,11 +1638,21 @@ function requestReviveAd(){
 }
 
 let countingDown=false;
+let _countdownEl=null, _countdownTick=null;
+
+function clearCountdown(){
+  if(_countdownTick){ clearInterval(_countdownTick); _countdownTick=null; }
+  if(_countdownEl){ _countdownEl.remove(); _countdownEl=null; }
+  countingDown=false;
+}
+
 function showCountdown(onDone){
+  clearCountdown();
   countingDown=true;
   const el=document.createElement('div');
+  el.id='countdown-overlay';
   el.style.cssText=`position:fixed;top:50%;left:50%;
-    transform:translate(-50%,-50%);z-index:300;
+    transform:translate(-50%,-50%);z-index:15;
     width:160px;height:160px;
     display:flex;align-items:center;justify-content:center;
     pointer-events:none;`;
@@ -1636,16 +1662,17 @@ function showCountdown(onDone){
     transition:transform 0.15s ease-out,opacity 0.15s ease-out;`;
   el.appendChild(num);
   document.body.appendChild(el);
+  _countdownEl=el;
   let count=3;
   num.textContent=count;
-  const tick=setInterval(()=>{
+  _countdownTick=setInterval(()=>{
+    if(paused) return; // pause while menu is open
     count--;
     if(count>0){
       num.style.transform='scale(1.4)';num.style.opacity='0.5';
-      setTimeout(()=>{num.textContent=count;num.style.transform='scale(1)';num.style.opacity='1';},100);
+      setTimeout(()=>{if(num.isConnected){num.textContent=count;num.style.transform='scale(1)';num.style.opacity='1';}},100);
     } else {
-      clearInterval(tick);el.remove();
-      countingDown=false;
+      clearCountdown();
       if(onDone) onDone();
     }
   },1000);
@@ -1830,7 +1857,7 @@ const ADV_WORLDS = [
   { name:'Storm Tower',    icon:'⚡', color:'#e8c840', sky:0x5a5a2a, fog:0x3a3a18,
     boss:'random',      bossLabel:'Chaos!',          bossDesc:'Random boss mechanic each attempt' },
   { name:"Dragon's Peak",  icon:'🐉', color:'#e84040', sky:0x5a1a1a, fog:0x3a1010,
-    boss:'all',         bossLabel:'Dragon\'s Wrath!',bossDesc:'All mechanics at once. Good luck.' },
+    boss:'all',         bossLabel:'Dragon\'s Wrath!',bossDesc:'All mechanics at once. Good luck.', bossBounces:1 },
 ];
 
 // Per-world difficulty scaling
@@ -1958,6 +1985,7 @@ let _advMapRAF=null,_advMapAnimalMesh=null;
 let _advMapScrollX=0,_advMapTargetX=0;
 let _advMapNodeMeshes=[];
 let _advSelectedLevel=0,_advIsHopping=false;
+let _advLastLevelPerWorld={}; // remembers which level to show per world
 const ADV_MAP_SPACING=2.6;
 
 function exitAdvMap(){
@@ -1995,6 +2023,9 @@ function showAdvMap(jumpToWorld, jumpToLevel){
   screen.style.display='flex';
   if(jumpToWorld!==undefined) _advMapWorld=jumpToWorld;
   else{_advMapWorld=0;for(let w=7;w>=0;w--){if(isAdvLevelUnlocked(w,0)){_advMapWorld=w;break;}}}
+  // Hard cut ALL music immediately
+  if(_aud){try{_aud.pause();}catch(e){}; _aud=null; _ct=null;}
+  _pendingMusicKey=null;
   buildWorldTabs();
   requestAnimationFrame(()=>{
     requestAnimationFrame(()=>{
@@ -2027,12 +2058,13 @@ function advWorldNav(dir){
   const next=_advMapWorld+dir;
   if(next<0||next>7) return;
   if(dir>0&&!isAdvLevelUnlocked(next,0)) return; // can't go forward to locked world
-  // Preserve level index — clamp to what's unlocked in target world
-  const preservedLevel=Math.min(_advSelectedLevel, Math.min(getFurthestCompletedLevel(next)+1, 9));
+  // Use remembered level for target world, else furthest completed
+  const furthest=Math.min(getFurthestCompletedLevel(next)+1,9);
+  const targetLevel=furthest;
   _advMapWorld=next;
-  _advSelectedLevel=preservedLevel;
+  _advSelectedLevel=targetLevel;
   buildWorldTabs();
-  initAdvMap3D(next, preservedLevel);
+  initAdvMap3D(next, targetLevel);
   stopAdvMapMusic();
   playAdvMapMusic(next);
 }
@@ -2056,8 +2088,11 @@ function initAdvMap3D(wi, startLevel){
   buildAdvPathMap(wi);   // places animal at _advSelectedLevel instantly
   setupCSSMapSwipe(wi);
 
-  // Scroll camera to it (no bounce animation — just snap into place)
+  // Scroll camera to it — skip if startLevel was provided (caller handles positioning)
+  // Cache map height before panel shows (full uncompressed height)
   setTimeout(()=>{
+    const area=document.getElementById('adv-map-area');
+    if(area && area.offsetHeight>50) _cachedMapVh=area.offsetHeight;
     scrollToNode(cur);
     updateLevelPanel(wi,cur,true);
     updateAdvArrows();
@@ -2074,13 +2109,11 @@ const ADV_NODE_R = 84;    // radius of each node circle
 const ADV_ANIMAL_SIZE = 108; // px font-size for animal emoji
 
 function getNodePositions(vh){
-  // vh = height of the scrollable area
+  // Node center = dead center of map area, matching the arrow midpoints exactly
   const mid = vh / 2;
-  const amp = vh * 0.18; // wave amplitude
   return Array.from({length:10},(_,i)=>{
     const x = ADV_SLOT_W/2 + i*ADV_SLOT_W;
-    const y = mid + Math.sin(i * 0.9) * amp;
-    return {x, y};
+    return {x, y:mid};
   });
 }
 
@@ -2268,22 +2301,77 @@ function buildAdvPathMap(wi){
 
   // Place animal — reload from save so it reflects current selection
   const sv=getSave(); selectedAnimal=sv.animal||selectedAnimal||'bunny';
-  _placeAnimal(wi, _advSelectedLevel, positions);
+  // Only show animal on the world where the player last played
+  // Determine where the animal should be: last played, or furthest unlocked
+  let _lpw=null, _lpl=0;
+  try{
+    const w=localStorage.getItem('ssLastPlayedWorld');
+    const l=localStorage.getItem('ssLastPlayedLevel');
+    if(w!==null){ _lpw=parseInt(w); _lpl=parseInt(l); }
+  }catch{}
+  if(_lpw===null){
+    // Never played — find furthest unlocked level across all worlds
+    for(let w2=7;w2>=0;w2--){
+      const fc=getFurthestCompletedLevel(w2);
+      if(fc>=0){ _lpw=w2; _lpl=Math.min(fc+1,9); break; }
+    }
+    // Still null = nothing completed, default to world 0 level 0
+    if(_lpw===null){ _lpw=0; _lpl=0; }
+  }
+  if(_lpw===wi){
+    // Cache map height now so _getAnimalTop has a valid value
+    const _areaEl=document.getElementById('adv-map-area');
+    if(_areaEl && _areaEl.offsetHeight>50) _cachedMapVh=_areaEl.offsetHeight;
+    _placeAnimal(wi, _lpl, positions);
+  } else {
+    document.querySelectorAll('.adv-animal-el').forEach(e=>e.remove()); _advAnimalEl=null;
+  }
 }
 
 let _advAnimalEl=null;
 
+let _cachedMapVh=0;
+function _getMapVh(){
+  // Measure when panel is hidden to get the full uncompressed height
+  const area=document.getElementById('adv-map-area');
+  if(!area) return _cachedMapVh||window.innerHeight*0.55;
+  const panel=document.getElementById('adv-level-panel');
+  // Temporarily hide panel to get true map area height
+  if(panel && panel.style.opacity!=='0'){
+    const ph=panel.offsetHeight;
+    return (area.offsetHeight+ph)||_cachedMapVh||window.innerHeight*0.55;
+  }
+  const h=area.offsetHeight;
+  if(h>50) _cachedMapVh=h;
+  return _cachedMapVh||h||window.innerHeight*0.55;
+}
+function _getAnimalTop(li){
+  const vh=_getMapVh();
+  const mid=vh/2;
+  const R=li===9?ADV_NODE_R+10:ADV_NODE_R;
+  return mid-R-ADV_ANIMAL_SIZE*0.9;
+}
+
+function _getAnimalLeft(li){
+  return ADV_SLOT_W/2 + li*ADV_SLOT_W;
+}
+
 function _placeAnimal(wi, li, positions){
   const nodesEl=document.getElementById('adv-map-nodes');
   if(!nodesEl) return;
+  document.querySelectorAll('.adv-animal-el').forEach(e=>e.remove());
   if(_advAnimalEl&&_advAnimalEl.parentNode) _advAnimalEl.parentNode.removeChild(_advAnimalEl);
-  const pos=positions[li];
-  const R=li===9?ADV_NODE_R+10:ADV_NODE_R;
+  _advAnimalEl=null;
+
+  // Measure actual map area height right now
+  const area=document.getElementById('adv-map-area');
+  if(area && area.offsetHeight>50) _cachedMapVh=area.offsetHeight;
+
   const el=document.createElement('div');
-  // No transition on initial placement — selectLevel handles animated moves
+  el.className='adv-animal-el';
   el.style.cssText=`position:absolute;
-    left:${pos.x}px;
-    top:${pos.y-R-ADV_ANIMAL_SIZE*0.9}px;
+    left:${_getAnimalLeft(li)}px;
+    top:${_getAnimalTop(li)}px;
     transform:translateX(-50%);
     font-size:${ADV_ANIMAL_SIZE}px;
     line-height:1;
@@ -2293,6 +2381,15 @@ function _placeAnimal(wi, li, positions){
   el.textContent=getAnimalEmoji();
   nodesEl.appendChild(el);
   _advAnimalEl=el;
+
+  // Re-check position after panel finishes rendering
+  setTimeout(()=>{
+    if(!_advAnimalEl) return;
+    if(area && area.offsetHeight>50) _cachedMapVh=area.offsetHeight;
+    _advAnimalEl.style.transition='none';
+    _advAnimalEl.style.top=_getAnimalTop(li)+'px';
+    setTimeout(()=>{ if(_advAnimalEl) _advAnimalEl.style.transition=''; },30);
+  },200);
 }
 
 function scrollToNode(li){
@@ -2307,6 +2404,8 @@ function scrollToNode(li){
   inner.style.transform=`translateX(${-offset}px)`;
 }
 
+let _animalAnimating=false;
+
 function selectLevel(wi,li,animate){
   if(li<0||li>9) return;
   _advSelectedLevel=li;
@@ -2314,30 +2413,26 @@ function selectLevel(wi,li,animate){
   updateAdvArrows();
   scrollToNode(li);
 
-  // Hop animal to new level — never blocks input
-  const area=document.getElementById('adv-map-area');
-  const vh=(area&&area.offsetHeight)||window.innerHeight*0.65;
-  const positions=getNodePositions(vh);
-  const pos=positions[li];
-  const R=li===9?ADV_NODE_R+10:ADV_NODE_R;
-  const targetTop=pos.y-R-ADV_ANIMAL_SIZE*0.9;
+  if(!_advAnimalEl) return;
 
-  if(_advAnimalEl){
-    // Move left in perfect sync with the camera scroll (same easing + duration)
-    // Bounce up then land
+  const area=document.getElementById('adv-map-area');
+  _animalAnimating=true;
+
+  // After panel reflows, use helpers that measure actual area height
+  setTimeout(()=>{
+    if(!_advAnimalEl){ _animalAnimating=false; return; }
+    const targetTop=_getAnimalTop(li);
+    const targetLeft=_getAnimalLeft(li);
     _advAnimalEl.style.animationPlayState='paused';
-    _advAnimalEl.style.transition='left 0.45s cubic-bezier(0.25,1,0.5,1),top 0.13s ease-out,transform 0.13s ease-out';
-    _advAnimalEl.style.left=pos.x+'px';
-    _advAnimalEl.style.top=(targetTop-26)+'px';
-    _advAnimalEl.style.transform='translateX(-50%) scale(1.2)';
+    _advAnimalEl.style.transition='left 0.45s cubic-bezier(0.25,1,0.5,1),top 0.2s ease-in,transform 0.2s ease-in';
+    _advAnimalEl.style.left=_getAnimalLeft(li)+'px';
+    _advAnimalEl.style.top=targetTop+'px';
+    _advAnimalEl.style.transform='translateX(-50%)';
     setTimeout(()=>{
-      if(!_advAnimalEl) return;
-      _advAnimalEl.style.transition='left 0.45s cubic-bezier(0.25,1,0.5,1),top 0.2s ease-in,transform 0.2s ease-in';
-      _advAnimalEl.style.top=targetTop+'px';
-      _advAnimalEl.style.transform='translateX(-50%)';
-      setTimeout(()=>{ if(_advAnimalEl) _advAnimalEl.style.animationPlayState='running'; }, 220);
-    },200);
-  }
+      if(_advAnimalEl) _advAnimalEl.style.animationPlayState='running';
+      _animalAnimating=false;
+    }, 460);
+  }, 80);
 }
 
 function advMapNav(dir){
@@ -2392,6 +2487,35 @@ function setupCSSMapSwipe(wi){
 
 function advPlaySelected(){ openAdvLevel(_advMapWorld, _advSelectedLevel); }
 
+function recenterMapNodes(){
+  const area=document.getElementById('adv-map-area');
+  const canvas=document.getElementById('adv-path-canvas');
+  const nodesEl=document.getElementById('adv-map-nodes');
+  if(!area) return;
+  const vh=area.offsetHeight;
+  if(!vh) return;
+  const mid=vh/2;
+  // Sync nodesEl height to actual area height so animal top is correct
+  if(canvas){ canvas.height=vh; canvas.style.height=vh+'px'; }
+  if(nodesEl) nodesEl.style.height=vh+'px';
+  // Reposition nodes
+  if(nodesEl){
+    Array.from(nodesEl.children).forEach(wrap=>{
+      if(wrap.classList.contains('adv-animal-el')) return; // skip animal
+      const h=parseInt(wrap.style.width)||ADV_NODE_R*2;
+      const r=h/2;
+      wrap.style.top=(mid-r)+'px';
+    });
+  }
+  // Reposition animal using updated vh
+  if(_advAnimalEl && !_animalAnimating){
+    const correctTop=_getAnimalTop(_advSelectedLevel);
+    _advAnimalEl.style.transition='none';
+    _advAnimalEl.style.top=correctTop+'px';
+    setTimeout(()=>{ if(_advAnimalEl){ _advAnimalEl.style.transition=''; _advAnimalEl.style.animationPlayState='running'; }},30);
+  }
+}
+
 function updateLevelPanel(wi,li,show){
   const panel=document.getElementById('adv-level-panel');
   if(!panel) return;
@@ -2400,27 +2524,36 @@ function updateLevelPanel(wi,li,show){
   const data=getAdvLevelData(wi,li), isBoss=li===9;
   document.getElementById('adv-panel-levelname').textContent=`${world.icon} World ${wi+1} · Level ${li+1}`;
   document.getElementById('adv-panel-title').textContent=ADV_LEVEL_NAMES[wi][li];
-  document.getElementById('adv-panel-goal').textContent=unlocked?
-    `Stack ${getAdvGoal(wi,li)} blocks · ${getAdvTime(wi,li)}s · ${getAdvRequiredStreak(wi,li)}x streak`:'';
-  document.getElementById('adv-panel-stars').textContent=data.stars>0?
-    '⭐'.repeat(data.stars)+'☆'.repeat(3-data.stars):(unlocked?'☆☆☆':'');
+  const goalEl=document.getElementById('adv-panel-goal');
+  goalEl.textContent=`Stack ${getAdvGoal(wi,li)} blocks · ${getAdvTime(wi,li)}s · ${getAdvRequiredStreak(wi,li)}x streak`;
+  goalEl.style.opacity=unlocked?'1':'0.35';
+  const starsEl=document.getElementById('adv-panel-stars');
+  starsEl.textContent=data.stars>0?'⭐'.repeat(data.stars)+'☆'.repeat(3-data.stars):'☆☆☆';
+  starsEl.style.opacity=unlocked?'1':'0.35';
   const pb=document.getElementById('adv-play-btn');
-  const le=document.getElementById('adv-panel-locked');
   const be=document.getElementById('adv-panel-boss-label');
   if(unlocked){
-    pb.style.display='inline-block';
     pb.textContent=data.stars>0?'▶ Play Again':'▶ Play';
     pb.style.background=isBoss?'linear-gradient(135deg,#cc2222,#881111)':'linear-gradient(135deg,#9b5de5,#6a2daa)';
-    le.style.display='none';
+    pb.style.boxShadow=isBoss?'0 6px 0 #881111,0 10px 24px rgba(200,0,0,0.3)':'0 6px 0 #4a1a80,0 10px 24px rgba(155,93,229,0.35)';
+    pb.style.opacity='1';
+    pb.style.pointerEvents='all';
+    pb.style.cursor='pointer';
     be.style.display=isBoss?'block':'none';
     if(isBoss) be.textContent=`⚠️ ${world.bossLabel}`;
   } else {
-    pb.style.display='none';
-    le.style.display='block';
+    pb.textContent='🔒 Locked';
+    pb.style.background='rgba(255,255,255,0.08)';
+    pb.style.boxShadow='none';
+    pb.style.opacity='0.5';
+    pb.style.pointerEvents='none';
+    pb.style.cursor='default';
     be.style.display='none';
   }
   panel.style.opacity='1';
   panel.style.pointerEvents='all';
+  // Recenter nodes after panel may have resized map area
+  setTimeout(recenterMapNodes, 50);
 }
 
 
@@ -2498,6 +2631,8 @@ function startAdvLevel(){
   advMode=true;
   _inAdvSession=true;
   _lastAdvWorld=advWorld; _lastAdvLevel=advLevel; // remember for map return
+  try{localStorage.setItem('ssLastPlayedWorld',advWorld);localStorage.setItem('ssLastPlayedLevel',advLevel);}catch{}
+  _advLastLevelPerWorld[advWorld]=advLevel; // remember per world
   // Don't auto-use reward mesh — player chooses after unlocking
   // _advGLBOverride stays as whatever the player selected in settings
   advBoss=isBoss?world.boss:null;
@@ -2543,7 +2678,8 @@ function applyAdvBoss(boss){
   }
   if(b==='all'){
     advBossEarthquake=true; advBossLightsOut=true; advBossPoisonHearts=true;
-    advBossNoBounce=true; advBossRotating=true; advBossSpeedSurge=true;
+    advBossRotating=true; advBossSpeedSurge=true;
+    // No nobounce — W8 uses bossBounces:1 instead (0 bounces is too punishing)
     return;
   }
   if(b==='speedsurge')  advBossSpeedSurge=true;
@@ -2565,9 +2701,9 @@ function applyChaosMechanic(mechName){
 
   if(mechName==='speedsurge')  advBossSpeedSurge=true;
   if(mechName==='nobounce'){
-    advBossNoBounce=true;
-    // Immediately turn current block red
-    if(mover && mover.mesh) blockSetRedWarning(mover.mesh, true);
+    advBossNoBounce=true; // in chaos context means 1 bounce (not 0)
+    // Immediately turn current block red if already at limit
+    if(mover && mover.mesh && mover.bounces>=1) blockSetRedWarning(mover.mesh, true);
   }
   if(mechName==='rotating')    _chaosSpinning=true;
   if(mechName==='earthquake')  advBossEarthquake=true;
@@ -2614,8 +2750,7 @@ function getMaxBounces(){
     // Use per-world bossBounces if defined, else default 3
     const world=ADV_WORLDS[advWorld];
     if(world && world.bossBounces!==undefined) return world.bossBounces;
-    // W8 'all' boss: 1 bounce (everything else is chaos)
-    if(advWorld===7) return 1;
+    // Default if no bossBounces defined
     return 3;
   }
   return 3; // normal levels: 3 bounces allowed
@@ -2746,7 +2881,7 @@ function showMapCelebration(wi,li,stars,elapsed,prevStars,rewardName){
 
   // Rebuild map BEFORE saving — node shows pre-run star count (empty if first time)
   _advSelectedLevel=li;
-  initAdvMap3D(wi);
+  initAdvMap3D(wi, li);
 
   // Full-screen dark overlay with card
   const overlay=document.createElement('div');
@@ -2919,7 +3054,7 @@ function showMapCelebration(wi,li,stars,elapsed,prevStars,rewardName){
       setTimeout(()=>{
         overlay.remove();
         _advSelectedLevel=li;
-        initAdvMap3D(wi);
+        initAdvMap3D(wi, li);
         // Show reward popup immediately — blocks interaction naturally
         showMeshUnlockPopup(rewardName, ()=>{
           // After reward dismissed, do the map transition
@@ -2934,7 +3069,7 @@ function showMapCelebration(wi,li,stars,elapsed,prevStars,rewardName){
     overlay.style.transition='opacity 0.35s 0.1s';
     overlay.style.opacity='0';
     _advSelectedLevel=li;
-    initAdvMap3D(wi);
+    initAdvMap3D(wi, li);
 
     setTimeout(()=>{
       overlay.remove();
@@ -2946,11 +3081,9 @@ function showMapCelebration(wi,li,stars,elapsed,prevStars,rewardName){
     const wasAlreadyCompleted = prevStars > 0;
     // If replaying a completed level, stay on it — don't advance
     if(wasAlreadyCompleted){
-      // Don't animate — just scroll and update panel, no animal hop
-      setTimeout(()=>{
-        scrollToNode(li);
-        updateLevelPanel(wi, li, true);
-      }, 300);
+      // Already on the right level — just update the panel, no movement at all
+      scrollToNode(li);
+      updateLevelPanel(wi, li, true);
       return;
     }
     // First-time completion — advance to next level
@@ -3068,28 +3201,97 @@ function resolveAssetPath(relativePath){
   console.log('Local asset path:',base+relativePath);
   return base+relativePath;
 }
+// ── MUSIC PACK REGISTRY ──
+// Convention: Music/Packs/{folder}/bgm_{prefix}_01.mp3, _02.mp3 ...
+// Tracks are auto-discovered at runtime — no need to specify count.
+// To add a new pack: add one entry to PACK_DEFS with folder+prefix+emoji+label.
+const PACK_DEFS=[
+  {id:'default', label:'🎵 Classic',  folder:null,       prefix:null,    emoji:'🎵', builtin:['Music/bgm_01.mp3','Music/bgm_02.mp3','Music/bgm_03.mp3','Music/bgm_04.mp3']},
+  {id:'happy',   label:'😊 Happy',   folder:'Happy_01', prefix:'happy', emoji:'😊'},
+  {id:'kpop',    label:'🎤 K-Pop',   folder:'Kpop_01',  prefix:'kpop',  emoji:'🎤'},
+  {id:'praise',  label:'🙏 Praise',  folder:'Praise_01',prefix:'praise',emoji:'🙏'},
+];
+
+// Auto-discover tracks: try loading the audio directly — if it errors it doesn't exist
+async function discoverPackTracks(folder, prefix){
+  const base=resolveAssetPath(`Music/Packs/${folder}/`);
+  const tracks=[];
+  for(let i=1;i<=99;i++){
+    const n=String(i).padStart(2,'0');
+    const path=base+`bgm_${prefix}_${n}.mp3`;
+    const exists=await new Promise(resolve=>{
+      const a=new Audio();
+      a.oncanplaythrough=()=>{ a.src=''; resolve(true); };
+      a.onerror=()=>resolve(false);
+      // Short timeout in case neither event fires
+      setTimeout(()=>resolve(false),2000);
+      a.src=path;
+    });
+    if(!exists) break;
+    tracks.push(path);
+  }
+  console.log(`[Music] ${folder}: ${tracks.length} tracks`);
+  return tracks;
+}
+
 const MUSIC_PACKS={
-  default:{
-    id:'default', label:'🎵 Classic', unlocked:true,
-    tracks:['Music/bgm_01.mp3','Music/bgm_02.mp3','Music/bgm_03.mp3','Music/bgm_04.mp3'].map(resolveAssetPath),
-  },
-  happy:{
-    id:'happy', label:'😊 Happy', unlocked:false,
-    tracks:['Music/Packs/Happy_01/bgm_happy_01.mp3','Music/Packs/Happy_01/bgm_happy_02.mp3',
-            'Music/Packs/Happy_01/bgm_happy_03.mp3','Music/Packs/Happy_01/bgm_happy_04.mp3',
-            'Music/Packs/Happy_01/bgm_happy_05.mp3'].map(resolveAssetPath),
-  },
-  kpop:{
-    id:'kpop', label:'🎤 K-Pop', unlocked:false,
-    tracks:['Music/Packs/Kpop_01/bgm_kpop_01.mp3','Music/Packs/Kpop_01/bgm_kpop_02.mp3',
-            'Music/Packs/Kpop_01/bgm_kpop_03.mp3','Music/Packs/Kpop_01/bgm_kpop_04.mp3',
-            'Music/Packs/Kpop_01/bgm_kpop_05.mp3'].map(resolveAssetPath),
-  },
+  default:{id:'default',label:'🎵 Classic',unlocked:true,
+    tracks:['Music/bgm_01.mp3','Music/bgm_02.mp3','Music/bgm_03.mp3','Music/bgm_04.mp3'].map(resolveAssetPath)},
 };
+
+// Pre-populate MUSIC_PACKS from PACK_DEFS immediately so collection shows all packs
+// Tracks start empty and get filled in by discovery
+PACK_DEFS.forEach(def=>{
+  if(def.builtin) return;
+  MUSIC_PACKS[def.id]={id:def.id, label:def.label, unlocked:false, tracks:[]};
+});
+
+// Discover tracks async — show loading screen if selected pack needs discovery
+(async function initMusicPacks(){
+  const selectedId=getSave().musicPack||'default';
+  // Only block with loading screen if the selected pack isn't default
+  const needsLoad=selectedId!=='default' && PACK_DEFS.find(d=>d.id===selectedId);
+  let loader=null;
+  if(needsLoad){
+    loader=document.createElement('div');
+    loader.id='music-loader';
+    loader.style.cssText=`position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;
+      background:rgba(10,5,20,0.97);display:flex;flex-direction:column;
+      align-items:center;justify-content:center;gap:16px;`;
+    loader.innerHTML=`
+      <div style="width:56px;height:56px;border:4px solid rgba(155,93,229,0.2);
+        border-top-color:#9b5de5;border-radius:50%;animation:spin 0.8s linear infinite;"></div>`;
+    document.body.appendChild(loader);
+  }
+
+  for(const def of PACK_DEFS){
+    if(def.builtin) continue;
+
+    const tracks=await discoverPackTracks(def.folder, def.prefix);
+    MUSIC_PACKS[def.id].tracks=tracks;
+    console.log(`[Music] '${def.id}' ready — ${tracks.length} tracks`);
+  }
+
+  // Remove loader
+  if(loader){ loader.style.transition='opacity 0.3s'; loader.style.opacity='0'; setTimeout(()=>loader.remove(),300); }
+
+  // Start correct music now that packs are ready
+  const activePack=getActivePack();
+  if(activePack.tracks.length>0){ _ct=null; playMusic('game'); }
+
+  // Refresh music tab if open
+  const mt=document.getElementById('col-tab-music');
+  if(mt && mt.style.background && mt.style.background.includes('0.8')){
+    switchCollectionTab('music',false,true);
+  }
+})();
 
 function getActivePack(){
   const id=getSave().musicPack||'default';
-  return MUSIC_PACKS[id]||MUSIC_PACKS.default;
+  const pack=MUSIC_PACKS[id]||MUSIC_PACKS.default;
+  // Fall back to default if selected pack tracks not loaded yet
+  if(!pack.tracks||pack.tracks.length===0) return MUSIC_PACKS.default;
+  return pack;
 }
 
 function isMusicPackUnlocked(id){
@@ -4418,7 +4620,8 @@ function update(){
     mover.mesh.position.x=mover.lx+mover.w/2;
 
     // Bounce when block fully exits the opposite side
-    const _effectiveBounceLimit = (advMode&&advBossNoBounce) ? 0 : _maxBounces;
+    // W7 chaos no-bounce = 1 bounce allowed; regular no-bounce boss = 0
+    const _effectiveBounceLimit = (advMode&&advBossNoBounce) ? (advBoss==='random'?1:0) : _maxBounces;
     if(mover.lx > S+0.5){
       if(mover.bounces>=_effectiveBounceLimit){if(!countingDown){doMiss();return;}}
       mover.bounces++;mover.dir=-1;
@@ -4434,7 +4637,7 @@ function update(){
   }
 
   // ── Pulse red while bounced ──
-  const _effLimit=(advMode&&advBossNoBounce)?0:_maxBounces;
+  const _effLimit=(advMode&&advBossNoBounce)?(advBoss==='random'?1:0):_maxBounces;
   if(mover && mover.bounces>=_effLimit){
     const pulse=0.4+Math.sin(Date.now()*0.01)*0.4;
     getAllMeshMaterials(mover.mesh).forEach(m=>{m.emissiveIntensity=pulse;});
@@ -5212,7 +5415,7 @@ function showAdvRetry(){
     el.remove(); startAdvLevel();
   });
   document.getElementById('adv-map-btn').addEventListener('click',()=>{
-    el.remove(); _fOut(_aud,()=>{_aud=null;_ct=null;}); showAdvMap(_lastAdvWorld, _lastAdvLevel);
+    clearCountdown(); el.remove(); _fOut(_aud,()=>{_aud=null;_ct=null;}); showAdvMap(_lastAdvWorld, _lastAdvLevel);
   });
 }
 
@@ -5851,6 +6054,22 @@ function showMeshUnlockPopup(name, onDismiss){
   setTimeout(()=>tone(880,'sine',0.3,0.4),200);
 }
 
+function devUnlockAllLevels(){
+  for(let w=0;w<8;w++) for(let l=0;l<10;l++) setAdvLevelData(w,l,1,999);
+  // Rebuild map if open
+  if(document.getElementById('s-adventure').style.display!=='none'){
+    initAdvMap3D(_advMapWorld);
+  }
+  const t=document.createElement('div');
+  t.style.cssText=`position:fixed;bottom:calc(var(--ad-bar-h,60px)+16px);left:50%;
+    transform:translateX(-50%);z-index:600;background:rgba(0,180,255,0.95);
+    color:#fff;font-family:'Fredoka One',cursive;font-size:15px;
+    padding:10px 24px;border-radius:12px;white-space:nowrap;animation:popIn 0.3s ease-out;`;
+  t.textContent='🔓 All levels unlocked!';
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity 0.4s';setTimeout(()=>t.remove(),400);},2000);
+}
+
 function confirmResetAdvProgress(){
   const pop=document.createElement('div');
   pop.style.cssText=`position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;
@@ -5892,9 +6111,11 @@ function confirmResetAdvProgress(){
 }
 
 function goToAdvMapFromPause(){
+  clearCountdown();
   state='idle';
   advMode=false;
   _inAdvSession=false;
+  clearCountdown();
   resetAdvBoss();
   // Stop game/boss music, then showAdvMap will start world map music
   stopAdvMapMusic(); // stop any existing map music first
@@ -5906,7 +6127,7 @@ function goToAdvMapFromPause(){
   setTenseMode(false);
   hearts.forEach(h=>{if(h.el){h.el.remove();h.el=null;}});
   hearts=[];
-  showAdvMap(advWorld); // showAdvMap calls playAdvMapMusic internally
+  showAdvMap(_lastAdvWorld, _lastAdvLevel); // return to the level we came from
 }
 
 document.getElementById('pauseBtn').addEventListener('click',()=>openPause(false));
@@ -6018,14 +6239,16 @@ document.getElementById('zoom-slider').value=userZoom;
   let _titleMusicStarted=false;
   function tryFS(){
     reqFS();
+    const ss=document.getElementById('s-start');
+    const onTitleScreen=ss && ss.style.display!=='none';
     if(!_titleMusicStarted){
       _titleMusicStarted=true;
-      const ss=document.getElementById('s-start');
-      if(ss && ss.style.display!=='none'){
-        _ct=null; // force start
+      if(onTitleScreen){
+        _ct=null;
         playMusic('title');
       }
-    } else {
+    } else if(onTitleScreen) {
+      // Only retry music if still on title screen
       _retryPendingMusic();
     }
     document.removeEventListener('touchstart',tryFS);
