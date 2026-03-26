@@ -415,15 +415,15 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
         pointer-events:all;">⚙️</button>
     </div>
   </div>
-  <!-- Stars badge — right-aligned under top bar -->
-  <div style="position:relative;z-index:10;text-align:right;padding:4px 12px 0;flex-shrink:0;">
-    <div id="adv-total-stars" style="display:inline-block;font-family:'Fredoka One',cursive;
-      font-size:14px;color:#ffcc00;background:rgba(0,0,0,0.45);
-      border-radius:20px;padding:3px 10px;">⭐0</div>
-  </div>
-  <!-- Scrollable map canvas area — fixed height, panel overlays on top -->
-  <div style="flex:1;overflow:hidden;position:relative;display:flex;align-items:center;min-height:0;">
-    <!-- Left arrow -->
+  <!-- Stars + map area wrapped so arrows cover full height including stars row -->
+  <div style="flex:1;overflow:hidden;position:relative;display:flex;flex-direction:column;min-height:0;">
+    <!-- Stars badge — right-aligned, inside the wrapper so arrows overlay it -->
+    <div style="position:relative;z-index:10;text-align:right;padding:4px 12px 0;flex-shrink:0;pointer-events:none;">
+      <div id="adv-total-stars" style="display:inline-block;font-family:'Fredoka One',cursive;
+        font-size:14px;color:#ffcc00;background:rgba(0,0,0,0.45);
+        border-radius:20px;padding:3px 10px;pointer-events:none;">⭐0</div>
+    </div>
+    <!-- Left arrow — covers full height including stars row -->
     <button id="adv-arrow-left" onclick="advMapNav(-1)"
       style="position:absolute;left:0;top:0;bottom:0;z-index:50;
       width:52px;background:linear-gradient(to right,rgba(0,0,0,0.45),transparent);
@@ -431,13 +431,16 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
       display:flex;align-items:center;justify-content:center;">
       <span style="font-size:32px;color:rgba(255,255,255,0.75);text-shadow:0 2px 8px rgba(0,0,0,0.8);">‹</span>
     </button>
+    <!-- Scrollable map canvas area -->
+    <div style="flex:1;overflow:hidden;position:relative;min-height:0;">
     <div id="adv-map-area" style="position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;">
     <div id="adv-map-inner" style="position:absolute;top:0;left:0;height:100%;will-change:transform;">
       <canvas id="adv-path-canvas" style="position:absolute;top:0;left:0;pointer-events:none;z-index:1;"></canvas>
       <div id="adv-map-nodes" style="position:relative;z-index:2;"></div>
     </div>
     </div><!-- end adv-map-area -->
-    <!-- Right arrow -->
+    </div><!-- end map canvas wrapper -->
+    <!-- Right arrow — covers full height including stars row -->
     <button id="adv-arrow-right" onclick="advMapNav(1)"
       style="position:absolute;right:0;top:0;bottom:0;z-index:50;
       width:52px;background:linear-gradient(to left,rgba(0,0,0,0.45),transparent);
@@ -1884,7 +1887,19 @@ const ADV_TIME_W = [
   [48, 60,  72,  85,  95, 105, 115, 125, 135, 155],  // W8 - tightest
 ];
 // Extra base speed per world (added on top of score-based speed)
-const ADV_WORLD_SPEED = [0, 0.25, 0.5, 0.75, 1.0, 1.3, 1.6, 2.0];
+// ── WORLD STARTING SPEED ──
+// W1 starts at default speed (multiplier 1.0), W8 starts at MAX_WORLD_SPEED_MULT × default.
+// To tune: change MAX_WORLD_SPEED_MULT. Scale is linear across 8 worlds.
+const MAX_WORLD_SPEED_MULT = 3.0; // W8 starts at 3× the base speed (tune this)
+// Base speed at score 0 (from getSpeed(0) = 2.2)
+const BASE_ADV_SPEED = 2.2;
+// Multiplier per world: W1=1.0, W2=1.28, ... W8=MAX_WORLD_SPEED_MULT
+function getWorldSpeedMult(w){
+  // Linear interpolation: world 0 = 1.0, world 7 = MAX_WORLD_SPEED_MULT
+  return 1.0 + (MAX_WORLD_SPEED_MULT - 1.0) * (w / 7);
+}
+// Kept for any legacy references
+const ADV_WORLD_SPEED = [0,0,0,0,0,0,0,0];
 
 // Compatibility shims — used when advWorld context isn't available
 const ADV_GOALS = ADV_GOALS_W[0];
@@ -2349,7 +2364,7 @@ function _getAnimalTop(li){
   const vh=_getMapVh();
   const mid=vh/2;
   const R=li===9?ADV_NODE_R+10:ADV_NODE_R;
-  return mid-R-ADV_ANIMAL_SIZE*0.9;
+  return mid-R-ADV_ANIMAL_SIZE*0.9-100;
 }
 
 function _getAnimalLeft(li){
@@ -2646,8 +2661,9 @@ function startAdvLevel(){
   document.getElementById('s-adventure').style.display='none';
   document.getElementById('s-start').style.display='none';
 
-  // Store world speed bonus — applied after initGame in startGame
-  _advWorldSpeedBonus = ADV_WORLD_SPEED[advWorld]||0;
+  // Store world speed — applied after initGame in startGame
+  // Starting speed = base speed × world multiplier
+  _advWorldSpeedBonus = BASE_ADV_SPEED * getWorldSpeedMult(advWorld) - BASE_ADV_SPEED;
 
   // Set stage colors to world theme
   scene.background=new THREE.Color(world.sky);
@@ -3165,7 +3181,7 @@ const STAGE_SIZE=5; // blocks per stage
 const getStageIdx=s=>Math.floor(s/STAGE_SIZE);
 const getStage=s=>STAGES[getStageIdx(s)%STAGES.length];
 // Speed: starts at 2.2, +0.6 per stage (every 5 blocks) — aggressive ramp
-const getSpeed=s=>2.2+getStageIdx(s)*0.6;
+const getSpeed=s=>Math.max(2.2+getStageIdx(s)*0.6, BASE_ADV_SPEED+_advWorldSpeedBonus);
 
 // ── Audio ──
 let AC=null;
@@ -5843,7 +5859,8 @@ function startGame(){
   activateHeartShower();
   // Show 3-2-1 countdown at start of adventure levels
   if(advMode){
-    spd+=_advWorldSpeedBonus; // world difficulty speed bonus
+    // getSpeed() already floors at world starting speed via _advWorldSpeedBonus
+    // No need to add bonus again — just save and restore after countdown
     const savedSpd=spd; spd=0;
     showCountdown(()=>{ spd=savedSpd; });
   }
