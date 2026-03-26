@@ -172,7 +172,7 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
 <div id="particles"></div>
 <!-- Persistent banner ad — shown on all non-gameplay screens -->
 <div id="persistent-banner">
-  <div style="font-family:'Nunito',sans-serif;font-size:11px;color:rgba(255,255,255,0.2);
+  <div style="font-family:'Nunito',sans-serif;font-size:12px;color:rgba(255,255,255,0.45);
     letter-spacing:1px;" id="persistent-banner-inner">Advertisement</div>
 </div>
 
@@ -271,91 +271,99 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
   background:rgba(15,8,25,0.55);
   align-items:center;justify-content:center;flex-direction:column;">
   <div style="background:rgba(30,15,50,0.92);border:1px solid rgba(255,255,255,0.2);
-    border-radius:28px;padding:20px 20px;max-width:380px;width:92%;text-align:center;
+    border-radius:28px;padding:22px 20px;max-width:380px;width:92%;text-align:center;
     box-shadow:0 20px 60px rgba(0,0,0,0.5);max-height:90vh;overflow-y:auto;">
     <div style="font-family:'Fredoka One',cursive;font-size:26px;color:#fff;margin-bottom:16px;letter-spacing:1px;">⚙️ Settings</div>
-    <!-- Compact sliders: label + value on one line -->
-    <div style="margin-bottom:14px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-        <span style="font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:1px;color:rgba(255,255,255,0.6);text-transform:uppercase;">Zoom</span>
-        <span id="zoom-label" style="font-family:'Fredoka One',cursive;font-size:14px;color:#9b5de5;"></span>
-      </div>
-      <input id="zoom-slider" type="range" min="2.5" max="7" step="0.1" value="4.6" style="width:100%;accent-color:#9b5de5;cursor:pointer;">
-    </div>
-    <div style="margin-bottom:14px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-        <span style="font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:1px;color:rgba(255,255,255,0.6);text-transform:uppercase;">Angle</span>
-        <span id="pitch-label" style="font-family:'Fredoka One',cursive;font-size:14px;color:#f5c842;"></span>
-      </div>
-      <input id="pitch-slider" type="range" min="4" max="18" step="0.5" value="10" style="width:100%;accent-color:#f5c842;cursor:pointer;">
-    </div>
-    <div style="margin-bottom:14px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-        <span style="font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:1px;color:rgba(255,255,255,0.6);text-transform:uppercase;">Rotate</span>
-        <span id="rotate-label" style="font-family:'Fredoka One',cursive;font-size:14px;color:#44ddff;"></span>
-      </div>
-      <input id="rotate-slider" type="range" min="0" max="360" step="1" value="45" style="width:100%;accent-color:#44ddff;cursor:pointer;">
-    </div>
-    <div style="margin-bottom:18px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-        <span style="font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:1px;color:rgba(255,255,255,0.6);text-transform:uppercase;">Stack Pos</span>
-        <span id="stacky-label" style="font-family:'Fredoka One',cursive;font-size:14px;color:#ff9955;">0.0</span>
-      </div>
-      <input id="stacky-slider" type="range" min="-5" max="5" step="0.1" value="0" style="width:100%;accent-color:#ff9955;cursor:pointer;">
-    </div>
-    <!-- Collection button -->
-    <button onclick="showCollection();closePause();"
-      style="width:100%;background:linear-gradient(135deg,rgba(155,93,229,0.3),rgba(255,200,0,0.15));
-      color:#fff;font-family:'Fredoka One',cursive;font-size:18px;padding:13px;
-      border:1px solid rgba(155,93,229,0.4);border-radius:16px;cursor:pointer;margin-bottom:12px;
-      box-shadow:0 4px 16px rgba(155,93,229,0.2);">🎁 My Collection</button>
+
     <!-- Hidden selectors kept for JS compat -->
     <div id="block-style-selector" style="display:none;"></div>
     <div id="animal-selector" style="display:none;"></div>
+
+    <!-- Sliders — kept in main settings -->
+    <!-- Hidden zoom/angle/rotate/stackpos sliders — moved to dev panel but IDs kept for JS -->
+    <div id="dev-sliders" style="display:none;">
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <span style="font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:1px;color:rgba(255,255,255,0.6);text-transform:uppercase;">Zoom</span>
+          <span id="zoom-label" style="font-family:'Fredoka One',cursive;font-size:14px;color:#9b5de5;"></span>
+        </div>
+        <input id="zoom-slider" type="range" min="2.5" max="7" step="0.1" value="4.6" style="width:100%;accent-color:#9b5de5;cursor:pointer;">
+      </div>
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <span style="font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:1px;color:rgba(255,255,255,0.6);text-transform:uppercase;">Angle</span>
+          <span id="pitch-label" style="font-family:'Fredoka One',cursive;font-size:14px;color:#f5c842;"></span>
+        </div>
+        <input id="pitch-slider" type="range" min="4" max="18" step="0.5" value="10" style="width:100%;accent-color:#f5c842;cursor:pointer;">
+      </div>
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <span style="font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:1px;color:rgba(255,255,255,0.6);text-transform:uppercase;">Rotate</span>
+          <span id="rotate-label" style="font-family:'Fredoka One',cursive;font-size:14px;color:#44ddff;"></span>
+        </div>
+        <input id="rotate-slider" type="range" min="0" max="360" step="1" value="45" style="width:100%;accent-color:#44ddff;cursor:pointer;">
+      </div>
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <span style="font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:1px;color:rgba(255,255,255,0.6);text-transform:uppercase;">Stack Pos</span>
+          <span id="stacky-label" style="font-family:'Fredoka One',cursive;font-size:14px;color:#ff9955;">0.0</span>
+        </div>
+        <input id="stacky-slider" type="range" min="-5" max="5" step="0.1" value="0" style="width:100%;accent-color:#ff9955;cursor:pointer;">
+      </div>
+      <div style="height:1px;background:rgba(255,255,255,0.08);margin:8px 0 14px;"></div>
+      <button id="devAutoPlayBtn" onclick="toggleDevAutoPlay()"
+        style="width:100%;background:rgba(0,200,100,0.15);color:rgba(0,255,130,0.8);
+        font-family:'Fredoka One',cursive;font-size:13px;padding:8px;
+        border:1px solid rgba(0,200,100,0.3);border-radius:12px;cursor:pointer;margin-bottom:8px;">
+        🤖 Dev: Auto-Play OFF</button>
+      <button id="devUnlockBtn" onclick="toggleDevUnlock()"
+        style="width:100%;background:rgba(255,165,0,0.15);color:rgba(255,165,0,0.8);
+        font-family:'Fredoka One',cursive;font-size:13px;padding:8px;
+        border:1px solid rgba(255,165,0,0.3);border-radius:12px;cursor:pointer;margin-bottom:8px;">
+        🔧 Dev: Unlock All Meshes</button>
+      <button id="resetAdvBtn" onclick="confirmResetAdvProgress()"
+        style="width:100%;background:rgba(200,50,50,0.15);color:rgba(255,120,120,0.8);
+        font-family:'Fredoka One',cursive;font-size:13px;padding:8px;
+        border:1px solid rgba(200,50,50,0.25);border-radius:12px;cursor:pointer;margin-bottom:8px;">
+        🗑️ Reset World Progress</button>
+      <div style="height:1px;background:rgba(255,255,255,0.08);margin:4px 0 14px;"></div>
+    </div>
+
+    <!-- Main buttons -->
     <button id="pause-mute-btn"
       style="width:100%;background:rgba(255,255,255,0.12);color:#fff;font-family:'Fredoka One',cursive;
-      font-size:16px;padding:10px;border:1px solid rgba(255,255,255,0.2);border-radius:12px;
-      cursor:pointer;margin-bottom:8px;">🔊 Sound</button>
-    <!-- Credits button -->
+      font-size:16px;padding:11px;border:1px solid rgba(255,255,255,0.2);border-radius:12px;
+      cursor:pointer;margin-bottom:8px;">🔊 Sound On</button>
     <button onclick="showCreditsPopup()"
       style="width:100%;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);
       font-family:'Fredoka One',cursive;font-size:14px;padding:9px;
       border:1px solid rgba(255,255,255,0.1);border-radius:12px;cursor:pointer;margin-bottom:8px;">🎵 Credits</button>
-    <!-- DEV: Auto-play toggle -->
-    <button id="devAutoPlayBtn" onclick="toggleDevAutoPlay()"
-      style="width:100%;background:rgba(0,200,100,0.15);color:rgba(0,255,130,0.8);
+    <!-- Dev options toggle -->
+    <button onclick="toggleDevPanel()"
+      style="width:100%;background:rgba(100,80,140,0.2);color:rgba(200,180,255,0.6);
       font-family:'Fredoka One',cursive;font-size:13px;padding:8px;
-      border:1px solid rgba(0,200,100,0.3);border-radius:12px;cursor:pointer;margin-bottom:8px;">
-      🤖 Dev: Auto-Play OFF</button>
-    <!-- DEV: Unlock all meshes toggle -->
-    <button id="devUnlockBtn" onclick="toggleDevUnlock()"
-      style="width:100%;background:rgba(255,165,0,0.15);color:rgba(255,165,0,0.8);
-      font-family:'Fredoka One',cursive;font-size:13px;padding:8px;
-      border:1px solid rgba(255,165,0,0.3);border-radius:12px;cursor:pointer;margin-bottom:8px;">
-      🔧 Dev: Unlock All Meshes</button>
-    <!-- Reset adventure progress -->
-    <button id="resetAdvBtn" onclick="confirmResetAdvProgress()"
-      style="width:100%;background:rgba(200,50,50,0.15);color:rgba(255,120,120,0.8);
-      font-family:'Fredoka One',cursive;font-size:14px;padding:9px;
-      border:1px solid rgba(200,50,50,0.25);border-radius:12px;cursor:pointer;margin-bottom:8px;">
-      🗑️ Reset World Progress</button>
-    <!-- Resume / Close -->
-    <button id="resumeBtn"
-      style="width:100%;background:#9b5de5;color:#fff;font-family:'Fredoka One',cursive;
-      font-size:20px;padding:13px;border:none;border-radius:14px;cursor:pointer;
-      box-shadow:0 5px 0 #6a35b0;margin-bottom:8px;">▶ Resume</button>
-    <!-- quitBtn kept as hidden stub for JS listener compatibility -->
-    <button id="quitBtn" style="display:none;"></button>
+      border:1px solid rgba(100,80,140,0.25);border-radius:12px;cursor:pointer;margin-bottom:8px;">
+      🛠 Dev Options</button>
+
+    <div style="height:1px;background:rgba(255,255,255,0.08);margin:4px 0 12px;"></div>
+
     <!-- Back to world map — only in adventure mode -->
     <button id="advMapBtn" onclick="closePause();goToAdvMapFromPause();"
       style="display:none;width:100%;background:rgba(76,175,125,0.2);color:#4caf7d;
-      font-family:'Fredoka One',cursive;font-size:14px;padding:10px;
-      border:1px solid rgba(76,175,125,0.35);border-radius:12px;cursor:pointer;pointer-events:all;margin-bottom:6px;">🗺️ World Map</button>
-    <!-- Always-visible title screen button -->
-    <button onclick="closePause();goToTitle();"
-      style="width:100%;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);
-      font-family:'Fredoka One',cursive;font-size:14px;padding:10px;
-      border:1px solid rgba(255,255,255,0.12);border-radius:12px;cursor:pointer;">🏠 Title Screen</button>
+      font-family:'Fredoka One',cursive;font-size:15px;padding:11px;
+      border:1px solid rgba(76,175,125,0.35);border-radius:12px;cursor:pointer;pointer-events:all;margin-bottom:8px;">🗺️ World Map</button>
+    <!-- quitBtn kept as hidden stub for JS listener compatibility -->
+    <button id="quitBtn" style="display:none;"></button>
+    <!-- Title screen with confirm -->
+    <button onclick="confirmGoToTitle()"
+      style="width:100%;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.55);
+      font-family:'Fredoka One',cursive;font-size:15px;padding:11px;
+      border:1px solid rgba(255,255,255,0.12);border-radius:12px;cursor:pointer;margin-bottom:8px;">🏠 Title Screen</button>
+    <!-- Close/Resume -->
+    <button id="resumeBtn"
+      style="width:100%;background:linear-gradient(135deg,#9b5de5,#6a2daa);color:#fff;font-family:'Fredoka One',cursive;
+      font-size:22px;padding:14px;border:none;border-radius:16px;cursor:pointer;
+      box-shadow:0 6px 0 #4a1a80;margin-bottom:0;">✕ Close</button>
   </div>
 </div>
 
@@ -501,7 +509,14 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
       box-shadow:0 6px 0 #4a1a80,0 10px 24px rgba(155,93,229,0.4);">
       Let's Go! 🍣
     </button>
-    <button onclick="closeAdvIntro()" style="width:100%;margin-top:14px;background:transparent;
+    <!-- Heart shower start button -->
+    <button onclick="startAdvWithHeartShower()" style="width:100%;margin-top:10px;
+      background:linear-gradient(135deg,rgba(255,80,120,0.35),rgba(255,150,50,0.25));color:#fff;
+      font-family:'Fredoka One',cursive;font-size:18px;padding:13px;
+      border:1px solid rgba(255,80,120,0.45);border-radius:16px;cursor:pointer;pointer-events:all;">
+      📺 Start with ❤️ Heart Shower!
+    </button>
+    <button onclick="closeAdvIntro()" style="width:100%;margin-top:10px;background:transparent;
       color:rgba(255,255,255,0.35);font-family:'Fredoka One',cursive;font-size:17px;
       padding:10px;border:none;cursor:pointer;pointer-events:all;">← Back to Map</button>
   </div>
@@ -522,9 +537,6 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
 
   <!-- Logo area -->
   <div style="text-align:center;margin-bottom:clamp(10px,2.5vh,28px);">
-    <div style="font-size:clamp(28px,7vw,44px);margin-bottom:4px;animation:sway 4s ease-in-out infinite;">
-      🍣 🍱 🍤 🥢 🍙
-    </div>
     <div style="font-size:clamp(66px,16vw,105px);animation:pulse 3s ease-in-out infinite;
       filter:drop-shadow(0 10px 28px rgba(100,60,120,0.35));line-height:1;margin-bottom:6px;">🍱</div>
     <div class="ttl" style="font-size:clamp(54px,14vw,90px);">SUSHI</div>
@@ -545,14 +557,6 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
       🗺️ Adventure Mode
     </button>
 
-    <button onclick="showCollection()"
-      style="background:linear-gradient(135deg,rgba(155,93,229,0.35),rgba(255,200,0,0.2));color:#fff;
-      font-family:'Fredoka One',cursive;font-size:clamp(18px,4.5vw,24px);
-      padding:16px;border:1px solid rgba(155,93,229,0.4);border-radius:20px;cursor:pointer;
-      box-shadow:0 5px 0 rgba(0,0,0,0.2);pointer-events:all;">
-      🎁 My Collection
-    </button>
-
     <button id="startDailyBtn" onclick="startDailyChallenge()"
       style="background:linear-gradient(135deg,#9b5de5,#5e2daa);color:#fff;
       font-family:'Fredoka One',cursive;font-size:clamp(18px,4.5vw,24px);
@@ -562,15 +566,13 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
     </button>
 
     <button id="headStartBtn" style="display:none;"></button>
-
-    <button id="heartShowerBtn" onclick="requestHeartShowerAd()"
-      style="background:rgba(255,80,120,0.25);color:#fff;
-      border:1px solid rgba(255,80,120,0.5);
-      font-family:'Fredoka One',cursive;font-size:clamp(15px,3.8vw,20px);
-      padding:14px;border-radius:20px;cursor:pointer;pointer-events:all;">
-      📺 Watch Ad → ❤️ Heart Shower
-    </button>
+    <button id="heartShowerBtn" style="display:none;"></button>
+    <div style="text-align:center;font-size:clamp(24px,6vw,36px);
+      animation:sway 4s ease-in-out infinite;pointer-events:none;margin-top:4px;">
+      🍣 🍱 🍤 🥢 🍙</div>
   </div>
+
+
 </div>
 
 <!-- AD OFFER SCREEN — shown immediately after game ends -->
@@ -1418,6 +1420,17 @@ function requestHeadStartAd(){
 }
 
 // 3. HEART SHOWER — 30 seconds of continuous hearts next game
+function startAdvWithHeartShower(){
+  // Watch ad then start level with heart shower active
+  admobShowRewarded('heartshower',
+    ()=>{
+      adState.heartShowerPending=true;
+      startAdvLevel(); // close intro and start level — activateHeartShower fires in startGame
+    },
+    ()=>{ /* ad failed/skipped — do nothing */ }
+  );
+}
+
 function requestHeartShowerAd(){
   admobShowRewarded(AD_IDS.rewarded, ()=>{
     adState.heartShowerPending = true;
@@ -1492,9 +1505,10 @@ function forceSpawnHeart(){
   const sx = 20 + Math.random() * 60;
   const el = document.createElement('div');
   el.style.cssText=`position:fixed;left:${sx}%;top:-60px;z-index:30;
-    font-size:clamp(28px,6vw,44px);cursor:pointer;pointer-events:all;
-    filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));user-select:none;
-    transition:transform 0.1s;`;
+    font-size:77px;cursor:pointer;pointer-events:all;
+    padding:30px;margin:-30px;
+    filter:drop-shadow(0 4px 12px rgba(255,50,100,0.6));
+    user-select:none;-webkit-user-select:none;transition:none;`;
   el.textContent='❤️';
   el.setAttribute('data-heart','1');
   document.getElementById('game-container')?.appendChild(el) || document.body.appendChild(el);
@@ -4081,9 +4095,13 @@ function update(){
       const el=document.createElement('div');
       const sx=20+Math.random()*60;
       const glow=isPoison?'rgba(0,0,0,0.8)':'rgba(255,50,100,0.6)';
+      // Red hearts get bigger hitbox; black poison hearts stay normal
+      const hitPad=isPoison?'20px':'30px';
+      const hitMargin=isPoison?'-20px':'-30px';
+      const heartSize=isPoison?'64px':'77px';
       el.style.cssText=`position:fixed;left:${sx}%;top:-80px;z-index:30;
-        font-size:64px;cursor:pointer;pointer-events:all;
-        padding:20px;margin:-20px;
+        font-size:${heartSize};cursor:pointer;pointer-events:all;
+        padding:${hitPad};margin:${hitMargin};
         filter:drop-shadow(0 4px 12px ${glow});
         transition:none;user-select:none;-webkit-user-select:none;`;
       el.textContent=isPoison?'🖤':'❤️';
@@ -5203,6 +5221,51 @@ function toggleDevAutoPlay(){
   const btn=document.getElementById('devAutoPlayBtn');
   if(btn) btn.textContent=_devAutoPlay?'🤖 Dev: Auto-Play ON ✓':'🤖 Dev: Auto-Play OFF';
   if(btn) btn.style.background=_devAutoPlay?'rgba(0,200,100,0.35)':'rgba(0,200,100,0.15)';
+}
+
+function toggleDevPanel(){
+  const panel=document.getElementById('dev-sliders');
+  if(!panel) return;
+  const open=panel.style.display!=='none';
+  panel.style.display=open?'none':'block';
+  // Sync button states when opening
+  if(!open){
+    const dab=document.getElementById('devAutoPlayBtn');
+    if(dab){ dab.textContent=_devAutoPlay?'🤖 Dev: Auto-Play ON ✓':'🤖 Dev: Auto-Play OFF'; dab.style.background=_devAutoPlay?'rgba(0,200,100,0.35)':'rgba(0,200,100,0.15)'; }
+    const dub=document.getElementById('devUnlockBtn');
+    if(dub){ dub.textContent=_allMeshesUnlocked?'🔧 Dev: All Meshes UNLOCKED ✓':'🔧 Dev: Unlock All Meshes (clears saved)'; dub.style.background=_allMeshesUnlocked?'rgba(255,165,0,0.35)':'rgba(255,165,0,0.15)'; }
+  }
+}
+
+function confirmGoToTitle(){
+  const pop=document.createElement('div');
+  pop.style.cssText=`position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.7);animation:modalBgIn 0.2s ease-out forwards;`;
+  pop.innerHTML=`
+    <div style="background:rgba(20,10,40,0.97);border:1px solid rgba(255,255,255,0.15);
+      border-radius:28px;padding:32px 26px;max-width:320px;width:90%;text-align:center;
+      animation:modalCardIn 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;">
+      <div style="font-size:48px;margin-bottom:10px;">🏠</div>
+      <div style="font-family:'Fredoka One',cursive;font-size:24px;color:#fff;margin-bottom:8px;">Go to Title?</div>
+      <div style="font-family:'Nunito',sans-serif;font-size:15px;color:rgba(255,255,255,0.5);margin-bottom:24px;">Your current game will be lost.</div>
+      <button id="title-confirm-yes" style="width:100%;background:linear-gradient(135deg,#9b5de5,#6a2daa);
+        color:#fff;font-family:'Fredoka One',cursive;font-size:19px;padding:14px;
+        border:none;border-radius:14px;cursor:pointer;box-shadow:0 5px 0 #4a1a80;margin-bottom:10px;">
+        Yes, go to Title</button>
+      <button id="title-confirm-no" style="width:100%;background:transparent;
+        color:rgba(255,255,255,0.4);font-family:'Fredoka One',cursive;font-size:16px;
+        padding:10px;border:none;cursor:pointer;">Cancel</button>
+    </div>`;
+  document.body.appendChild(pop);
+  document.getElementById('title-confirm-yes').onclick=()=>{
+    pop.style.animation='modalBgOut 0.2s ease-in forwards';
+    setTimeout(()=>{ pop.remove(); closePause(); goToTitle(); }, 200);
+  };
+  document.getElementById('title-confirm-no').onclick=()=>{
+    pop.style.animation='modalBgOut 0.2s ease-in forwards';
+    setTimeout(()=>pop.remove(), 200);
+  };
 }
 
 function toggleDevUnlock(){
