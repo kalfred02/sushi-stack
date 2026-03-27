@@ -709,25 +709,31 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
         let json=null, bin=null;
         let chunkOffset=12;
         const totalLen=view.getUint32(8,true);
+        console.log('[GLB] parsing, size='+data.byteLength+' totalLen='+totalLen);
         while(chunkOffset<totalLen-7){
           const chunkLen=view.getUint32(chunkOffset,true);
           const chunkType=view.getUint32(chunkOffset+4,true);
           const chunkStart=chunkOffset+8;
-          if(chunkType===0x4E4F534A){ // JSON chunk
+          console.log('[GLB] chunk type='+chunkType.toString(16)+' len='+chunkLen+' at '+chunkOffset);
+          if(chunkType===0x4E4F534A){
             const jsonStr=new TextDecoder().decode(new Uint8Array(data,chunkStart,chunkLen));
-            json=JSON.parse(jsonStr.replace(/ +$/,'')); // trim padding nulls
-          } else if(chunkType===0x004E4942){ // BIN chunk
-            // Copy into fresh ArrayBuffer to guarantee alignment
+            json=JSON.parse(jsonStr.replace(/\0+$/,''));
+            const acc1=json.accessors&&json.accessors[1];
+            const bv1=acc1&&json.bufferViews&&json.bufferViews[acc1.bufferView];
+            console.log('[GLB] JSON ok, ext='+(json.extensionsUsed||[]).join(','));
+            console.log('[GLB] acc1 compType='+(acc1&&acc1.componentType)+' norm='+(acc1&&acc1.normalized));
+            console.log('[GLB] bv1 stride='+(bv1&&bv1.byteStride)+' offset='+(bv1&&bv1.byteOffset));
+          } else if(chunkType===0x004E4942){
             const raw=new Uint8Array(data,chunkStart,chunkLen);
             const buf=new ArrayBuffer(chunkLen);
             new Uint8Array(buf).set(raw);
             bin=new Uint8Array(buf);
+            console.log('[GLB] BIN ok len='+chunkLen);
           }
-          // Advance past chunk, rounding up to 4-byte boundary
           chunkOffset=chunkStart+((chunkLen+3)&~3);
         }
         if(!json) throw new Error('No JSON chunk found in GLB');
-        if(!bin) bin=new Uint8Array(0); // some GLBs have no binary chunk
+        if(!bin) bin=new Uint8Array(0);
 
         const accessors=json.accessors||[];
         const bufferViews=json.bufferViews||[];
@@ -775,11 +781,46 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
         function getAccessorData(idx){
           const acc=accessors[idx];
           const bv=bufferViews[acc.bufferView||0];
-          const start=(bv.byteOffset||0)+(acc.byteOffset||0);
-          const TypedArray={5120:Int8Array,5121:Uint8Array,5122:Int16Array,5123:Uint16Array,5125:Uint32Array,5126:Float32Array}[acc.componentType];
           const comps={SCALAR:1,VEC2:2,VEC3:3,VEC4:4,MAT4:16}[acc.type]||1;
-          // bin.buffer is now a clean copy starting at 0 — no byteOffset needed
-          return new TypedArray(bin.buffer,start,acc.count*comps);
+          const compSize={5120:1,5121:1,5122:2,5123:2,5125:4,5126:4}[acc.componentType]||4;
+          const TypedArray={5120:Int8Array,5121:Uint8Array,5122:Int16Array,5123:Uint16Array,5125:Uint32Array,5126:Float32Array}[acc.componentType];
+          const bvStart=bv.byteOffset||0;
+          const accStart=acc.byteOffset||0;
+          const stride=bv.byteStride||0;
+          const defaultStride=comps*compSize;
+          const isSigned=acc.componentType===5120||acc.componentType===5122;
+          const maxVal={5120:127,5121:255,5122:32767,5123:65535}[acc.componentType]||1;
+          const dequant=acc.normalized&&acc.componentType!==5126;
+
+          // If interleaved (byteStride != natural stride), must read element by element
+          if(stride && stride!==defaultStride){
+            const out=new Float32Array(acc.count*comps);
+            for(let i=0;i<acc.count;i++){
+              const off=bvStart+accStart+i*stride;
+              const view=new DataView(bin.buffer,off,comps*compSize);
+              for(let c=0;c<comps;c++){
+                let v;
+                if(acc.componentType===5126) v=view.getFloat32(c*4,true);
+                else if(acc.componentType===5125) v=view.getUint32(c*4,true);
+                else if(acc.componentType===5123) v=view.getUint16(c*2,true);
+                else if(acc.componentType===5122) v=view.getInt16(c*2,true);
+                else if(acc.componentType===5121) v=view.getUint8(c);
+                else v=view.getInt8(c);
+                out[i*comps+c]=dequant?Math.max(isSigned?-1:0,v/maxVal):v;
+              }
+            }
+            return out;
+          }
+
+          // Non-interleaved
+          const start=bvStart+accStart;
+          const raw=new TypedArray(bin.buffer,start,acc.count*comps);
+          if(dequant){
+            const out=new Float32Array(acc.count*comps);
+            for(let i=0;i<raw.length;i++) out[i]=Math.max(isSigned?-1:0,raw[i]/maxVal);
+            return out;
+          }
+          return raw;
         }
 
         const scene=new THREE.Group();
@@ -1476,7 +1517,7 @@ function _doShare(text){
 }
 
 // ── GAME VERSION ──
-const GAME_VERSION = '0.650012';
+const GAME_VERSION = '0.650017';
 
 function showAboutPopup(){
   const pop=document.createElement('div');
