@@ -775,43 +775,11 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
         function getAccessorData(idx){
           const acc=accessors[idx];
           const bv=bufferViews[acc.bufferView||0];
-          const accByteOffset=acc.byteOffset||0;
-          const bvByteOffset=bv.byteOffset||0;
-          const comps={SCALAR:1,VEC2:2,VEC3:3,VEC4:4,MAT4:16}[acc.type]||1;
-          const compSize={5120:1,5121:1,5122:2,5123:2,5125:4,5126:4}[acc.componentType]||4;
+          const start=(bv.byteOffset||0)+(acc.byteOffset||0);
           const TypedArray={5120:Int8Array,5121:Uint8Array,5122:Int16Array,5123:Uint16Array,5125:Uint32Array,5126:Float32Array}[acc.componentType];
-          const stride=bv.byteStride||0;
-          const isSigned=acc.componentType===5120||acc.componentType===5122;
-          const maxVal={5120:127,5121:255,5122:32767,5123:65535}[acc.componentType]||1;
-          const needsDequant=acc.normalized&&acc.componentType!==5126;
-
-          if(stride && stride!==(comps*compSize)){
-            // Interleaved buffer — must read element by element with stride
-            const out=new Float32Array(acc.count*comps);
-            const start=bvByteOffset+accByteOffset;
-            for(let i=0;i<acc.count;i++){
-              const elemOffset=start+i*stride;
-              const elem=new TypedArray(bin.buffer,elemOffset,comps);
-              for(let c=0;c<comps;c++){
-                out[i*comps+c]=needsDequant
-                  ? Math.max(isSigned?-1:0, elem[c]/maxVal)
-                  : elem[c];
-              }
-            }
-            return out;
-          }
-
-          // Non-interleaved — read as flat array
-          const start=bvByteOffset+accByteOffset;
-          const raw=new TypedArray(bin.buffer,start,acc.count*comps);
-          if(needsDequant){
-            const out=new Float32Array(acc.count*comps);
-            for(let i=0;i<raw.length;i++){
-              out[i]=Math.max(isSigned?-1:0, raw[i]/maxVal);
-            }
-            return out;
-          }
-          return raw;
+          const comps={SCALAR:1,VEC2:2,VEC3:3,VEC4:4,MAT4:16}[acc.type]||1;
+          // bin.buffer is now a clean copy starting at 0 — no byteOffset needed
+          return new TypedArray(bin.buffer,start,acc.count*comps);
         }
 
         const scene=new THREE.Group();
@@ -1508,7 +1476,7 @@ function _doShare(text){
 }
 
 // ── GAME VERSION ──
-const GAME_VERSION = '0.650015';
+const GAME_VERSION = '0.650012';
 
 function showAboutPopup(){
   const pop=document.createElement('div');
