@@ -45,6 +45,7 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
 #stage-banner{position:fixed;z-index:10;top:35%;left:50%;transform:translate(-50%,-50%);font-family:'Fredoka One',cursive;font-size:clamp(20px,5vw,30px);color:#fff;text-align:center;text-shadow:0 2px 16px rgba(0,0,0,0.3);pointer-events:none;opacity:0;line-height:1.4;}
 #hint{position:fixed;z-index:10;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Fredoka One',cursive;font-size:18px;color:rgba(255,255,255,0.9);letter-spacing:2px;pointer-events:none;display:none;text-align:center;text-shadow:0 2px 8px rgba(0,0,0,0.3);line-height:1.15;}
 #hint.adv-hint{top:30%;transform:translate(-50%,-50%);}
+#hint.play-hint{top:30%;transform:translate(-50%,-50%);}
 #mute{display:none;} /* removed — sound controlled via settings only */
 /* Screens */
 .screen{position:fixed;z-index:100;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 12px calc(var(--ad-bar-h) + 12px);overflow-y:auto;}
@@ -128,6 +129,68 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
   0%{transform:scale(0.7) translateY(20px);opacity:0;}
   100%{transform:scale(1) translateY(0);opacity:1;}
 }
+/* Gift button nudge styles */
+@keyframes giftGlow{
+  0%,100%{box-shadow:0 0 0 0 rgba(255,200,0,0);}
+  50%{box-shadow:0 0 18px 6px rgba(255,200,0,0.55);}
+}
+#gift-btn-title.gift-glow{animation:giftGlow 2s ease-in-out infinite;}
+.gift-dot{position:absolute;top:2px;right:2px;width:13px;height:13px;
+  background:#ff3b30;border-radius:50%;border:2px solid rgba(255,255,255,0.9);
+  pointer-events:none;animation:pulse 1.5s ease-in-out infinite;}
+#gift-callout{position:fixed;z-index:9000;pointer-events:none;}
+#gift-callout-inner{background:rgba(20,10,40,0.95);border:2px solid rgba(255,200,0,0.7);
+  border-radius:16px;padding:10px 16px;font-family:'Fredoka One',cursive;
+  font-size:15px;color:#fff;white-space:nowrap;letter-spacing:0.5px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.5);animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;}
+#gift-callout-arrow{width:0;height:0;border-left:10px solid transparent;
+  border-right:10px solid transparent;border-bottom:12px solid rgba(255,200,0,0.7);
+  margin:0 8px 0 auto;}
+#splash{position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;
+  background:linear-gradient(160deg,#a8d8ea,#c5a8d8 40%,#f4c2d0 75%,#fde8d0);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;transition:opacity 0.5s ease-out;}
+#splash.hiding{opacity:0;pointer-events:none;}
+#splash-title{font-family:'Fredoka One',cursive;font-size:clamp(48px,14vw,76px);
+  color:#fff;text-shadow:0 4px 0 rgba(120,80,160,0.3),0 8px 24px rgba(0,0,0,0.12);
+  letter-spacing:2px;line-height:1;animation:splashDrop 0.7s cubic-bezier(0.34,1.56,0.64,1) forwards;}
+#splash-sub{font-size:clamp(11px,2.5vw,14px);color:rgba(255,255,255,0.85);
+  letter-spacing:4px;text-transform:uppercase;margin-top:8px;font-weight:700;
+  animation:splashDrop 0.7s 0.08s cubic-bezier(0.34,1.56,0.64,1) both;}
+#splash-emoji{font-size:clamp(36px,9vw,52px);margin-bottom:clamp(16px,3vh,32px);
+  animation:sway 4s ease-in-out infinite,splashDrop 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards;}
+#splash-tap{font-family:'Fredoka One',cursive;font-size:clamp(18px,4.5vw,24px);
+  color:rgba(255,255,255,0.9);letter-spacing:2px;margin-top:clamp(32px,7vh,60px);
+  animation:pulse 1.8s ease-in-out infinite,splashDrop 0.7s 0.2s cubic-bezier(0.34,1.56,0.64,1) both;}
+@keyframes splashDrop{
+  0%{transform:translateY(-28px);opacity:0;}
+  100%{transform:translateY(0);opacity:1;}
+}
+/* Angular wipe — diagonal edge from bottom-left to top-right */
+#wipe{position:fixed;top:0;left:0;right:0;bottom:0;z-index:8888;
+  pointer-events:none;overflow:hidden;}
+#wipe-panel{position:absolute;top:0;left:0;width:100%;height:100%;
+  background:linear-gradient(160deg,#1a0a2e,#2a1050);
+  clip-path:polygon(0% 100%, 0% 100%, 0% 100%, 0% 100%);
+  will-change:clip-path;}
+/* Bottom edge leads — so bottom-left corner enters first, top-right last */
+@keyframes wipeIn{
+  0%  {clip-path:polygon(-80% 100%, -10% 100%, -80% 0%, -80% 0%);}
+  100%{clip-path:polygon(-10% 100%, 180% 100%, 110% 0%, -80% 0%);}
+}
+@keyframes wipeOut{
+  0%  {clip-path:polygon(-10% 100%, 180% 100%, 110% 0%, -80% 0%);}
+  100%{clip-path:polygon(180% 100%, 250% 100%, 180% 0%, 110% 0%);}
+}
+/* Reverse: top-right corner enters first, sweeps to bottom-left */
+@keyframes wipeInReverse{
+  0%  {clip-path:polygon(180% 0%, 110% 0%, 180% 100%, 180% 100%);}
+  100%{clip-path:polygon(110% 0%, -80% 0%, -10% 100%, 180% 100%);}
+}
+@keyframes wipeOutReverse{
+  0%  {clip-path:polygon(110% 0%, -80% 0%, -10% 100%, 180% 100%);}
+  100%{clip-path:polygon(-80% 0%, -150% 0%, -80% 100%, -10% 100%);}
+}
 @keyframes colTabSlideLeft{
   0%{transform:translateX(60px);opacity:0;}
   100%{transform:translateX(0);opacity:1;}
@@ -168,6 +231,13 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
 </style>
 </head>
 <body>
+<div id="wipe"><div id="wipe-panel"></div></div>
+<div id="splash">
+  <div id="splash-emoji">🍣🥢🍱</div>
+  <div id="splash-title">Sushi Stack</div>
+  <div id="splash-sub">Stack · Drop · Repeat</div>
+  <div id="splash-tap">Tap to Play</div>
+</div>
 <canvas id="c"></canvas>
 <div id="particles"></div>
 <!-- Persistent banner ad — shown on all non-gameplay screens -->
@@ -428,7 +498,10 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
   <div style="flex:1;overflow:hidden;position:relative;min-height:0;">
     <!-- Background image fills entire map row — nodes/arrows/stars float on top -->
     <div id="adv-map-area" style="position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;">
-      <div id="adv-map-inner" style="position:absolute;top:0;left:0;height:100%;will-change:transform;">
+      <div id="adv-map-bg" style="position:absolute;top:0;left:0;width:100%;height:100%;
+        background-size:cover;background-position:center center;background-repeat:no-repeat;
+        transform:scale(1.3);transform-origin:center center;will-change:transform;z-index:0;"></div>
+      <div id="adv-map-inner" style="position:absolute;top:0;left:0;height:100%;will-change:transform;z-index:1;">
         <canvas id="adv-path-canvas" style="position:absolute;top:0;left:0;pointer-events:none;z-index:1;"></canvas>
         <div id="adv-map-nodes" style="position:relative;z-index:2;"></div>
       </div>
@@ -565,8 +638,8 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
 <!-- START SCREEN -->
 <div class="screen" id="s-start">
   <div style="position:absolute;top:16px;right:16px;display:flex;gap:8px;">
-    <button onclick="showCollection()" style="background:rgba(255,255,255,0.22);border:none;border-radius:50%;
-      width:52px;height:52px;font-size:26px;cursor:pointer;pointer-events:all;">🎁</button>
+    <button id="gift-btn-title" onclick="showCollection()" style="background:rgba(255,255,255,0.22);border:none;border-radius:50%;
+      width:52px;height:52px;font-size:26px;cursor:pointer;pointer-events:all;position:relative;">🎁</button>
     <button onclick="openPause(true)" style="background:rgba(255,255,255,0.22);border:none;border-radius:50%;
       width:52px;height:52px;font-size:26px;cursor:pointer;pointer-events:all;">⚙️</button>
   </div>
@@ -1088,7 +1161,95 @@ function _previewPack(packId){
   });
 }
 
+// ── REWARD AWARENESS SYSTEM ──
+let _calloutDismissed=false;
+let _calloutEl=null;
+
+function _hasOpenedCollection(){
+  return !!getSave().collectionOpened;
+}
+function _markCollectionOpened(){
+  const sv=getSave(); sv.collectionOpened=true; setSave(sv);
+}
+
+function _updateGiftDot(){
+  const btn=document.getElementById('gift-btn-title');
+  if(!btn) return;
+  // Remove existing dot
+  const existing=btn.querySelector('.gift-dot');
+  if(existing) existing.remove();
+  if(!_hasOpenedCollection()){
+    const dot=document.createElement('div');
+    dot.className='gift-dot';
+    btn.appendChild(dot);
+    btn.classList.add('gift-glow');
+  } else {
+    btn.classList.remove('gift-glow');
+  }
+}
+
+function _showGiftCallout(){
+  if(_hasOpenedCollection() || _calloutDismissed) return;
+  const btn=document.getElementById('gift-btn-title');
+  if(!btn) return;
+  // Only show on title screen
+  const ss=document.getElementById('s-start');
+  if(!ss || ss.style.display==='none') return;
+
+  _dismissGiftCallout();
+  const rect=btn.getBoundingClientRect();
+  const el=document.createElement('div');
+  el.id='gift-callout';
+  // Right-align callout to screen edge with padding, so it never overflows
+  const rightEdge=window.innerWidth - 8;
+  el.style.cssText=`right:8px;top:${rect.bottom + 14}px;`;
+  // Arrow points up at the button center from the right side
+  const arrowRight=rightEdge - (rect.left + rect.width/2) - 10;
+  el.innerHTML=`<div id="gift-callout-arrow" style="margin-left:auto;margin-right:${Math.max(4,arrowRight)}px"></div>
+    <div id="gift-callout-inner">🎁 Tap to see your rewards!</div>`;
+  document.body.appendChild(el);
+  _calloutEl=el;
+  // Auto-dismiss after 5 seconds
+  setTimeout(_dismissGiftCallout, 5000);
+  // Tap anywhere to dismiss
+  setTimeout(()=>{
+    document.addEventListener('touchstart', _dismissGiftCallout, {once:true, passive:true});
+    document.addEventListener('click', _dismissGiftCallout, {once:true});
+  }, 300);
+}
+
+function _dismissGiftCallout(){
+  if(_calloutEl){ _calloutEl.remove(); _calloutEl=null; }
+  _calloutDismissed=true;
+}
+
+function _showCollectionToast(){
+  const sv=getSave();
+  if(sv.collectionOpened) return; // already seen it
+  const toast=document.createElement('div');
+  toast.style.cssText=`position:fixed;bottom:calc(var(--ad-bar-h,60px) + 70px);left:50%;
+    transform:translateX(-50%);z-index:500;
+    background:linear-gradient(135deg,rgba(155,93,229,0.95),rgba(100,50,180,0.95));
+    color:#fff;font-family:'Fredoka One',cursive;font-size:16px;
+    padding:12px 22px;border-radius:20px;white-space:nowrap;
+    box-shadow:0 6px 20px rgba(0,0,0,0.4);
+    animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    cursor:pointer;pointer-events:all;`;
+  toast.textContent='🎁 Check your collection!';
+  toast.addEventListener('click', ()=>{ toast.remove(); showCollection(); });
+  document.body.appendChild(toast);
+  setTimeout(()=>{
+    toast.style.transition='opacity 0.5s, transform 0.5s';
+    toast.style.opacity='0';
+    toast.style.transform='translateX(-50%) translateY(10px)';
+    setTimeout(()=>toast.remove(), 500);
+  }, 4000);
+}
+
 function showCollection(tab){
+  _markCollectionOpened();
+  _dismissGiftCallout();
+  _updateGiftDot();
   if(state==='playing') paused=true;
   // Remember what's currently playing so we can restore it on close
   if(state==='playing'){ _previewRestoreKey=isDailyMode?'daily':advMode?_advLevelMusicKey:'game'; }
@@ -1106,25 +1267,42 @@ function showCollection(tab){
 
 function closeCollection(){
   paused=false;
-  // Stop any preview playing
+  const continuingAud=_previewAud; // grab before _stopPreview clears it
+  const continuingPackId=_previewPackId;
   _stopPreview();
   // Restore previous music
   if(_previewRestoreKey){
     if(_previewRestoreKey==='world'){
-      // Resume world map music
       if(_aud){try{_aud.pause();}catch(e){} _aud=null; _ct=null;}
       if(_advMapMusic && _advMapMusic.paused){
-        _advMapMusic.play().catch(()=>{
-          // If resume fails, restart from scratch
-          playAdvMapMusic(_advMapWorld);
-        });
+        _advMapMusic.play().catch(()=>{ playAdvMapMusic(_advMapWorld); });
       } else if(!_advMapMusic){
         playAdvMapMusic(_advMapWorld);
       }
     } else if(_previewRestoreKey==='title'){
-      _ct=null; playMusic('title');
+      // If a preview was playing, continue it as the title music
+      if(continuingAud && continuingPackId){
+        if(_aud && _aud!==continuingAud){try{_aud.pause();}catch(e){}}
+        continuingAud.loop=true;
+        continuingAud.volume=0.5;
+        _aud=continuingAud;
+        _ct=continuingAud.src;
+      } else {
+        _ct=null; playMusic('title');
+      }
     } else {
-      _ct=null; playMusic(_previewRestoreKey);
+      // game/daily — if a preview was playing, adopt it seamlessly as _aud
+      if(continuingAud && continuingPackId){
+        // Pause the old game track if still around, then adopt preview with no interruption
+        if(_aud && _aud !== continuingAud){ try{_aud.pause();}catch(e){} }
+        _aud = continuingAud;
+        _ct = continuingAud.src;
+        // Preview is already playing — ensure loop and correct volume, don't restart
+        continuingAud.loop = true;
+        if(continuingAud.paused){ continuingAud.play().catch(()=>{}); }
+      } else {
+        _ct=null; playMusic(_previewRestoreKey);
+      }
     }
     _previewRestoreKey=null;
   }
@@ -1301,9 +1479,9 @@ function buildCollectionMusic(container){
           if(lbl) lbl.style.visibility=(isA&&!isLocked)?'visible':'hidden';
         });
         if(state==='playing'){
-          // In-game: switch immediately, no preview needed
-          _ct=null;
-          playMusic(isDailyMode?'daily':advMode?_advLevelMusicKey:'game');
+          // In-game: preview the new pack, adopt it seamlessly on close
+          if(_aud){try{_aud.pause();}catch(e){} _aud=null; _ct=null;}
+          _previewPack(pack.id);
         } else {
           // Not in game: preview this pack, pause whatever was playing
           if(_aud){try{_aud.pause();}catch(e){} _aud=null; _ct=null;}
@@ -1347,8 +1525,13 @@ function showMusicPackOffer(pack){
   document.getElementById('music-unlock-yes').onclick=()=>{
     admobShowRewarded('musicpack',
       ()=>{
-        // Permanently unlock
+        // Permanently unlock and start playing via preview (works in-game and out)
         const sv=getSave(); sv['musicPack_'+pack.id]=true; sv.musicPack=pack.id; setSave(sv);
+        if(state==='playing'){
+          if(_aud){try{_aud.pause();}catch(e){} _aud=null; _ct=null;}
+        }
+        _stopPreview();
+        _previewPack(pack.id);
         pop.style.animation='modalBgOut 0.2s ease-in forwards';
         setTimeout(()=>{ pop.remove(); buildCollectionMusic(document.getElementById('col-content').firstChild||document.getElementById('col-content')); switchCollectionTab('music',false,true); },200);
         // Toast
@@ -1599,27 +1782,29 @@ function showCreditsPopup(){
 
 // ── GO TO TITLE ──
 function goToTitle(){
-  clearCountdown();
-  state='idle';
-  advMode=false;
-  isDailyMode=false;
-  clearCountdown();
-  resetAdvBoss();
-  stopAdvMapMusic();
-  setTenseMode(false);
-  hearts.forEach(h=>{if(h.el){h.el.remove();h.el=null;}});hearts=[];
-  bunnies.forEach(b=>scene.remove(b.grp));bunnies=[];
-  document.getElementById('hud').style.display='none';
-  document.getElementById('s-over').style.display='none';
-  document.getElementById('s-ad-offer').style.display='none';
-  document.getElementById('s-adv-intro').style.display='none';
-  document.getElementById('s-adv-complete').style.display='none';
-  document.getElementById('s-adventure').style.display='none';
-  document.getElementById('s-start').style.display='flex';
-  reqFS();
-  showFullscreenNudge();
-  showScreenAds('start');
-  playMusic('title');
+  wipeTransitionReverse(()=>{
+    clearCountdown();
+    state='idle';
+    advMode=false;
+    isDailyMode=false;
+    clearCountdown();
+    resetAdvBoss();
+    stopAdvMapMusic();
+    setTenseMode(false);
+    hearts.forEach(h=>{if(h.el){h.el.remove();h.el=null;}});hearts=[];
+    bunnies.forEach(b=>scene.remove(b.grp));bunnies=[];
+    document.getElementById('hud').style.display='none';
+    document.getElementById('s-over').style.display='none';
+    document.getElementById('s-ad-offer').style.display='none';
+    document.getElementById('s-adv-intro').style.display='none';
+    document.getElementById('s-adv-complete').style.display='none';
+    document.getElementById('s-adventure').style.display='none';
+    document.getElementById('s-start').style.display='flex';
+    reqFS();
+    showScreenAds('start');
+    playMusic('title');
+    setTimeout(_updateGiftDot, 100);
+  });
 }
 
 // ── UNLOCK REQUIRED POPUP ──
@@ -2189,10 +2374,49 @@ let _advSelectedLevel=0,_advIsHopping=false;
 let _advLastLevelPerWorld={}; // remembers which level to show per world
 const ADV_MAP_SPACING=2.6;
 
+// ── WIPE TRANSITION ──
+// wipeTransition(fn) — sweeps a dark angular panel in, calls fn() at peak,
+// then sweeps out. Total duration ~600ms.
+function wipeTransition(fn){
+  const panel=document.getElementById('wipe-panel');
+  if(!panel){ fn(); return; }
+  panel.style.animation='none';
+  panel.offsetHeight;
+  panel.style.animation='wipeIn 0.31s linear forwards';
+  setTimeout(()=>{
+    fn();
+    panel.style.animation='wipeOut 0.31s linear forwards';
+    setTimeout(()=>{
+      panel.style.animation='none';
+      panel.style.clipPath='polygon(0% 100%, 0% 100%, 0% 100%, 0% 100%)';
+    }, 330);
+  }, 320);
+}
+
+function wipeTransitionReverse(fn){
+  const panel=document.getElementById('wipe-panel');
+  if(!panel){ fn(); return; }
+  panel.style.animation='none';
+  panel.offsetHeight;
+  panel.style.animation='wipeInReverse 0.31s linear forwards';
+  setTimeout(()=>{
+    fn();
+    panel.style.animation='wipeOutReverse 0.31s linear forwards';
+    setTimeout(()=>{
+      panel.style.animation='none';
+      panel.style.clipPath='polygon(0% 100%, 0% 100%, 0% 100%, 0% 100%)';
+    }, 330);
+  }, 320);
+}
+
 function exitAdvMap(){
-  stopAdvMapMusic();stopAdvMap3D();
-  document.getElementById('s-adventure').style.display='none';
-  document.getElementById('s-start').style.display='flex';
+  wipeTransitionReverse(()=>{
+    stopAdvMapMusic();stopAdvMap3D();
+    document.getElementById('s-adventure').style.display='none';
+    document.getElementById('s-start').style.display='flex';
+    _ct=null; playMusic('title');
+    setTimeout(_updateGiftDot, 100);
+  });
 }
 function stopAdvMapMusic(){if(_advMapMusic){_advMapMusic.pause();_advMapMusic=null;}}
 function stopAdvMap3D(){
@@ -2217,8 +2441,9 @@ function playAdvMapMusic(w){
   });
   _advMapMusic=a;
 }
-function showAdvMap(jumpToWorld, jumpToLevel){
-  document.getElementById('s-start').style.display='none';
+function showAdvMap(jumpToWorld, jumpToLevel, _skipWipe){
+  function _doShow(){
+    document.getElementById('s-start').style.display='none';
   document.getElementById('s-adv-intro').style.display='none';
   const screen=document.getElementById('s-adventure');
   screen.style.display='flex';
@@ -2249,6 +2474,8 @@ function showAdvMap(jumpToWorld, jumpToLevel){
       playAdvMapMusic(_advMapWorld);
     });
   });
+  } // end _doShow
+  if(_skipWipe) _doShow(); else wipeTransition(_doShow);
 }
 function buildWorldTabs(){
   const w=ADV_WORLDS[_advMapWorld];
@@ -2293,37 +2520,34 @@ function getMapNodePositions(){
 function initAdvMap3D(wi, startLevel){
   _advMapWorld=wi;
   _advIsHopping=false;
-  const world=ADV_WORLDS[wi];
   const bgCols=['#1e3d1e','#3d1505','#163308','#12283d','#0a0415','#2e1220','#201f06','#200505'];
-  const screen=document.getElementById('s-adventure');
-  screen.style.background=bgCols[wi];
-  // Set world background image on map area — scaled up for parallax room
-  const mapArea=document.getElementById('adv-map-area');
-  if(mapArea){
+  document.getElementById('s-adventure').style.background=bgCols[wi];
+  const mapBg=document.getElementById('adv-map-bg');
+  if(mapBg){
     const bgNum=String(wi+1).padStart(2,'0');
-    const bgPath=resolveAssetPath('Bgs/World_'+bgNum+'.jpg');
-    mapArea.style.backgroundImage='url('+bgPath+')';
-    mapArea.style.backgroundSize='160%';
-    mapArea.style.backgroundPosition='center center';
-    mapArea.style.backgroundRepeat='no-repeat';
+    mapBg.style.backgroundImage='url('+resolveAssetPath('Bgs/World_'+bgNum+'.jpg')+')';
   }
-
-  // Determine current level — use startLevel if provided, otherwise next unplayed
   const cur=startLevel!==undefined ? startLevel : Math.min(getFurthestCompletedLevel(wi)+1,9);
   _advSelectedLevel=cur;
-
-  buildAdvPathMap(wi);   // places animal at _advSelectedLevel instantly
+  document.querySelectorAll('.adv-animal-el').forEach(e=>e.remove());
+  _advAnimalEl=null;
+  buildAdvPathMap(wi);
   setupCSSMapSwipe(wi);
-
-  // Scroll camera to it — skip if startLevel was provided (caller handles positioning)
-  // Cache map height before panel shows (full uncompressed height)
+  const inner=document.getElementById('adv-map-inner');
+  if(inner){ inner.style.opacity='0'; inner.style.transition='none'; }
   setTimeout(()=>{
     const area=document.getElementById('adv-map-area');
-    if(area && area.offsetHeight>50) _cachedMapVh=area.offsetHeight;
+    const vh=area ? area.offsetHeight : 0;
+    if(vh>50) _cachedMapVh=vh;
     scrollToNode(cur);
     updateLevelPanel(wi,cur,true);
     updateAdvArrows();
-  },60);
+    const sv=getSave(); selectedAnimal=sv.animal||selectedAnimal||'bunny';
+    const positions=getNodePositions(_cachedMapVh||vh||window.innerHeight*0.65);
+    _placeAnimal(wi, cur, positions);
+    const liveInner=document.getElementById('adv-map-inner');
+    if(liveInner){ liveInner.style.transition='opacity 0.2s ease-out'; liveInner.style.opacity='1'; }
+  }, 150);
 }
 
 // ── HORIZONTAL MAP ──
@@ -2526,33 +2750,7 @@ function buildAdvPathMap(wi){
     nodesEl.appendChild(wrap);
   }
 
-  // Place animal — reload from save so it reflects current selection
-  const sv=getSave(); selectedAnimal=sv.animal||selectedAnimal||'bunny';
-  // Only show animal on the world where the player last played
-  // Determine where the animal should be: last played, or furthest unlocked
-  let _lpw=null, _lpl=0;
-  try{
-    const w=localStorage.getItem('ssLastPlayedWorld');
-    const l=localStorage.getItem('ssLastPlayedLevel');
-    if(w!==null){ _lpw=parseInt(w); _lpl=parseInt(l); }
-  }catch{}
-  if(_lpw===null){
-    // Never played — find furthest unlocked level across all worlds
-    for(let w2=7;w2>=0;w2--){
-      const fc=getFurthestCompletedLevel(w2);
-      if(fc>=0){ _lpw=w2; _lpl=Math.min(fc+1,9); break; }
-    }
-    // Still null = nothing completed, default to world 0 level 0
-    if(_lpw===null){ _lpw=0; _lpl=0; }
-  }
-  if(_lpw===wi){
-    // Cache map height now so _getAnimalTop has a valid value
-    const _areaEl=document.getElementById('adv-map-area');
-    if(_areaEl && _areaEl.offsetHeight>50) _cachedMapVh=_areaEl.offsetHeight;
-    _placeAnimal(wi, _lpl, positions);
-  } else {
-    document.querySelectorAll('.adv-animal-el').forEach(e=>e.remove()); _advAnimalEl=null;
-  }
+  // Animal placed by initAdvMap3D after layout settles
 }
 
 let _advAnimalEl=null;
@@ -2589,52 +2787,37 @@ function _placeAnimal(wi, li, positions){
   document.querySelectorAll('.adv-animal-el').forEach(e=>e.remove());
   if(_advAnimalEl&&_advAnimalEl.parentNode) _advAnimalEl.parentNode.removeChild(_advAnimalEl);
   _advAnimalEl=null;
-
-  // Measure actual map area height right now
-  const area=document.getElementById('adv-map-area');
-  if(area && area.offsetHeight>50) _cachedMapVh=area.offsetHeight;
-
+  const nodeY=positions&&positions[li]?positions[li].y:_cachedMapVh/2;
+  const R=li===9?ADV_NODE_R+10:ADV_NODE_R;
+  const topPx=nodeY-R-ADV_ANIMAL_SIZE*0.9;
   const el=document.createElement('div');
   el.className='adv-animal-el';
-  el.style.cssText=`position:absolute;
-    left:${_getAnimalLeft(li)}px;
-    top:${_getAnimalTop(li)}px;
-    transform:translateX(-50%);
-    font-size:${ADV_ANIMAL_SIZE}px;
-    line-height:1;
+  el.style.cssText=`position:absolute;left:${_getAnimalLeft(li)}px;top:${topPx}px;
+    transform:translateX(-50%);font-size:${ADV_ANIMAL_SIZE}px;line-height:1;
     z-index:10;pointer-events:none;
     filter:drop-shadow(0 5px 12px rgba(0,0,0,0.85));
     animation:animalFloat 1.8s ease-in-out infinite;`;
   el.textContent=getAnimalEmoji();
   nodesEl.appendChild(el);
   _advAnimalEl=el;
-
-  // Re-check position after panel finishes rendering
-  setTimeout(()=>{
-    if(!_advAnimalEl) return;
-    if(area && area.offsetHeight>50) _cachedMapVh=area.offsetHeight;
-    _advAnimalEl.style.transition='none';
-    _advAnimalEl.style.top=_getAnimalTop(li)+'px';
-    setTimeout(()=>{ if(_advAnimalEl) _advAnimalEl.style.transition=''; },30);
-  },200);
 }
 
 function scrollToNode(li){
   const area=document.getElementById('adv-map-area');
   const inner=document.getElementById('adv-map-inner');
+  const bg=document.getElementById('adv-map-bg');
   if(!area||!inner) return;
   const areaW=area.offsetWidth||window.innerWidth;
   const nodeX=ADV_SLOT_W/2 + li*ADV_SLOT_W;
   const offset=nodeX - areaW/2;
   inner.style.transition='transform 0.45s cubic-bezier(0.25,1,0.5,1)';
   inner.style.transform=`translateX(${-offset}px)`;
-  // Parallax: background moves at 30% of scroll speed, centered at level 4-5
-  const totalW=ADV_SLOT_W*10;
-  const scrollFrac=offset/totalW; // -0.5 to 0.5 range
-  const bgX=50 + scrollFrac*30; // 50% center ± 15%
-  if(area.style.backgroundImage){
-    area.style.transition='background-position 0.45s cubic-bezier(0.25,1,0.5,1)';
-    area.style.backgroundPosition=`${bgX}% center`;
+  if(bg){
+    const totalW=ADV_SLOT_W*10;
+    const scrollFrac=offset/totalW;
+    const bgShift=scrollFrac*-12;
+    bg.style.transition='transform 0.45s cubic-bezier(0.25,1,0.5,1)';
+    bg.style.transform=`scale(1.3) translateX(${bgShift}%)`;
   }
 }
 
@@ -2650,14 +2833,14 @@ function selectLevel(wi,li,animate){
 
   if(!_advAnimalEl) return;
 
-  const area=document.getElementById('adv-map-area');
   _animalAnimating=true;
-
-  // After panel reflows, use helpers that measure actual area height
   setTimeout(()=>{
     if(!_advAnimalEl){ _animalAnimating=false; return; }
-    const targetTop=_getAnimalTop(li);
-    const targetLeft=_getAnimalLeft(li);
+    const area=document.getElementById('adv-map-area');
+    if(area&&area.offsetHeight>50) _cachedMapVh=area.offsetHeight;
+    const nodeY=_cachedMapVh>0?_cachedMapVh/2:area.offsetHeight/2;
+    const R=li===9?ADV_NODE_R+10:ADV_NODE_R;
+    const targetTop=nodeY-R-ADV_ANIMAL_SIZE*0.9;
     _advAnimalEl.style.animationPlayState='paused';
     _advAnimalEl.style.transition='left 0.45s cubic-bezier(0.25,1,0.5,1),top 0.2s ease-in,transform 0.2s ease-in';
     _advAnimalEl.style.left=_getAnimalLeft(li)+'px';
@@ -3102,7 +3285,7 @@ function finishAdvLevel(stars, elapsed){
   const _alreadySaved=_rewardName && getUnlockedMeshes().includes(_rewardName);
   const _isNewUnlock=_rewardName && !_alreadySaved;
   if(_rewardName) unlockMesh(_rewardName);
-  showAdvMap(savedWorld, savedLevel);
+  showAdvMap(savedWorld, savedLevel, true);
   // Pass unlock info to celebration so popup shows AFTER stars reveal
   setTimeout(()=>showMapCelebration(savedWorld,savedLevel,stars,elapsed,prevStars,_isNewUnlock?_rewardName:null),400);
 }
@@ -5621,6 +5804,8 @@ function showGameOver(){
   }
 
   playMusic('title');
+  // Nudge first-time players toward the collection after their first game
+  if(score > 0) setTimeout(_showCollectionToast, 2000);
   // Only reset camera rotation if NOT daily (daily revive needs camRotate intact)
   if(!_wasDaily) camRotate=parseFloat(getSave().rotate||45);
   isDailyMode=false;
@@ -6124,53 +6309,57 @@ function startGame(){
   reqFS();
   if(!isDailyMode && !advMode) camRotate=parseFloat(getSave().rotate||45);
   else if(isDailyMode) camRotate=45;
-  else if(advMode) camRotate=parseFloat(getSave().rotate||45); // always reset for adv — boss levels spin from here anyway
-  // Stop world map music when level starts
+  else if(advMode) camRotate=parseFloat(getSave().rotate||45);
   stopAdvMapMusic();
   _maxBounces=getMaxBounces();
-  _ct=null; // ensure music always switches cleanly
+  _ct=null;
   unlockMusic(isDailyMode?'daily':advMode?_advLevelMusicKey:'game');
   hideScreenAds();
-  document.getElementById('s-start').style.display='none';
-  document.getElementById('s-over').style.display='none';
-  document.getElementById('hud').style.display='flex';
-  // Show goal hint in adventure mode
-  const hintEl=document.getElementById('hint');
-  hintEl.style.display='block';
-  hintEl.style.opacity='1';
-  if(advMode){
-    hintEl.className='adv-hint';
-    hintEl.innerHTML=`
-      <div style="font-size:38px;line-height:1;">
-        ${ADV_WORLDS[advWorld].icon}
-      </div>
-      <div style="animation:pulse 2s ease-in-out infinite;font-size:50px;letter-spacing:2px;line-height:1.1;white-space:nowrap;">
-        ${ADV_LEVEL_NAMES[advWorld][advLevel]}</div>
-      <div style="margin:8px auto 6px;height:3px;width:80%;background:rgba(255,255,255,0.3);border-radius:2px;"></div>
-      <div style="font-size:36px;color:#ffcc00;font-family:'Fredoka One',cursive;line-height:1.1;white-space:nowrap;">
-        Goal: ${advGoal} blocks</div>
-      ${advBossLabel?`
-      <div style="margin:8px auto 6px;height:3px;width:80%;background:rgba(255,255,255,0.3);border-radius:2px;"></div>
-      <div style="margin-top:20px;font-size:32px;color:#ff8888;font-family:'Fredoka One',cursive;line-height:1.1;white-space:nowrap;text-shadow:0 0 16px rgba(255,80,80,0.6);">⚠️ ${advBossLabel}${(()=>{const bc=ADV_WORLDS[advWorld]?.bossBounces;return(bc!==undefined&&bc<3)?' · '+bc+' bounce'+(bc===1?'':'s'):'';})()}</div>`:''}`;
-    setTimeout(()=>{hintEl.style.transition='opacity 1s';hintEl.style.opacity='0';setTimeout(()=>{hintEl.style.display='none';hintEl.className='';},1000);},4000);
-  } else {
-    hintEl.className='';
-    hintEl.innerHTML=`<div style="animation:pulse 2s ease-in-out infinite;font-size:20px;letter-spacing:3px;">TAP TO DROP</div>
-      <div style="margin-top:10px;font-size:13px;color:rgba(255,255,255,0.65);letter-spacing:1px;font-family:'Nunito',sans-serif;font-weight:700;">
-      ❤️ Touch falling hearts to grow the block</div>`;
-    setTimeout(()=>{hintEl.style.transition='opacity 1s';hintEl.style.opacity='0';},3000);
-  }
-  state='playing';
-  adState.reviveUsed=false;
-  initGame();
-  applyHeadStart();
-  activateHeartShower();
-  // Show 3-2-1 countdown at start of adventure levels
-  if(advMode){
-    // getSpeed() already floors at world starting speed via _advWorldSpeedBonus
-    // No need to add bonus again — just save and restore after countdown
+
+  const _doStart=()=>{
+    document.getElementById('s-start').style.display='none';
+    document.getElementById('s-over').style.display='none';
+    document.getElementById('hud').style.display='flex';
+    const hintEl=document.getElementById('hint');
+    hintEl.style.display='block';
+    hintEl.style.opacity='1';
+    if(advMode){
+      hintEl.className='adv-hint';
+      hintEl.innerHTML=`
+        <div style="font-size:38px;line-height:1;">
+          ${ADV_WORLDS[advWorld].icon}
+        </div>
+        <div style="animation:pulse 2s ease-in-out infinite;font-size:50px;letter-spacing:2px;line-height:1.1;white-space:nowrap;">
+          ${ADV_LEVEL_NAMES[advWorld][advLevel]}</div>
+        <div style="margin:8px auto 6px;height:3px;width:80%;background:rgba(255,255,255,0.3);border-radius:2px;"></div>
+        <div style="font-size:36px;color:#ffcc00;font-family:'Fredoka One',cursive;line-height:1.1;white-space:nowrap;">
+          Goal: ${advGoal} blocks</div>
+        ${advBossLabel?`
+        <div style="margin:8px auto 6px;height:3px;width:80%;background:rgba(255,255,255,0.3);border-radius:2px;"></div>
+        <div style="margin-top:20px;font-size:32px;color:#ff8888;font-family:'Fredoka One',cursive;line-height:1.1;white-space:nowrap;text-shadow:0 0 16px rgba(255,80,80,0.6);">⚠️ ${advBossLabel}${(()=>{const bc=ADV_WORLDS[advWorld]?.bossBounces;return(bc!==undefined&&bc<3)?' · '+bc+' bounce'+(bc===1?'':'s'):'';})()}</div>`:''}`;
+      setTimeout(()=>{hintEl.style.transition='opacity 1s';hintEl.style.opacity='0';setTimeout(()=>{hintEl.style.display='none';hintEl.className='';},1000);},4000);
+    } else {
+      hintEl.className='play-hint';
+      hintEl.innerHTML=`<div style="animation:pulse 2s ease-in-out infinite;font-size:20px;letter-spacing:3px;">TAP TO DROP</div>
+        <div style="margin-top:10px;font-size:13px;color:rgba(255,255,255,0.65);letter-spacing:1px;font-family:'Nunito',sans-serif;font-weight:700;">
+        ❤️ Touch falling hearts to grow the block</div>`;
+      setTimeout(()=>{hintEl.style.transition='opacity 1s';hintEl.style.opacity='0';},3000);
+    }
+    state='playing';
+    adState.reviveUsed=false;
+    initGame();
+    applyHeadStart();
+    activateHeartShower();
+    // Countdown for all modes
     const savedSpd=spd; spd=0;
     showCountdown(()=>{ spd=savedSpd; });
+  };
+
+  // Forward wipe for tap-to-play and daily; adv mode has its own intro screen
+  if(!advMode){
+    wipeTransition(_doStart);
+  } else {
+    _doStart();
   }
 }
 
@@ -6459,22 +6648,21 @@ function confirmResetAdvProgress(){
 
 function goToAdvMapFromPause(){
   clearCountdown();
-  state='idle';
-  advMode=false;
-  _inAdvSession=false;
-  clearCountdown();
-  resetAdvBoss();
-  // Stop game/boss music, then showAdvMap will start world map music
-  stopAdvMapMusic(); // stop any existing map music first
-  _fOut(_aud,()=>{
-    _aud=null;_ct=null;
+  wipeTransition(()=>{
+    state='idle';
+    advMode=false;
+    _inAdvSession=false;
+    clearCountdown();
+    resetAdvBoss();
+    stopAdvMapMusic();
+    _fOut(_aud,()=>{ _aud=null;_ct=null; });
+    document.getElementById('hud').style.display='none';
+    document.getElementById('hint').style.display='none';
+    setTenseMode(false);
+    hearts.forEach(h=>{if(h.el){h.el.remove();h.el=null;}});
+    hearts=[];
+    showAdvMap(_lastAdvWorld, _lastAdvLevel, true);
   });
-  document.getElementById('hud').style.display='none';
-  document.getElementById('hint').style.display='none';
-  setTenseMode(false);
-  hearts.forEach(h=>{if(h.el){h.el.remove();h.el=null;}});
-  hearts=[];
-  showAdvMap(_lastAdvWorld, _lastAdvLevel); // return to the level we came from
 }
 
 document.getElementById('pauseBtn').addEventListener('click',()=>openPause(false));
@@ -6485,19 +6673,22 @@ document.getElementById('pause-menu').addEventListener('click',e=>{
 });
 document.getElementById('quitBtn').addEventListener('click',()=>{
   closePause();
-  state='idle';
-  advMode=false;
-  _inAdvSession=false;
-  resetAdvBoss();
-  _fOut(_aud,()=>{_aud=null;_ct=null;});
-  stopAdvMapMusic();
-  document.getElementById('hud').style.display='none';
-  document.getElementById('s-start').style.display='flex';
-  setTenseMode(false);
-  hearts.forEach(h=>{if(h.el){h.el.remove();h.el=null;}});
-  hearts=[];
-  playMusic('title');
-  showScreenAds('start');
+  wipeTransitionReverse(()=>{
+    state='idle';
+    advMode=false;
+    _inAdvSession=false;
+    resetAdvBoss();
+    _fOut(_aud,()=>{_aud=null;_ct=null;});
+    stopAdvMapMusic();
+    document.getElementById('hud').style.display='none';
+    document.getElementById('s-start').style.display='flex';
+    setTenseMode(false);
+    hearts.forEach(h=>{if(h.el){h.el.remove();h.el=null;}});
+    hearts=[];
+    playMusic('title');
+    showScreenAds('start');
+    setTimeout(_updateGiftDot, 100);
+  });
 });
 document.getElementById('zoom-slider').addEventListener('input',e=>{
   applyZoom(parseFloat(e.target.value));
@@ -6581,28 +6772,22 @@ showScreenAds('start');
 applyPitch(camPitch);
 applyRotate(camRotate);
 document.getElementById('zoom-slider').value=userZoom;
-// Fullscreen on first user interaction
+// Splash screen — first tap wipes to title screen and unlocks AudioContext
 (function(){
-  let _titleMusicStarted=false;
-  function tryFS(){
+  const splash=document.getElementById('splash');
+  function onSplashTap(){
     reqFS();
-    const ss=document.getElementById('s-start');
-    const onTitleScreen=ss && ss.style.display!=='none';
-    if(!_titleMusicStarted){
-      _titleMusicStarted=true;
-      if(onTitleScreen){
-        _ct=null;
-        playMusic('title');
-      }
-    } else if(onTitleScreen) {
-      // Only retry music if still on title screen
-      _retryPendingMusic();
-    }
-    document.removeEventListener('touchstart',tryFS);
-    document.removeEventListener('click',tryFS);
+    splash.style.pointerEvents='none';
+    wipeTransition(()=>{
+      splash.style.display='none';
+      _ct=null;
+      playMusic('title');
+      // Nudge first-timers after a moment
+      setTimeout(()=>{ _updateGiftDot(); _showGiftCallout(); }, 800);
+    });
   }
-  document.addEventListener('touchstart',tryFS,{once:true,passive:true});
-  document.addEventListener('click',tryFS,{once:true});
+  splash.addEventListener('touchstart', onSplashTap, {once:true, passive:true});
+  splash.addEventListener('click', onSplashTap, {once:true});
   reqFS();
 })();
 // Show fullscreen nudge on initial load if not already fullscreen
