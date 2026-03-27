@@ -733,12 +733,21 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
           const img=new Image();
           img.onload=()=>{
             tex.image=img;
+            tex.encoding=THREE.sRGBEncoding||3001; // correct color space
             tex.needsUpdate=true;
-            // Force all materials using this texture to update
-            if(typeof renderer!=='undefined') renderer.render(scene,cam);
+            // Force all materials in the scene to update their maps
+            if(typeof scene!=='undefined' && scene.traverse){
+              scene.traverse(obj=>{
+                if(obj.isMesh && obj.material){
+                  const mats=Array.isArray(obj.material)?obj.material:[obj.material];
+                  mats.forEach(mat=>{ if(mat.map===tex||mat.map){ mat.needsUpdate=true; } });
+                }
+              });
+            }
             URL.revokeObjectURL(imgUrl);
           };
           img.src=imgUrl;
+          tex.encoding=THREE.sRGBEncoding||3001;
           tex.flipY=false; // GLTF textures are not flipped
           textureCache[texIdx]=tex;
           return tex;
@@ -1443,7 +1452,7 @@ function _doShare(text){
 }
 
 // ── GAME VERSION ──
-const GAME_VERSION = '0.650006';
+const GAME_VERSION = '0.650007';
 
 function showAboutPopup(){
   const pop=document.createElement('div');
@@ -4145,8 +4154,10 @@ function loadGLB(name, path, onDone){
             if(!m) return m;
             const baseColor=m.color?m.color.clone():new THREE.Color(0xffffff);
             baseColor.multiplyScalar(0.82); // prevent blowout under bright lights
+            const tex=m.map||null;
+            if(tex){ tex.encoding=THREE.sRGBEncoding||3001; tex.needsUpdate=true; }
             const lm=new THREE.MeshLambertMaterial({
-              map: m.map||null,
+              map: tex,
               color: baseColor,
               emissive: new THREE.Color(0),
               emissiveIntensity: 0,
