@@ -50,27 +50,27 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
 .screen{position:fixed;z-index:100;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 12px calc(var(--ad-bar-h) + 12px);overflow-y:auto;}
 #s-start{background:linear-gradient(160deg,#a8d8ea,#c5a8d8 40%,#f4c2d0 75%,#fde8d0);}
 #s-over{background:rgba(20,10,30,0.88);backdrop-filter:blur(14px);display:none;}
-.panel{background:linear-gradient(160deg,#fef9ff,#fff8f2);border-radius:24px;padding:clamp(16px,3.5vh,32px) clamp(18px,5vw,36px);text-align:center;max-width:340px;width:94%;max-height:calc(100dvh - 40px);overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.38),0 0 0 3px rgba(180,140,220,0.3);}
+.panel{background:linear-gradient(160deg,#fef9ff,#fff8f2);border-radius:24px;padding:clamp(10px,2vh,20px) clamp(14px,4vw,28px);text-align:center;max-width:340px;width:94%;max-height:calc(100dvh - 24px);overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.38),0 0 0 3px rgba(180,140,220,0.3);}
 .ttl{font-family:'Fredoka One',cursive;font-size:clamp(36px,11vw,60px);color:#fff;text-shadow:0 3px 0 rgba(120,80,160,0.3),0 6px 18px rgba(0,0,0,0.1);letter-spacing:2px;line-height:1;}
 .sub{font-size:clamp(11px,2.5vw,14px);color:rgba(255,255,255,0.85);letter-spacing:4px;text-transform:uppercase;margin-top:6px;font-weight:700;}
 .emoji-row{font-size:clamp(22px,5.5vw,34px);margin-bottom:clamp(12px,2.5vh,28px);animation:sway 4s ease-in-out infinite;}
 .play-btn{background:rgba(255,255,255,0.92);color:#6a4c93;font-family:'Fredoka One',cursive;font-size:clamp(20px,5vw,26px);padding:clamp(13px,2.8vh,17px) clamp(34px,9vw,56px);border:none;border-radius:50px;cursor:pointer;pointer-events:all;box-shadow:0 6px 0 rgba(100,60,140,0.28);letter-spacing:1px;animation:pulse 2s ease-in-out infinite;}
 .play-btn:active{transform:translateY(3px);box-shadow:0 3px 0 rgba(100,60,140,0.28);}
-.go-emoji{font-size:clamp(34px,9vw,52px);display:block;margin-bottom:3px;}
-.go-title{font-family:'Fredoka One',cursive;font-size:clamp(22px,6vw,32px);color:#2a1a2e;margin-bottom:2px;}
-.go-score-lbl{font-size:11px;letter-spacing:3px;color:#c8a06a;text-transform:uppercase;font-weight:700;margin-top:8px;}
-.go-score{font-family:'Fredoka One',cursive;font-size:clamp(44px,13vw,68px);color:#9b5de5;line-height:1;}
-.div{width:60px;height:3px;background:rgba(180,140,220,0.25);border-radius:2px;margin:8px auto;}
-.btns{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
-.btn-p{background:#9b5de5;color:#fff;font-family:'Fredoka One',cursive;font-size:clamp(17px,4.5vw,21px);padding:12px;border:none;border-radius:16px;cursor:pointer;pointer-events:all;box-shadow:0 5px 0 #6a35b0;}
+.go-emoji{font-size:clamp(24px,6vw,36px);display:block;margin-bottom:0px;}
+.go-title{font-family:'Fredoka One',cursive;font-size:clamp(18px,5vw,26px);color:#2a1a2e;margin-bottom:0;}
+.go-score-lbl{font-size:10px;letter-spacing:2px;color:#c8a06a;text-transform:uppercase;font-weight:700;margin-top:4px;}
+.go-score{font-family:'Fredoka One',cursive;font-size:clamp(36px,10vw,54px);color:#9b5de5;line-height:1;}
+.div{width:60px;height:2px;background:rgba(180,140,220,0.25);border-radius:2px;margin:4px auto;}
+.btns{display:flex;flex-direction:column;gap:5px;margin-top:6px;}
+.btn-p{background:#9b5de5;color:#fff;font-family:'Fredoka One',cursive;font-size:clamp(15px,4vw,19px);padding:10px;border:none;border-radius:14px;cursor:pointer;pointer-events:all;box-shadow:0 4px 0 #6a35b0;}
 .btn-p:active{transform:translateY(3px);box-shadow:0 2px 0 #6a35b0;}
 .btn-s{background:#f5c842;color:#2a1a2e;font-family:'Fredoka One',cursive;font-size:clamp(14px,3.8vw,17px);padding:10px;border:none;border-radius:16px;cursor:pointer;pointer-events:all;box-shadow:0 5px 0 #c8a020;}
 .btn-s:active{transform:translateY(3px);}
-.lb-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(0,0,0,0.06);font-size:14px;font-weight:700;color:#2a1a2e;}
-.lb-rank{width:26px;font-family:'Fredoka One',cursive;color:#c8a06a;font-size:17px;}
+.lb-row{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(0,0,0,0.06);font-size:13px;font-weight:700;color:#2a1a2e;}
+.lb-rank{width:24px;font-family:'Fredoka One',cursive;color:#c8a06a;font-size:15px;}
 .lb-name{flex:1;}
-.lb-score{font-family:'Fredoka One',cursive;color:#9b5de5;font-size:19px;}
-.lb-row.you{background:rgba(155,93,229,0.1);border-radius:8px;padding:6px 5px;}
+.lb-score{font-family:'Fredoka One',cursive;color:#9b5de5;font-size:17px;}
+.lb-row.you{background:rgba(155,93,229,0.1);border-radius:8px;padding:4px 5px;}
 #particles{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:15;overflow:hidden;}
 .pt{position:absolute;animation:ptfall 1.2s ease-out forwards;pointer-events:none;}
 @keyframes ptfall{0%{transform:translateY(0) rotate(0) scale(1);opacity:1}100%{transform:translateY(100px) rotate(360deg) scale(0);opacity:0}}
@@ -661,23 +661,23 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
     <div class="go-score" id="go-score">0</div>
     <div id="go-streak" style="display:none;font-family:'Fredoka One',cursive;font-size:16px;
       color:#ff9944;margin-top:4px;margin-bottom:2px;"></div>
-    <div id="name-entry" style="display:none;margin-top:10px;">
+    <div id="name-entry" style="display:none;margin-top:6px;">
       <div class="go-score-lbl" style="color:#9b5de5;">🏆 Enter your name</div>
       <input id="name-input" type="text" maxlength="12" placeholder="Your name..."
-        style="margin-top:7px;width:100%;padding:9px 13px;border-radius:11px;border:2px solid rgba(155,93,229,0.35);font-family:'Fredoka One',cursive;font-size:18px;text-align:center;background:#fef9ff;color:#2a1a2e;outline:none;">
-      <button id="saveBtn" style="margin-top:9px;width:100%;background:#4caf7d;color:#fff;font-family:'Fredoka One',cursive;font-size:19px;padding:11px;border:none;border-radius:15px;cursor:pointer;pointer-events:all;box-shadow:0 5px 0 #2a8a55;">💾 Save Score</button>
-      <div id="save-msg" style="display:none;color:#4caf7d;font-family:'Fredoka One',cursive;font-size:13px;margin-top:5px;"></div>
+        style="margin-top:5px;width:100%;padding:7px 10px;border-radius:11px;border:2px solid rgba(155,93,229,0.35);font-family:'Fredoka One',cursive;font-size:16px;text-align:center;background:#fef9ff;color:#2a1a2e;outline:none;">
+      <button id="saveBtn" style="margin-top:6px;width:100%;background:#4caf7d;color:#fff;font-family:'Fredoka One',cursive;font-size:17px;padding:9px;border:none;border-radius:15px;cursor:pointer;pointer-events:all;box-shadow:0 4px 0 #2a8a55;">💾 Save Score</button>
+      <div id="save-msg" style="display:none;color:#4caf7d;font-family:'Fredoka One',cursive;font-size:12px;margin-top:3px;"></div>
     </div>
-    <div class="div"></div>
-    <div style="font-family:'Fredoka One',cursive;font-size:12px;letter-spacing:2px;color:#c8a06a;text-transform:uppercase;margin-bottom:7px;" id="lb-header">🐰 Top Scores</div>
+    <div class="div" style="margin:4px 0;"></div>
+    <div style="font-family:'Fredoka One',cursive;font-size:11px;letter-spacing:2px;color:#c8a06a;text-transform:uppercase;margin-bottom:4px;" id="lb-header">🐰 Top Scores</div>
     <div id="lb"></div>
-    <div class="div"></div>
-    <div class="btns">
+    <div class="div" style="margin:4px 0;"></div>
+    <div class="btns" style="margin-top:0;">
       <button class="btn-p" id="retryBtn">🍣 Try Again</button>
       <button class="btn-s" id="dailyBtn">🗓️ Daily Challenge</button>
-      <button onclick="shareScore()" style="width:100%;background:rgba(255,255,255,0.12);color:#fff;
-        font-family:'Fredoka One',cursive;font-size:17px;padding:11px;
-        border:1px solid rgba(255,255,255,0.2);border-radius:14px;cursor:pointer;
+      <button onclick="shareScore()" style="width:100%;background:rgba(155,93,229,0.1);color:#9b5de5;
+        font-family:'Fredoka One',cursive;font-size:15px;padding:9px;
+        border:1px solid rgba(155,93,229,0.3);border-radius:14px;cursor:pointer;
         margin-top:2px;">📤 Share My Score</button>
     </div>
   </div>
@@ -708,7 +708,10 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
         const json=JSON.parse(jsonStr);
         const binOffset=20+jsonLen;
         const binLen=view.getUint32(binOffset,true);
-        const bin=new Uint8Array(data,binOffset+8,binLen);
+        // Copy binary chunk into its own ArrayBuffer to avoid alignment issues on some hosts
+        const binRaw=new Uint8Array(data,binOffset+8,binLen);
+        const binBuf=binRaw.buffer.slice(binRaw.byteOffset,binRaw.byteOffset+binLen);
+        const bin=new Uint8Array(binBuf);
 
         const accessors=json.accessors||[];
         const bufferViews=json.bufferViews||[];
@@ -725,7 +728,7 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
           const imgDef=images[texDef.source];
           if(!imgDef) return null;
           const bv=bufferViews[imgDef.bufferView];
-          const imgBytes=bin.slice(bv.byteOffset||0,(bv.byteOffset||0)+(bv.byteLength||0));
+          const imgBytes=bin.buffer.slice(bv.byteOffset||0,(bv.byteOffset||0)+(bv.byteLength||0));
           const mime=imgDef.mimeType||'image/png';
           const blob=new Blob([imgBytes],{type:mime});
           const imgUrl=URL.createObjectURL(blob);
@@ -759,7 +762,8 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
           const start=(bv.byteOffset||0)+(acc.byteOffset||0);
           const TypedArray={5120:Int8Array,5121:Uint8Array,5122:Int16Array,5123:Uint16Array,5125:Uint32Array,5126:Float32Array}[acc.componentType];
           const comps={SCALAR:1,VEC2:2,VEC3:3,VEC4:4,MAT4:16}[acc.type]||1;
-          return new TypedArray(bin.buffer,bin.byteOffset+start,acc.count*comps);
+          // bin.buffer is now a clean copy starting at 0 — no byteOffset needed
+          return new TypedArray(bin.buffer,start,acc.count*comps);
         }
 
         const scene=new THREE.Group();
@@ -1212,16 +1216,19 @@ function buildCollectionMusic(container){
     if(unlocked){
       card.addEventListener('click',()=>{
         const sv=getSave(); sv.musicPack=pack.id; setSave(sv);
-        // Update all cards in-place
+        // Update all cards in-place — skip locked cards
         grid.querySelectorAll('[data-col-id]').forEach(c=>{
           const cid=c.getAttribute('data-col-id');
           const isA=cid===pack.id;
-          c.style.background=isA?'rgba(155,93,229,0.4)':'rgba(255,255,255,0.07)';
-          c.style.border='2px solid '+(isA?'#9b5de5':'rgba(255,255,255,0.15)');
+          const isLocked=c.getAttribute('data-locked')==='1';
+          if(!isLocked){
+            c.style.background=isA?'rgba(155,93,229,0.4)':'rgba(255,255,255,0.07)';
+            c.style.border='2px solid '+(isA?'#9b5de5':'rgba(255,255,255,0.15)');
+            const ico=c.querySelector('div:last-child');
+            if(ico) ico.textContent=isA?'▶️':'⏸';
+          }
           const lbl=c.querySelector('.col-active-lbl');
-          if(lbl) lbl.style.visibility=isA?'visible':'hidden';
-          const ico=c.querySelector('div:last-child');
-          if(ico) ico.textContent=isA?'▶️':'⏸';
+          if(lbl) lbl.style.visibility=(isA&&!isLocked)?'visible':'hidden';
         });
         if(state==='playing'){
           // In-game: switch immediately, no preview needed
@@ -1235,6 +1242,7 @@ function buildCollectionMusic(container){
         }
       });
     } else {
+      card.setAttribute('data-locked','1');
       card.addEventListener('click',()=>showMusicPackOffer(pack));
     }
     grid.appendChild(card);
@@ -1452,7 +1460,7 @@ function _doShare(text){
 }
 
 // ── GAME VERSION ──
-const GAME_VERSION = '0.650007';
+const GAME_VERSION = '0.650012';
 
 function showAboutPopup(){
   const pop=document.createElement('div');
