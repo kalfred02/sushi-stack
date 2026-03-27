@@ -775,28 +775,39 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
         function getAccessorData(idx){
           const acc=accessors[idx];
           const bv=bufferViews[acc.bufferView||0];
-          const start=(bv.byteOffset||0)+(acc.byteOffset||0);
-          const TypedArray={5120:Int8Array,5121:Uint8Array,5122:Int16Array,5123:Uint16Array,5125:Uint32Array,5126:Float32Array}[acc.componentType];
+          const accByteOffset=acc.byteOffset||0;
+          const bvByteOffset=bv.byteOffset||0;
           const comps={SCALAR:1,VEC2:2,VEC3:3,VEC4:4,MAT4:16}[acc.type]||1;
-          const raw=new TypedArray(bin.buffer,start,acc.count*comps);
-          // KHR_mesh_quantization: dequantize normalized integer attributes to float
-          if(acc.normalized && acc.componentType!==5126){
-            const maxVal=acc.componentType===5122?32767:(acc.componentType===5120?127:(acc.componentType===5123?255:65535));
+          const compSize={5120:1,5121:1,5122:2,5123:2,5125:4,5126:4}[acc.componentType]||4;
+          const TypedArray={5120:Int8Array,5121:Uint8Array,5122:Int16Array,5123:Uint16Array,5125:Uint32Array,5126:Float32Array}[acc.componentType];
+          const stride=bv.byteStride||0;
+          const isSigned=acc.componentType===5120||acc.componentType===5122;
+          const maxVal={5120:127,5121:255,5122:32767,5123:65535}[acc.componentType]||1;
+          const needsDequant=acc.normalized&&acc.componentType!==5126;
+
+          if(stride && stride!==(comps*compSize)){
+            // Interleaved buffer — must read element by element with stride
             const out=new Float32Array(acc.count*comps);
-            // Use min/max from accessor if present, otherwise normalize to [-1,1] or [0,1]
-            if(acc.min && acc.max && acc.type==='VEC3'){
-              for(let i=0;i<acc.count;i++){
-                for(let c=0;c<comps;c++){
-                  const t=(raw[i*comps+c]/maxVal+1)/2; // normalize to [0,1]
-                  out[i*comps+c]=acc.min[c]+t*(acc.max[c]-acc.min[c]);
-                }
+            const start=bvByteOffset+accByteOffset;
+            for(let i=0;i<acc.count;i++){
+              const elemOffset=start+i*stride;
+              const elem=new TypedArray(bin.buffer,elemOffset,comps);
+              for(let c=0;c<comps;c++){
+                out[i*comps+c]=needsDequant
+                  ? Math.max(isSigned?-1:0, elem[c]/maxVal)
+                  : elem[c];
               }
-            } else {
-              // Standard normalization
-              const isSigned=acc.componentType===5120||acc.componentType===5122;
-              for(let i=0;i<raw.length;i++){
-                out[i]=Math.max(isSigned?-1:0,raw[i]/maxVal);
-              }
+            }
+            return out;
+          }
+
+          // Non-interleaved — read as flat array
+          const start=bvByteOffset+accByteOffset;
+          const raw=new TypedArray(bin.buffer,start,acc.count*comps);
+          if(needsDequant){
+            const out=new Float32Array(acc.count*comps);
+            for(let i=0;i<raw.length;i++){
+              out[i]=Math.max(isSigned?-1:0, raw[i]/maxVal);
             }
             return out;
           }
@@ -1497,7 +1508,7 @@ function _doShare(text){
 }
 
 // ── GAME VERSION ──
-const GAME_VERSION = '0.650014';
+const GAME_VERSION = '0.650015';
 
 function showAboutPopup(){
   const pop=document.createElement('div');
