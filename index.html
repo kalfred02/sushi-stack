@@ -335,6 +335,11 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
         font-family:'Fredoka One',cursive;font-size:13px;padding:8px;
         border:1px solid rgba(0,180,255,0.25);border-radius:12px;cursor:pointer;margin-bottom:8px;">
         🔓 Dev: Unlock All Levels</button>
+      <button onclick="devResetRewards()"
+        style="width:100%;background:rgba(200,50,50,0.15);color:rgba(255,120,120,0.8);
+        font-family:'Fredoka One',cursive;font-size:13px;padding:8px;
+        border:1px solid rgba(200,50,50,0.25);border-radius:12px;cursor:pointer;margin-bottom:8px;">
+        🎁 Dev: Reset All Rewards</button>
       <div style="height:1px;background:rgba(255,255,255,0.08);margin:4px 0 14px;"></div>
     </div>
 
@@ -419,15 +424,22 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
         pointer-events:all;">⚙️</button>
     </div>
   </div>
-  <!-- Stars + map area wrapped so arrows cover full height including stars row -->
-  <div style="flex:1;overflow:hidden;position:relative;display:flex;flex-direction:column;min-height:0;">
-    <!-- Stars badge — right-aligned, inside the wrapper so arrows overlay it -->
-    <div style="position:relative;z-index:10;text-align:right;padding:4px 12px 0;flex-shrink:0;pointer-events:none;">
-      <div id="adv-total-stars" style="display:inline-block;font-family:'Fredoka One',cursive;
-        font-size:14px;color:#ffcc00;background:rgba(0,0,0,0.45);
-        border-radius:20px;padding:3px 10px;pointer-events:none;">⭐0</div>
+  <!-- Map row — bg image fills everything, nodes/stars/arrows float on top -->
+  <div style="flex:1;overflow:hidden;position:relative;min-height:0;">
+    <!-- Background image fills entire map row — nodes/arrows/stars float on top -->
+    <div id="adv-map-area" style="position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;">
+      <div id="adv-map-inner" style="position:absolute;top:0;left:0;height:100%;will-change:transform;">
+        <canvas id="adv-path-canvas" style="position:absolute;top:0;left:0;pointer-events:none;z-index:1;"></canvas>
+        <div id="adv-map-nodes" style="position:relative;z-index:2;"></div>
+      </div>
     </div>
-    <!-- Left arrow — covers full height including stars row -->
+    <!-- Stars badge floats on top of bg image -->
+    <div style="position:absolute;top:8px;right:12px;z-index:30;pointer-events:none;">
+      <div id="adv-total-stars" style="display:inline-block;font-family:'Fredoka One',cursive;
+        font-size:14px;color:#ffcc00;background:rgba(0,0,0,0.5);
+        border-radius:20px;padding:3px 10px;">⭐0</div>
+    </div>
+    <!-- Left arrow -->
     <button id="adv-arrow-left" onclick="advMapNav(-1)"
       style="position:absolute;left:0;top:0;bottom:0;z-index:50;
       width:52px;background:linear-gradient(to right,rgba(0,0,0,0.45),transparent);
@@ -435,16 +447,7 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
       display:flex;align-items:center;justify-content:center;">
       <span style="font-size:32px;color:rgba(255,255,255,0.75);text-shadow:0 2px 8px rgba(0,0,0,0.8);">‹</span>
     </button>
-    <!-- Scrollable map canvas area -->
-    <div style="flex:1;overflow:hidden;position:relative;min-height:0;">
-    <div id="adv-map-area" style="position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;">
-    <div id="adv-map-inner" style="position:absolute;top:0;left:0;height:100%;will-change:transform;">
-      <canvas id="adv-path-canvas" style="position:absolute;top:0;left:0;pointer-events:none;z-index:1;"></canvas>
-      <div id="adv-map-nodes" style="position:relative;z-index:2;"></div>
-    </div>
-    </div><!-- end adv-map-area -->
-    </div><!-- end map canvas wrapper -->
-    <!-- Right arrow — covers full height including stars row -->
+    <!-- Right arrow -->
     <button id="adv-arrow-right" onclick="advMapNav(1)"
       style="position:absolute;right:0;top:0;bottom:0;z-index:50;
       width:52px;background:linear-gradient(to left,rgba(0,0,0,0.45),transparent);
@@ -470,8 +473,7 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
       font-family:'Fredoka One',cursive;font-size:26px;padding:16px;
       border:none;border-radius:22px;cursor:pointer;pointer-events:all;width:100%;
       box-shadow:0 6px 0 #4a1a80,0 10px 24px rgba(155,93,229,0.35);">▶ Play</button>
-    <div id="adv-panel-boss-label" style="font-family:'Nunito',sans-serif;
-      font-size:16px;color:#ff8888;margin-top:4px;font-weight:700;display:none;"></div>
+
   </div>
 </div>
 <!-- ADVENTURE LEVEL INTRO SCREEN -->
@@ -1109,8 +1111,16 @@ function closeCollection(){
   // Restore previous music
   if(_previewRestoreKey){
     if(_previewRestoreKey==='world'){
-      // World map — playAdvMapMusic handles its own audio, just ensure _aud isn't fighting it
+      // Resume world map music
       if(_aud){try{_aud.pause();}catch(e){} _aud=null; _ct=null;}
+      if(_advMapMusic && _advMapMusic.paused){
+        _advMapMusic.play().catch(()=>{
+          // If resume fails, restart from scratch
+          playAdvMapMusic(_advMapWorld);
+        });
+      } else if(!_advMapMusic){
+        playAdvMapMusic(_advMapWorld);
+      }
     } else if(_previewRestoreKey==='title'){
       _ct=null; playMusic('title');
     } else {
@@ -1212,6 +1222,7 @@ function buildCollectionBlocks(container, noCardAnim){
     _bi++;
     if(unlocked){
       card.addEventListener('click',()=>{
+        _playSfx('switch');
         setBlockStyle(st.id);
         // Update cards in-place — no rebuild, no flicker
         grid.querySelectorAll('[data-col-id]').forEach(c=>{
@@ -1227,6 +1238,7 @@ function buildCollectionBlocks(container, noCardAnim){
     } else {
       card.setAttribute('data-locked','1');
       card.addEventListener('click',()=>{
+        _playSfx('locked');
         if(st.unlock==='mesh'){
           showMeshPreviewOffer(st.id, st.label);
         } else {
@@ -1272,6 +1284,7 @@ function buildCollectionMusic(container){
     card.setAttribute('data-col-id', pack.id);
     if(unlocked){
       card.addEventListener('click',()=>{
+        _playSfx('switch');
         const sv=getSave(); sv.musicPack=pack.id; setSave(sv);
         // Update all cards in-place — skip locked cards
         grid.querySelectorAll('[data-col-id]').forEach(c=>{
@@ -1300,7 +1313,7 @@ function buildCollectionMusic(container){
       });
     } else {
       card.setAttribute('data-locked','1');
-      card.addEventListener('click',()=>showMusicPackOffer(pack));
+      card.addEventListener('click',()=>{ _playSfx('locked'); showMusicPackOffer(pack); });
     }
     grid.appendChild(card);
   });
@@ -1386,6 +1399,7 @@ function buildCollectionAnimals(container, noCardAnim){
       ${!unlocked?'<div style="font-size:16px;margin-top:2px;">🔒</div>':''}`;
     if(unlocked){
       card.addEventListener('click',()=>{
+        _playSfx('switch');
         selectedAnimal=key;
         const sv2=getSave(); sv2.animal=key; setSave(sv2);
         if(state==='playing'){
@@ -1449,6 +1463,7 @@ function showMeshPreviewOffer(meshId, label){
     admobShowRewarded('preview',
       ()=>{
         // Grant one-level preview — save current style to restore after
+        _playSfx('unlock');
         pop.style.animation='modalBgOut 0.2s ease-in forwards';
         setTimeout(()=>pop.remove(), 200);
         _meshPreviewId=meshId;
@@ -1517,7 +1532,7 @@ function _doShare(text){
 }
 
 // ── GAME VERSION ──
-const GAME_VERSION = '0.650017';
+const GAME_VERSION = '0.650028';
 
 function showAboutPopup(){
   const pop=document.createElement('div');
@@ -1973,7 +1988,7 @@ function forceSpawnHeart(){
   el.textContent='❤️';
   el.setAttribute('data-heart','1');
   document.getElementById('game-container')?.appendChild(el) || document.body.appendChild(el);
-  const h={el,y:-60,vy:1.8+Math.random()*1.0,sx,done:false,doneT:0,grp:null};
+  const h={el,y:-60,vy:2.07+Math.random()*1.15,sx,done:false,doneT:0,grp:null};
   el.addEventListener('touchstart',e=>{e.preventDefault();e.stopPropagation();collectHeart(h);},{passive:false});
   el.addEventListener('mousedown',e=>{e.stopPropagation();collectHeart(h);});
   hearts.push(h);
@@ -2207,8 +2222,23 @@ function showAdvMap(jumpToWorld, jumpToLevel){
   document.getElementById('s-adv-intro').style.display='none';
   const screen=document.getElementById('s-adventure');
   screen.style.display='flex';
-  if(jumpToWorld!==undefined) _advMapWorld=jumpToWorld;
-  else{_advMapWorld=0;for(let w=7;w>=0;w--){if(isAdvLevelUnlocked(w,0)){_advMapWorld=w;break;}}}
+  if(jumpToWorld!==undefined){
+    _advMapWorld=jumpToWorld;
+  } else {
+    // Restore last viewed world, falling back to furthest unlocked
+    try{
+      const lvw=localStorage.getItem('ssLastViewedWorld');
+      if(lvw!==null) _advMapWorld=parseInt(lvw);
+      else { _advMapWorld=0; for(let w=7;w>=0;w--){if(isAdvLevelUnlocked(w,0)){_advMapWorld=w;break;}} }
+    }catch{ _advMapWorld=0; for(let w=7;w>=0;w--){if(isAdvLevelUnlocked(w,0)){_advMapWorld=w;break;}} }
+    // Also restore last viewed level if not provided
+    if(jumpToLevel===undefined){
+      try{
+        const lvl=localStorage.getItem('ssLastViewedLevel');
+        if(lvl!==null) jumpToLevel=parseInt(lvl);
+      }catch{}
+    }
+  }
   // Hard cut ALL music immediately
   if(_aud){try{_aud.pause();}catch(e){}; _aud=null; _ct=null;}
   _pendingMusicKey=null;
@@ -2244,11 +2274,12 @@ function advWorldNav(dir){
   const next=_advMapWorld+dir;
   if(next<0||next>7) return;
   if(dir>0&&!isAdvLevelUnlocked(next,0)) return; // can't go forward to locked world
-  // Use remembered level for target world, else furthest completed
+  // Stay on same level number, clamped to what's unlocked in target world
   const furthest=Math.min(getFurthestCompletedLevel(next)+1,9);
-  const targetLevel=furthest;
+  const targetLevel=Math.min(_advSelectedLevel, furthest);
   _advMapWorld=next;
   _advSelectedLevel=targetLevel;
+  try{localStorage.setItem('ssLastViewedWorld',next);localStorage.setItem('ssLastViewedLevel',targetLevel);}catch{}
   buildWorldTabs();
   initAdvMap3D(next, targetLevel);
   stopAdvMapMusic();
@@ -2266,6 +2297,16 @@ function initAdvMap3D(wi, startLevel){
   const bgCols=['#1e3d1e','#3d1505','#163308','#12283d','#0a0415','#2e1220','#201f06','#200505'];
   const screen=document.getElementById('s-adventure');
   screen.style.background=bgCols[wi];
+  // Set world background image on map area — scaled up for parallax room
+  const mapArea=document.getElementById('adv-map-area');
+  if(mapArea){
+    const bgNum=String(wi+1).padStart(2,'0');
+    const bgPath=resolveAssetPath('Bgs/World_'+bgNum+'.jpg');
+    mapArea.style.backgroundImage='url('+bgPath+')';
+    mapArea.style.backgroundSize='160%';
+    mapArea.style.backgroundPosition='center center';
+    mapArea.style.backgroundRepeat='no-repeat';
+  }
 
   // Determine current level — use startLevel if provided, otherwise next unplayed
   const cur=startLevel!==undefined ? startLevel : Math.min(getFurthestCompletedLevel(wi)+1,9);
@@ -2584,10 +2625,17 @@ function scrollToNode(li){
   if(!area||!inner) return;
   const areaW=area.offsetWidth||window.innerWidth;
   const nodeX=ADV_SLOT_W/2 + li*ADV_SLOT_W;
-  // No clamping — always center the node, even at the edges
   const offset=nodeX - areaW/2;
   inner.style.transition='transform 0.45s cubic-bezier(0.25,1,0.5,1)';
   inner.style.transform=`translateX(${-offset}px)`;
+  // Parallax: background moves at 30% of scroll speed, centered at level 4-5
+  const totalW=ADV_SLOT_W*10;
+  const scrollFrac=offset/totalW; // -0.5 to 0.5 range
+  const bgX=50 + scrollFrac*30; // 50% center ± 15%
+  if(area.style.backgroundImage){
+    area.style.transition='background-position 0.45s cubic-bezier(0.25,1,0.5,1)';
+    area.style.backgroundPosition=`${bgX}% center`;
+  }
 }
 
 let _animalAnimating=false;
@@ -2595,6 +2643,7 @@ let _animalAnimating=false;
 function selectLevel(wi,li,animate){
   if(li<0||li>9) return;
   _advSelectedLevel=li;
+  try{localStorage.setItem('ssLastViewedWorld',wi);localStorage.setItem('ssLastViewedLevel',li);}catch{}
   updateLevelPanel(wi,li,true);
   updateAdvArrows();
   scrollToNode(li);
@@ -2717,16 +2766,14 @@ function updateLevelPanel(wi,li,show){
   starsEl.textContent=data.stars>0?'⭐'.repeat(data.stars)+'☆'.repeat(3-data.stars):'☆☆☆';
   starsEl.style.opacity=unlocked?'1':'0.35';
   const pb=document.getElementById('adv-play-btn');
-  const be=document.getElementById('adv-panel-boss-label');
   if(unlocked){
-    pb.textContent=data.stars>0?'▶ Play Again':'▶ Play';
+    const playLabel=data.stars>0?'Play Again':'Play';
+    pb.textContent=isBoss?`▶ ${playLabel}  ⚠️ ${world.bossLabel}`:`▶ ${playLabel}`;
     pb.style.background=isBoss?'linear-gradient(135deg,#cc2222,#881111)':'linear-gradient(135deg,#9b5de5,#6a2daa)';
     pb.style.boxShadow=isBoss?'0 6px 0 #881111,0 10px 24px rgba(200,0,0,0.3)':'0 6px 0 #4a1a80,0 10px 24px rgba(155,93,229,0.35)';
     pb.style.opacity='1';
     pb.style.pointerEvents='all';
     pb.style.cursor='pointer';
-    be.style.display=isBoss?'block':'none';
-    if(isBoss) be.textContent=`⚠️ ${world.bossLabel}`;
   } else {
     pb.textContent='🔒 Locked';
     pb.style.background='rgba(255,255,255,0.08)';
@@ -2734,7 +2781,7 @@ function updateLevelPanel(wi,li,show){
     pb.style.opacity='0.5';
     pb.style.pointerEvents='none';
     pb.style.cursor='default';
-    be.style.display='none';
+
   }
   panel.style.opacity='1';
   panel.style.pointerEvents='all';
@@ -3066,10 +3113,6 @@ function showMapCelebration(wi,li,stars,elapsed,prevStars,rewardName){
   const underTime=elapsed<=timeLimit;
   const gotStreak=advMaxPerfectStreak>=requiredStreak;
 
-  // Rebuild map BEFORE saving — node shows pre-run star count (empty if first time)
-  _advSelectedLevel=li;
-  initAdvMap3D(wi, li);
-
   // Full-screen dark overlay with card
   const overlay=document.createElement('div');
   overlay.style.cssText=`position:fixed;top:0;left:0;right:0;bottom:0;z-index:150;
@@ -3126,10 +3169,10 @@ function showMapCelebration(wi,li,stars,elapsed,prevStars,rewardName){
     starEl.textContent=earned?'⭐':'☆';
     if(hadBefore){
       // Already earned — show immediately, no animation
-      starEl.style.cssText='font-size:clamp(72px,20vw,110px);line-height:1;opacity:1;';
+      starEl.style.cssText='font-size:clamp(52px,13vw,88px);line-height:1;opacity:1;';
     } else if(isNew){
       // New star — start hidden, animate in
-      starEl.style.cssText=`font-size:clamp(72px,20vw,110px);line-height:1;
+      starEl.style.cssText=`font-size:clamp(52px,13vw,88px);line-height:1;
         opacity:0;transform:scale(0.05) rotate(-30deg);
         transition:opacity 0.15s,transform 0.55s cubic-bezier(0.34,1.56,0.64,1);`;
       const newIdx=s-prevStars;
@@ -3145,7 +3188,7 @@ function showMapCelebration(wi,li,stars,elapsed,prevStars,rewardName){
       },delay);
     } else {
       // Unearned — fade in dim after new stars are done
-      starEl.style.cssText='font-size:clamp(72px,20vw,110px);line-height:1;opacity:0;filter:grayscale(1) brightness(0.3);';
+      starEl.style.cssText='font-size:clamp(52px,13vw,88px);line-height:1;opacity:0;filter:grayscale(1) brightness(0.3);';
       setTimeout(()=>{ starEl.style.opacity='0.35'; },FIRST_STAR+newStarCount*STAR_DELAY+200);
     }
     starRow.appendChild(starEl);
@@ -3497,6 +3540,45 @@ const MT={
          'Music/World_05.mp3','Music/World_06.mp3','Music/World_07.mp3','Music/World_08.mp3'].map(resolveAssetPath),
 };
 let _aud=null,_ct=null,_muted=false,_mu=false;
+
+// ── SOUND EFFECTS (Web Audio API — no files needed) ──
+let _sfxCtx=null;
+function _getSfxCtx(){
+  if(!_sfxCtx) try{ _sfxCtx=new(window.AudioContext||window.webkitAudioContext)(); }catch{}
+  return _sfxCtx;
+}
+function _playSfx(type){
+  if(_muted) return;
+  const ctx=_getSfxCtx(); if(!ctx) return;
+  const now=ctx.currentTime;
+  if(type==='select'||type==='switch'){
+    const o=ctx.createOscillator(),g=ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type='sine'; o.frequency.setValueAtTime(520,now); o.frequency.exponentialRampToValueAtTime(420,now+0.08);
+    g.gain.setValueAtTime(0.15,now); g.gain.exponentialRampToValueAtTime(0.001,now+0.1);
+    o.start(now); o.stop(now+0.1);
+  } else if(type==='music'){
+    const o=ctx.createOscillator(),g=ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type='triangle'; o.frequency.setValueAtTime(880,now); o.frequency.exponentialRampToValueAtTime(660,now+0.2);
+    g.gain.setValueAtTime(0.1,now); g.gain.exponentialRampToValueAtTime(0.001,now+0.22);
+    o.start(now); o.stop(now+0.22);
+  } else if(type==='unlock'){
+    [440,550,660,880].forEach((f,i)=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type='sine'; o.frequency.setValueAtTime(f,now+i*0.07);
+      g.gain.setValueAtTime(0.15,now+i*0.07); g.gain.exponentialRampToValueAtTime(0.001,now+i*0.07+0.15);
+      o.start(now+i*0.07); o.stop(now+i*0.07+0.15);
+    });
+  } else if(type==='locked'){
+    const o=ctx.createOscillator(),g=ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type='sine'; o.frequency.setValueAtTime(120,now); o.frequency.exponentialRampToValueAtTime(60,now+0.1);
+    g.gain.setValueAtTime(0.18,now); g.gain.exponentialRampToValueAtTime(0.001,now+0.12);
+    o.start(now); o.stop(now+0.12);
+  }
+}
 try{_muted=localStorage.getItem('ssMuted')==='1';}catch{}
 const _cA=(src,lp=true)=>{
   const a=new Audio(src);
@@ -4929,7 +5011,7 @@ function update(){
       el.textContent=isPoison?'🖤':'❤️';
       el.setAttribute('data-heart','1');
       document.body.appendChild(el);
-      const h={el,y:-60,vy:1.8+Math.random()*1.0,sx,done:false,doneT:0,grp:null,isPoison};
+      const h={el,y:-60,vy:2.07+Math.random()*1.15,sx,done:false,doneT:0,grp:null,isPoison};
       el.addEventListener('touchstart',ev=>{ev.preventDefault();ev.stopPropagation();collectHeart(h);},{passive:false});
       el.addEventListener('mousedown',ev=>{ev.stopPropagation();collectHeart(h);});
       hearts.push(h);
@@ -6295,6 +6377,28 @@ function showMeshUnlockPopup(name, onDismiss){
   if(navigator.vibrate) navigator.vibrate([80,40,120]);
   tone(660,'sine',0.4,0.3);
   setTimeout(()=>tone(880,'sine',0.3,0.4),200);
+}
+
+function devResetRewards(){
+  if(!confirm('Reset ALL rewards? This clears unlocked meshes, music packs, and block selections.')) return;
+  try{
+    localStorage.removeItem('ssUnlockedMeshes');
+    // Clear music pack unlocks
+    const sv=getSave();
+    Object.keys(sv).filter(k=>k.startsWith('musicPack_')).forEach(k=>delete sv[k]);
+    sv.musicPack='default';
+    sv.blockStyle='sushi';
+    sv.animal='bunny';
+    delete sv.pandaUnlocked;
+    setSave(sv);
+    _allMeshesUnlocked=false;
+    blockStyle='sushi';
+    setBlockStyle('sushi');
+    selectedAnimal='bunny';
+    const btn=document.getElementById('devUnlockBtn');
+    if(btn) btn.textContent='🔧 Dev: Unlock All Meshes';
+  }catch(e){ console.warn('Reset rewards error:',e); }
+  alert('All rewards reset!');
 }
 
 function devUnlockAllLevels(){
