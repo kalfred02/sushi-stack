@@ -1192,7 +1192,6 @@ function _showGiftCallout(){
   if(_hasOpenedCollection() || _calloutDismissed) return;
   const btn=document.getElementById('gift-btn-title');
   if(!btn) return;
-  // Only show on title screen
   const ss=document.getElementById('s-start');
   if(!ss || ss.style.display==='none') return;
 
@@ -1200,22 +1199,13 @@ function _showGiftCallout(){
   const rect=btn.getBoundingClientRect();
   const el=document.createElement('div');
   el.id='gift-callout';
-  // Right-align callout to screen edge with padding, so it never overflows
-  const rightEdge=window.innerWidth - 8;
-  el.style.cssText=`right:8px;top:${rect.bottom + 14}px;`;
-  // Arrow points up at the button center from the right side
-  const arrowRight=rightEdge - (rect.left + rect.width/2) - 10;
-  el.innerHTML=`<div id="gift-callout-arrow" style="margin-left:auto;margin-right:${Math.max(4,arrowRight)}px"></div>
-    <div id="gift-callout-inner">🎁 Tap to see your rewards!</div>`;
+  // 50px left of right edge, stays until collection is opened
+  el.style.cssText='position:fixed;z-index:9000;pointer-events:none;right:75px;top:'+(rect.bottom+10)+'px;';
+  el.innerHTML='<div id="gift-callout-arrow" style="margin-left:auto;margin-right:'+(rect.width/2-10)+'px;"></div>'
+    +'<div id="gift-callout-inner">🎁 Tap to see your rewards!</div>';
   document.body.appendChild(el);
   _calloutEl=el;
-  // Auto-dismiss after 5 seconds
-  setTimeout(_dismissGiftCallout, 5000);
-  // Tap anywhere to dismiss
-  setTimeout(()=>{
-    document.addEventListener('touchstart', _dismissGiftCallout, {once:true, passive:true});
-    document.addEventListener('click', _dismissGiftCallout, {once:true});
-  }, 300);
+  // No auto-dismiss — stays until they open the collection
 }
 
 function _dismissGiftCallout(){
@@ -1253,7 +1243,7 @@ function showCollection(tab){
   if(state==='playing') paused=true;
   // Remember what's currently playing so we can restore it on close
   if(state==='playing'){ _previewRestoreKey=isDailyMode?'daily':advMode?_advLevelMusicKey:'game'; }
-  else if(document.getElementById('s-adventure')?.style.display!=='none'){ _previewRestoreKey='world'; }
+  else if((function(){var _e=document.getElementById('s-adventure');return _e&&_e.style.display;})()!=='none'){ _previewRestoreKey='world'; }
   else { _previewRestoreKey='title'; }
   const screen=document.getElementById('s-collection');
   screen.style.display='flex';
@@ -1700,7 +1690,7 @@ function _doShare(text){
     navigator.share({ title:'Sushi Stack', text, url }).catch(()=>{});
   } else {
     // Fallback: copy to clipboard
-    navigator.clipboard?.writeText(text+' '+url).then(()=>{
+    navigator.clipboard&&navigator.clipboard.writeText(text+' '+url).then(()=>{
       const t=document.createElement('div');
       t.style.cssText=`position:fixed;bottom:calc(var(--ad-bar-h,60px)+16px);left:50%;
         transform:translateX(-50%);z-index:600;background:rgba(76,175,125,0.95);
@@ -1990,7 +1980,7 @@ function requestReviveAd(){
         }
       });
     }
-    let reviveW = placed[placed.length-1]?.w || S*0.4;
+    let reviveW = (placed[placed.length-1]&&placed[placed.length-1].w) || S*0.4;
     for(let i=0;i<3;i++){
       const ratio=reviveW/S;
       const gp=Math.min(0.3/ratio,2);
@@ -2172,7 +2162,7 @@ function forceSpawnHeart(){
     user-select:none;-webkit-user-select:none;transition:none;`;
   el.textContent='❤️';
   el.setAttribute('data-heart','1');
-  document.getElementById('game-container')?.appendChild(el) || document.body.appendChild(el);
+  (document.getElementById('game-container')||document.body).appendChild(el);
   const h={el,y:-60,vy:2.07+Math.random()*1.15,sx,done:false,doneT:0,grp:null};
   el.addEventListener('touchstart',e=>{e.preventDefault();e.stopPropagation();collectHeart(h);},{passive:false});
   el.addEventListener('mousedown',e=>{e.stopPropagation();collectHeart(h);});
@@ -2320,19 +2310,19 @@ function getAdvRequiredStreak(w, l){
 }
 
 function getAdvSave(){
-  try{return JSON.parse(localStorage.getItem('ssAdv')||'{}');}catch{return{};}
+  try{return JSON.parse(localStorage.getItem('ssAdv')||'{}');}catch(e){return{};}
 }
 function getUnlockedMeshes(){
-  try{return JSON.parse(localStorage.getItem('ssUnlockedMeshes')||'[]');}catch{return[];}
+  try{return JSON.parse(localStorage.getItem('ssUnlockedMeshes')||'[]');}catch(e){return[];}
 }
 function unlockMesh(name){
   const list=getUnlockedMeshes();
-  if(!list.includes(name)){list.push(name);try{localStorage.setItem('ssUnlockedMeshes',JSON.stringify(list));}catch{}}
+  if(!list.includes(name)){list.push(name);try{localStorage.setItem('ssUnlockedMeshes',JSON.stringify(list));}catch(e){}}
 }
 function isMeshUnlocked(name){
   return _allMeshesUnlocked || getUnlockedMeshes().includes(name);
 }
-function setAdvSave(d){try{localStorage.setItem('ssAdv',JSON.stringify(d));}catch{}}
+function setAdvSave(d){try{localStorage.setItem('ssAdv',JSON.stringify(d));}catch(e){}}
 
 function getAdvLevelKey(w,l){ return `${w}_${l}`; }
 function getAdvLevelData(w,l){
@@ -2376,15 +2366,24 @@ const ADV_MAP_SPACING=2.6;
 
 // ── WIPE TRANSITION ──
 // wipeTransition(fn) — sweeps a dark angular panel in, calls fn() at peak,
-// then sweeps out. Total duration ~600ms.
+// then sweeps out. Falls back to instant transition if clip-path unsupported.
+function _clipPathSupported(){
+  try{ return CSS.supports('clip-path','polygon(0 0,100% 0,100% 100%)'); }catch(e){ return false; }
+}
 function wipeTransition(fn){
+  if(!_clipPathSupported()){ fn(); return; }
   const panel=document.getElementById('wipe-panel');
   if(!panel){ fn(); return; }
+  let fired=false;
+  function doFn(){ if(fired) return; fired=true; fn(); }
+  // Hard safety: if animation never fires, call fn anyway after 700ms
+  const safety=setTimeout(doFn, 700);
   panel.style.animation='none';
   panel.offsetHeight;
   panel.style.animation='wipeIn 0.31s linear forwards';
   setTimeout(()=>{
-    fn();
+    clearTimeout(safety);
+    doFn();
     panel.style.animation='wipeOut 0.31s linear forwards';
     setTimeout(()=>{
       panel.style.animation='none';
@@ -2394,13 +2393,18 @@ function wipeTransition(fn){
 }
 
 function wipeTransitionReverse(fn){
+  if(!_clipPathSupported()){ fn(); return; }
   const panel=document.getElementById('wipe-panel');
   if(!panel){ fn(); return; }
+  let fired=false;
+  function doFn(){ if(fired) return; fired=true; fn(); }
+  const safety=setTimeout(doFn, 700);
   panel.style.animation='none';
   panel.offsetHeight;
   panel.style.animation='wipeInReverse 0.31s linear forwards';
   setTimeout(()=>{
-    fn();
+    clearTimeout(safety);
+    doFn();
     panel.style.animation='wipeOutReverse 0.31s linear forwards';
     setTimeout(()=>{
       panel.style.animation='none';
@@ -2455,13 +2459,13 @@ function showAdvMap(jumpToWorld, jumpToLevel, _skipWipe){
       const lvw=localStorage.getItem('ssLastViewedWorld');
       if(lvw!==null) _advMapWorld=parseInt(lvw);
       else { _advMapWorld=0; for(let w=7;w>=0;w--){if(isAdvLevelUnlocked(w,0)){_advMapWorld=w;break;}} }
-    }catch{ _advMapWorld=0; for(let w=7;w>=0;w--){if(isAdvLevelUnlocked(w,0)){_advMapWorld=w;break;}} }
+    }catch(e){ _advMapWorld=0; for(let w=7;w>=0;w--){if(isAdvLevelUnlocked(w,0)){_advMapWorld=w;break;}} }
     // Also restore last viewed level if not provided
     if(jumpToLevel===undefined){
       try{
         const lvl=localStorage.getItem('ssLastViewedLevel');
         if(lvl!==null) jumpToLevel=parseInt(lvl);
-      }catch{}
+      }catch(e){}
     }
   }
   // Hard cut ALL music immediately
@@ -2506,7 +2510,7 @@ function advWorldNav(dir){
   const targetLevel=Math.min(_advSelectedLevel, furthest);
   _advMapWorld=next;
   _advSelectedLevel=targetLevel;
-  try{localStorage.setItem('ssLastViewedWorld',next);localStorage.setItem('ssLastViewedLevel',targetLevel);}catch{}
+  try{localStorage.setItem('ssLastViewedWorld',next);localStorage.setItem('ssLastViewedLevel',targetLevel);}catch(e){}
   buildWorldTabs();
   initAdvMap3D(next, targetLevel);
   stopAdvMapMusic();
@@ -2826,7 +2830,7 @@ let _animalAnimating=false;
 function selectLevel(wi,li,animate){
   if(li<0||li>9) return;
   _advSelectedLevel=li;
-  try{localStorage.setItem('ssLastViewedWorld',wi);localStorage.setItem('ssLastViewedLevel',li);}catch{}
+  try{localStorage.setItem('ssLastViewedWorld',wi);localStorage.setItem('ssLastViewedLevel',li);}catch(e){}
   updateLevelPanel(wi,li,true);
   updateAdvArrows();
   scrollToNode(li);
@@ -3047,7 +3051,7 @@ function startAdvLevel(){
   advMode=true;
   _inAdvSession=true;
   _lastAdvWorld=advWorld; _lastAdvLevel=advLevel; // remember for map return
-  try{localStorage.setItem('ssLastPlayedWorld',advWorld);localStorage.setItem('ssLastPlayedLevel',advLevel);}catch{}
+  try{localStorage.setItem('ssLastPlayedWorld',advWorld);localStorage.setItem('ssLastPlayedLevel',advLevel);}catch(e){}
   _advLastLevelPerWorld[advWorld]=advLevel; // remember per world
   // Don't auto-use reward mesh — player chooses after unlocking
   // _advGLBOverride stays as whatever the player selected in settings
@@ -3540,7 +3544,7 @@ function sanitizeName(raw){
   return name||'Bunny';
 }
 
-async function submitScore(n,s){try{const r=await fetch(SU+'/rest/v1/scores',{method:'POST',headers:{...SH,'Prefer':'return=minimal'},body:JSON.stringify({name:sanitizeName(n),score:s})});return r.ok;}catch{return false;}}
+async function submitScore(n,s){try{const r=await fetch(SU+'/rest/v1/scores',{method:'POST',headers:{...SH,'Prefer':'return=minimal'},body:JSON.stringify({name:sanitizeName(n),score:s})});return r.ok;}catch(e){return false;}}
 async function fetchLB(dailyDate){
   try{
     const url=dailyDate
@@ -3552,11 +3556,11 @@ async function fetchLB(dailyDate){
     const seen=new Map();
     for(const row of rows){const k=row.name.trim().toLowerCase();if(!seen.has(k))seen.set(k,row);}
     return[...seen.values()].slice(0,10);
-  }catch{return[];}
+  }catch(e){return[];}
 }
 function renderLB(entries,hi){
   const el=document.getElementById('lb');
-  if(!entries?.length){el.innerHTML='<div style="text-align:center;color:#aaa;font-size:12px;padding:8px">No scores yet!</div>';return;}
+  if(!entries||!entries.length){el.innerHTML='<div style="text-align:center;color:#aaa;font-size:12px;padding:8px">No scores yet!</div>';return;}
   const M=['🥇','🥈','🥉'];let hl=false;
   el.innerHTML=entries.map((e,i)=>{const y=!hl&&e.score===hi;if(y)hl=true;return`<div class="lb-row ${y?'you':''}"><span class="lb-rank">${i<3?M[i]:'#'+(i+1)}</span><span class="lb-name">${y?'👤 ':''}${e.name}</span><span class="lb-score">${e.score}</span></div>`;}).join('');
 }
@@ -3583,12 +3587,12 @@ const getSpeed=s=>Math.max(2.2+getStageIdx(s)*0.6, BASE_ADV_SPEED+_advWorldSpeed
 // ── Audio ──
 let AC=null;
 const getAC=()=>{if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();return AC;};
-function tone(f,t='sine',d=0.1,v=0.3){try{const ac=getAC(),o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,ac.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+d);o.start();o.stop(ac.currentTime+d);}catch{}}
+function tone(f,t='sine',d=0.1,v=0.3){try{const ac=getAC(),o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,ac.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+d);o.start();o.stop(ac.currentTime+d);}catch(e){}}
 const sfxPlace=p=>p?(tone(523,'sine',0.1,0.4),setTimeout(()=>tone(659,'sine',0.1,0.35),60),setTimeout(()=>tone(784,'sine',0.12,0.3),120)):tone(330,'triangle',0.1,0.3);
 const sfxDrop=()=>(tone(150,'sawtooth',0.3,0.4),setTimeout(()=>tone(100,'sawtooth',0.2,0.3),80));
-function sfxScream(){try{const ac=getAC(),o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.type='sine';o.frequency.setValueAtTime(600,ac.currentTime);o.frequency.linearRampToValueAtTime(1400,ac.currentTime+0.08);o.frequency.linearRampToValueAtTime(400,ac.currentTime+0.22);g.gain.setValueAtTime(0.25,ac.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.25);o.start();o.stop(ac.currentTime+0.26);}catch{}}
+function sfxScream(){try{const ac=getAC(),o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.type='sine';o.frequency.setValueAtTime(600,ac.currentTime);o.frequency.linearRampToValueAtTime(1400,ac.currentTime+0.08);o.frequency.linearRampToValueAtTime(400,ac.currentTime+0.22);g.gain.setValueAtTime(0.25,ac.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.25);o.start();o.stop(ac.currentTime+0.26);}catch(e){}}
 const sfxCombo=n=>tone([523,587,659,698,784,880,988,1047][Math.min(n-2,7)],'sine',0.15,0.5);
-function sfxHeart(){try{const ac=getAC(),o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.type='sine';o.frequency.setValueAtTime(880,ac.currentTime);o.frequency.linearRampToValueAtTime(1760,ac.currentTime+0.14);g.gain.setValueAtTime(0.3,ac.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.22);o.start();o.stop(ac.currentTime+0.23);}catch{}}
+function sfxHeart(){try{const ac=getAC(),o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.type='sine';o.frequency.setValueAtTime(880,ac.currentTime);o.frequency.linearRampToValueAtTime(1760,ac.currentTime+0.14);g.gain.setValueAtTime(0.3,ac.currentTime);g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.22);o.start();o.stop(ac.currentTime+0.23);}catch(e){}}
 
 function sfxBunnyJump(){
   // Cute little "boing" — quick pitch-up then down, soft and bubbly
@@ -3603,7 +3607,7 @@ function sfxBunnyJump(){
     g.gain.setValueAtTime(0.12,ac.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.14);
     o.start();o.stop(ac.currentTime+0.15);
-  }catch{}
+  }catch(e){}
 }
 
 // ── Music ──
@@ -3727,7 +3731,7 @@ let _aud=null,_ct=null,_muted=false,_mu=false;
 // ── SOUND EFFECTS (Web Audio API — no files needed) ──
 let _sfxCtx=null;
 function _getSfxCtx(){
-  if(!_sfxCtx) try{ _sfxCtx=new(window.AudioContext||window.webkitAudioContext)(); }catch{}
+  if(!_sfxCtx) try{ _sfxCtx=new(window.AudioContext||window.webkitAudioContext)(); }catch(e){}
   return _sfxCtx;
 }
 function _playSfx(type){
@@ -3762,7 +3766,7 @@ function _playSfx(type){
     o.start(now); o.stop(now+0.12);
   }
 }
-try{_muted=localStorage.getItem('ssMuted')==='1';}catch{}
+try{_muted=localStorage.getItem('ssMuted')==='1';}catch(e){}
 const _cA=(src,lp=true)=>{
   const a=new Audio(src);
   a.loop=lp; a.volume=0;
@@ -3790,7 +3794,7 @@ function _playWhenReady(a, onPlay){
   a.load();
 }
 function _fIn(a,tv=0.5){let i=0;const t=setInterval(()=>{a.volume=Math.min(tv,a.volume+tv/20);if(++i>=20)clearInterval(t);},40);}
-function _fOut(a,cb){if(!a){cb?.();return;}let i=0;const sv=a.volume,t=setInterval(()=>{a.volume=Math.max(0,a.volume-sv/20);if(++i>=20){clearInterval(t);a.pause();cb?.();}},30);}
+function _fOut(a,cb){if(!a){if(cb)cb();return;}let i=0;const sv=a.volume,t=setInterval(()=>{a.volume=Math.max(0,a.volume-sv/20);if(++i>=20){clearInterval(t);a.pause();if(cb)cb();}},30);}
 // Warm up audio on load — create a silent audio element immediately
 // so the browser considers audio "started" and allows volume changes later
 let _warmAud=null;
@@ -3842,8 +3846,8 @@ function _retryPendingMusic(){
   }
 }
 function toggleMute(){
-  _muted=!_muted;try{localStorage.setItem('ssMuted',_muted?'1':'0');}catch{}
-  if(_muted){_aud?.pause();}else{if(_aud){_aud.play().catch(()=>{});_fIn(_aud,0.5);}}
+  _muted=!_muted;try{localStorage.setItem('ssMuted',_muted?'1':'0');}catch(e){}
+  if(_muted){if(_aud)_aud.pause();}else{if(_aud){_aud.play().catch(()=>{});_fIn(_aud,0.5);}}
   const btn=document.getElementById('pause-mute-btn');
   if(btn) btn.textContent=_muted?'🔇 Sound Off':'🔊 Sound On';
 }
@@ -3953,7 +3957,7 @@ function mkBlock(w,color){
   const GLB_STYLES=['strawberry','tomato','carrot','cucumber','banana','lemon','orange_bell_pepper','orange','bread','chocolate_cake','cinnamon_roll','glazed_donut','pepperoni_pizza','salami','swiss_cheese'];
   if(GLB_STYLES.includes(blockStyle)){
     const cache=_glbCache[blockStyle];
-    if(cache?.glb && cache.size){
+    if(cache&&cache.glb&&cache.size){
       const saved=_advGLBOverride; _advGLBOverride=blockStyle;
       const m=mkAdvRewardBlock(w,color); _advGLBOverride=saved; return m;
     }
@@ -4466,8 +4470,8 @@ preloadSushiGLB();
 const _glbCache={};
 
 function loadGLB(name, path, onDone){
-  if(_glbCache[name]?.glb){ onDone?.(_glbCache[name]); return; }
-  if(_glbCache[name]?.loading) return;
+  if(_glbCache[name]&&_glbCache[name].glb){ if(onDone)onDone(_glbCache[name]); return; }
+  if(_glbCache[name]&&_glbCache[name].loading) return;
   if(typeof THREE.GLTFLoader==='undefined') return;
   _glbCache[name]={glb:null,size:null,center:null,loading:true};
   try{
@@ -4507,7 +4511,7 @@ function loadGLB(name, path, onDone){
         };
         console.log(`GLB loaded: ${name}`);
         _updateGLBLoadingUI();
-        onDone?.(_glbCache[name]);
+        if(onDone)onDone(_glbCache[name]);
       },
       null,
       err=>{ console.warn(`GLB failed: ${name}`,err); _glbCache[name].loading=false; _updateGLBLoadingUI(); }
@@ -4576,7 +4580,7 @@ function _showMusicLoader(text){
 
 function _hideMusicLoader(){
   const el=document.getElementById('music-loader-bar');
-  if(el){ el.style.transition='opacity 0.5s'; el.style.opacity='0'; setTimeout(()=>el?.remove(),500); }
+  if(el){ el.style.transition='opacity 0.5s'; el.style.opacity='0'; setTimeout(function(){if(el&&el.parentNode)el.parentNode.removeChild(el);},500); }
 }
 
 function _showGLBLoader(){
@@ -4599,7 +4603,7 @@ function _updateGLBLoadingUI(){
   const done=Object.values(_glbCache).filter(c=>c.glb||(!c.loading&&!c.glb)).length;
   const el=document.getElementById('glb-loader');
   if(done>=total){
-    if(el){ el.style.transition='opacity 0.5s'; el.style.opacity='0'; setTimeout(()=>el?.remove(),500); }
+    if(el){ el.style.transition='opacity 0.5s'; el.style.opacity='0'; setTimeout(function(){if(el&&el.parentNode)el.parentNode.removeChild(el);},500); }
   } else {
     if(!el) _showGLBLoader();
     const txt=document.getElementById('glb-loader-txt');
@@ -4625,7 +4629,7 @@ let _advGLBOverride=null; // name string or null
 function mkAdvRewardBlock(w, color){
   if(!_advGLBOverride) return mkSushiBlock(w, color);
   const cache=_glbCache[_advGLBOverride];
-  if(!cache?.glb || !cache.size) return mkSushiBlock(w, color); // fallback
+  if(!cache||!cache.glb||!cache.size) return mkSushiBlock(w, color); // fallback
   const g=new THREE.Group();
   const model=cache.glb.clone(true);
   const scaleXZ=w/Math.max(cache.size.x,0.001);
@@ -4697,7 +4701,7 @@ function blockResize(mesh,newW){
     // Use correct GLB cache entry — could be sushi or a reward model
     const glbName=mesh.userData.glbName;
     const cache=glbName?_glbCache[glbName]:null;
-    const glbData=cache?.size?cache:{glb:sushiGLB,size:sushiGLBSize,center:sushiGLBCenter};
+    const glbData=cache&&cache.size?cache:{glb:sushiGLB,size:sushiGLBSize,center:sushiGLBCenter};
     if(glbData.glb && glbData.size){
       const scaleXZ2=newW/Math.max(glbData.size.x,0.001);
       const scaleY2=BH/Math.max(glbData.size.y,0.001);
@@ -5705,7 +5709,7 @@ function updateHUD(){
   scoreVal.textContent=score;
   // Scale font size in adventure mode
   scoreVal.style.fontSize=advMode?'58px':'54px';
-  scoreLbl.textContent=isDailyMode?'DAILY':advMode?ADV_WORLDS[advWorld]?.icon+' Level '+(advLevel+1):'Score';
+  scoreLbl.textContent=isDailyMode?'DAILY':advMode?(ADV_WORLDS[advWorld]&&ADV_WORLDS[advWorld].icon)+' Level '+(advLevel+1):'Score';
 
   // Adventure goal progress shown inline under score
   const goalHud=document.getElementById('adv-goal-hud');
@@ -6093,7 +6097,7 @@ async function submitDailyScore(name,score){
       headers:{...SH,'Prefer':'return=minimal'},
       body:JSON.stringify({name:sanitizeName(name),score,created_at:new Date().toISOString(),daily:date})});
     return r.ok;
-  }catch{return false;}
+  }catch(e){return false;}
 }
 
 function checkDailyPlayed(){
@@ -6262,7 +6266,7 @@ document.addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='Enter'){e
 
 // Gamepad
 let gpI=null,gpLA=false;
-window.addEventListener('gamepadconnected',()=>{if(!gpI)gpI=setInterval(()=>{const p=navigator.getGamepads?.();if(p)for(const pad of p){if(!pad)continue;const a=pad.buttons[0]?.pressed;if(a&&!gpLA&&state==='playing'&&!countingDown)doDrop();gpLA=a;}},50);});
+window.addEventListener('gamepadconnected',()=>{if(!gpI)gpI=setInterval(()=>{const p=navigator.getGamepads&&navigator.getGamepads();if(p)for(const pad of p){if(!pad)continue;const a=(pad.buttons[0]&&pad.buttons[0].pressed);if(a&&!gpLA&&state==='playing'&&!countingDown)doDrop();gpLA=a;}},50);});
 
 // Fullscreen
 function updateAdBarHeight(){
@@ -6275,7 +6279,7 @@ function updateAdBarHeight(){
 window.addEventListener('resize', updateAdBarHeight);
 setTimeout(updateAdBarHeight, 500);
 
-function reqFS(){try{const e=document.documentElement;(e.requestFullscreen||e.webkitRequestFullscreen)?.call(e,{navigationUI:'hide'});}catch{}try{screen.orientation?.lock('portrait').catch(()=>{});}catch{}}
+function reqFS(){try{const e=document.documentElement;var _rf=e.requestFullscreen||e.webkitRequestFullscreen;if(_rf)_rf.call(e,{navigationUI:'hide'});}catch(e){}try{if(screen.orientation&&screen.orientation.lock)screen.orientation.lock('portrait').catch(function(){});}catch(e){}}
 
 function showFullscreenNudge(){
   // Don't show if already fullscreen
@@ -6336,7 +6340,7 @@ function startGame(){
           Goal: ${advGoal} blocks</div>
         ${advBossLabel?`
         <div style="margin:8px auto 6px;height:3px;width:80%;background:rgba(255,255,255,0.3);border-radius:2px;"></div>
-        <div style="margin-top:20px;font-size:32px;color:#ff8888;font-family:'Fredoka One',cursive;line-height:1.1;white-space:nowrap;text-shadow:0 0 16px rgba(255,80,80,0.6);">⚠️ ${advBossLabel}${(()=>{const bc=ADV_WORLDS[advWorld]?.bossBounces;return(bc!==undefined&&bc<3)?' · '+bc+' bounce'+(bc===1?'':'s'):'';})()}</div>`:''}`;
+        <div style="margin-top:20px;font-size:32px;color:#ff8888;font-family:'Fredoka One',cursive;line-height:1.1;white-space:nowrap;text-shadow:0 0 16px rgba(255,80,80,0.6);">⚠️ ${advBossLabel}${(()=>{const bc=(ADV_WORLDS[advWorld]&&ADV_WORLDS[advWorld].bossBounces);return(bc!==undefined&&bc<3)?' · '+bc+' bounce'+(bc===1?'':'s'):'';})()}</div>`:''}`;
       setTimeout(()=>{hintEl.style.transition='opacity 1s';hintEl.style.opacity='0';setTimeout(()=>{hintEl.style.display='none';hintEl.className='';},1000);},4000);
     } else {
       hintEl.className='play-hint';
@@ -6449,11 +6453,11 @@ function closePause(){
   setTimeout(()=>{ pm.style.display='none'; pm.style.animation=''; if(pmCard) pmCard.style.animation=''; }, 190);
 }
 
-let _devAutoPlay=false;try{_devAutoPlay=localStorage.getItem('devAutoPlay')==='1';}catch{}
+let _devAutoPlay=false;try{_devAutoPlay=localStorage.getItem('devAutoPlay')==='1';}catch(e){}
 
 function toggleDevAutoPlay(){
   _devAutoPlay=!_devAutoPlay;
-  try{localStorage.setItem('devAutoPlay',_devAutoPlay?'1':'0');}catch{}
+  try{localStorage.setItem('devAutoPlay',_devAutoPlay?'1':'0');}catch(e){}
   const btn=document.getElementById('devAutoPlayBtn');
   if(btn) btn.textContent=_devAutoPlay?'🤖 Dev: Auto-Play ON ✓':'🤖 Dev: Auto-Play OFF';
   if(btn) btn.style.background=_devAutoPlay?'rgba(0,200,100,0.35)':'rgba(0,200,100,0.15)';
@@ -6508,7 +6512,7 @@ function toggleDevUnlock(){
   _allMeshesUnlocked=!_allMeshesUnlocked;
   if(!_allMeshesUnlocked){
     // Clear saved unlocks so natural unlock flow can be tested from scratch
-    try{localStorage.removeItem('ssUnlockedMeshes');}catch{}
+    try{localStorage.removeItem('ssUnlockedMeshes');}catch(e){}
   }
   const btn=document.getElementById('devUnlockBtn');
   if(btn) btn.textContent=_allMeshesUnlocked?'🔧 Dev: All Meshes UNLOCKED ✓':'🔧 Dev: Unlock All Meshes (clears saved)';
@@ -6572,22 +6576,25 @@ function devResetRewards(){
   if(!confirm('Reset ALL rewards? This clears unlocked meshes, music packs, and block selections.')) return;
   try{
     localStorage.removeItem('ssUnlockedMeshes');
-    // Clear music pack unlocks
     const sv=getSave();
     Object.keys(sv).filter(k=>k.startsWith('musicPack_')).forEach(k=>delete sv[k]);
     sv.musicPack='default';
     sv.blockStyle='sushi';
     sv.animal='bunny';
     delete sv.pandaUnlocked;
+    delete sv.collectionOpened;
     setSave(sv);
     _allMeshesUnlocked=false;
+    _calloutDismissed=false;
     blockStyle='sushi';
     setBlockStyle('sushi');
     selectedAnimal='bunny';
+    _updateGiftDot();
     const btn=document.getElementById('devUnlockBtn');
     if(btn) btn.textContent='🔧 Dev: Unlock All Meshes';
   }catch(e){ console.warn('Reset rewards error:',e); }
   alert('All rewards reset!');
+  setTimeout(()=>{ _updateGiftDot(); _showGiftCallout(); }, 500);
 }
 
 function devUnlockAllLevels(){
@@ -6626,7 +6633,7 @@ function confirmResetAdvProgress(){
     </div>`;
   document.body.appendChild(pop);
   document.getElementById('reset-confirm').onclick=()=>{
-    try{localStorage.removeItem('ssAdv');}catch{}
+    try{localStorage.removeItem('ssAdv');}catch(e){}
     pop.remove();
     // Rebuild world tabs if on adventure map
     if(document.getElementById('s-adventure').style.display!=='none'){
@@ -6778,11 +6785,17 @@ document.getElementById('zoom-slider').value=userZoom;
   function onSplashTap(){
     reqFS();
     splash.style.pointerEvents='none';
+    // Hard fallback: if wipe doesn't complete in 800ms, force through
+    const fallback=setTimeout(()=>{
+      splash.style.display='none';
+      _ct=null; playMusic('title');
+      setTimeout(()=>{ _updateGiftDot(); _showGiftCallout(); }, 400);
+    }, 800);
     wipeTransition(()=>{
+      clearTimeout(fallback);
       splash.style.display='none';
       _ct=null;
       playMusic('title');
-      // Nudge first-timers after a moment
       setTimeout(()=>{ _updateGiftDot(); _showGiftCallout(); }, 800);
     });
   }
