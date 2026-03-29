@@ -100,6 +100,7 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
 #s-start.anim-ready .title-btn-1{animation:titleSlideUp 0.5s cubic-bezier(0.34,1.3,0.64,1) 0.98s both;}
 #s-start.anim-ready .title-btn-2{animation:titleSlideUp 0.5s cubic-bezier(0.34,1.3,0.64,1) 1.1s both;}
 #s-start.anim-ready .title-btn-3{animation:titleSlideUp 0.5s cubic-bezier(0.34,1.3,0.64,1) 1.22s both;}
+#s-start.anim-ready .title-btn-4{animation:titleSlideUp 0.5s cubic-bezier(0.34,1.3,0.64,1) 1.32s both;}
 #s-start.anim-ready .title-emoji-row{animation:sway 4s ease-in-out infinite, titleFadeIn 0.5s ease-out 1.4s both;}
 @keyframes advIntroIn{
   0%  {transform:scale(0.78) translateY(32px);opacity:0;}
@@ -287,7 +288,7 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
 <body>
 <div id="wipe"><div id="wipe-panel"></div></div>
 <div id="splash">
-  <div id="splash-tap">⚡ Stack Attack</div>
+  <div id="splash-tap">Tap to Start</div>
 </div>
 <canvas id="c"></canvas>
 <div id="particles"></div>
@@ -822,12 +823,64 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
     <button id="headStartBtn" style="display:none;"></button>
     <button id="heartShowerBtn" style="display:none;"></button>
 
+    <!-- Leaderboards -->
+    <button onclick="showAllLeaderboards()" class="title-btn-4"
+      style="width:100%;background:linear-gradient(135deg,#f5c842,#d4a010);color:#2a1a2e;
+      font-family:'Fredoka One',cursive;font-size:clamp(16px,4vw,20px);
+      padding:12px;border:none;border-radius:50px;cursor:pointer;
+      box-shadow:0 4px 0 #a07800,0 6px 16px rgba(0,0,0,0.25);pointer-events:all;margin-bottom:10px;">
+      🏆 Leaderboards
+    </button>
+
     <!-- Small emoji row -->
     <div class="title-emoji-row" style="text-align:center;font-size:clamp(22px,5vw,30px);
       pointer-events:none;margin-top:4px;opacity:0.9;">
       🍣 🍱 🍤 🥢 🍙</div>
   </div>
 
+</div>
+
+<!-- ALL LEADERBOARDS SCREEN -->
+<div id="s-leaderboards" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:100;
+  flex-direction:column;background:linear-gradient(170deg,#07051a 0%,#110828 50%,#0a1020 100%);">
+
+  <!-- Background grid -->
+  <div style="position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(rgba(155,93,229,0.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(155,93,229,0.04) 1px,transparent 1px);
+    background-size:28px 28px;"></div>
+
+  <!-- Header -->
+  <div style="position:relative;z-index:2;display:flex;align-items:center;
+    padding:14px 14px 10px;flex-shrink:0;">
+    <button onclick="hideAllLeaderboards()" style="background:rgba(255,255,255,0.07);
+      border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:8px 14px;
+      font-family:'Fredoka One',cursive;font-size:15px;color:rgba(255,255,255,0.75);
+      cursor:pointer;pointer-events:all;">← Back</button>
+    <div style="flex:1;text-align:center;">
+      <div style="font-family:'Fredoka One',cursive;font-size:11px;letter-spacing:3px;
+        color:rgba(155,93,229,0.65);text-transform:uppercase;">All</div>
+      <div style="font-family:'Fredoka One',cursive;font-size:22px;color:#fff;
+        text-shadow:0 0 20px rgba(155,93,229,0.4);">🏆 Leaderboards</div>
+    </div>
+    <div style="width:70px;"></div>
+  </div>
+
+  <!-- Tab indicator -->
+  <div id="lb-all-tabs" style="position:relative;z-index:2;display:flex;
+    overflow-x:auto;gap:8px;padding:0 14px 10px;flex-shrink:0;
+    scrollbar-width:none;"></div>
+
+  <!-- Swipe area -->
+  <div id="lb-all-area" style="position:relative;z-index:2;flex:1;overflow:hidden;min-height:0;">
+    <div id="lb-all-inner" style="position:absolute;top:0;left:0;height:100%;
+      display:flex;will-change:transform;"></div>
+  </div>
+
+  <!-- Swipe hint -->
+  <div style="position:relative;z-index:2;text-align:center;padding:8px 0 calc(var(--ad-bar-h,60px)+8px);
+    font-family:'Nunito',sans-serif;font-size:11px;color:rgba(255,255,255,0.25);flex-shrink:0;">
+    ← swipe to browse →</div>
 </div>
 
 <!-- MODES SCREEN -->
@@ -1530,6 +1583,17 @@ function closeCollection(){
   if(inner){ inner.style.animation='colSlideDown 0.25s ease-in forwards'; }
   screen.style.animation='modalBgOut 0.3s ease-in forwards';
   setTimeout(()=>{ screen.style.display='none'; }, 300);
+  // Update world map animal if it's showing
+  const animalEl=_advAnimalEl||document.querySelector('.adv-animal-el');
+  if(animalEl){
+    if(selectedAnimal==='none'){
+      animalEl.style.display='none';
+    } else {
+      animalEl.style.display='';
+      const animalInner=animalEl.querySelector('div')||animalEl;
+      animalInner.textContent=getAnimalEmoji();
+    }
+  }
 }
 
 function initCollectionSwipe(){
@@ -1753,7 +1817,48 @@ function showMusicPackOffer(pack){
         _stopPreview();
         _previewPack(pack.id);
         pop.style.animation='modalBgOut 0.2s ease-in forwards';
-        setTimeout(()=>{ pop.remove(); buildCollectionMusic(document.getElementById('col-content').firstChild||document.getElementById('col-content')); switchCollectionTab('music',false,true); },200);
+        setTimeout(()=>{
+          pop.remove();
+          buildCollectionMusic(document.getElementById('col-content').firstChild||document.getElementById('col-content'));
+          switchCollectionTab('music',false,true);
+          // Add loading bar to the newly unlocked card
+          setTimeout(()=>{
+            const card=document.querySelector(`[data-col-id="${pack.id}"]`);
+            if(card && _previewAud){
+              const a=_previewAud;
+              // Only show bar if not already playing
+              if(a.readyState<3){
+                const barWrap=document.createElement('div');
+                barWrap.style.cssText='margin-top:6px;height:4px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;';
+                const bar=document.createElement('div');
+                bar.style.cssText='height:100%;width:0%;background:#9b5de5;border-radius:4px;transition:width 0.3s;';
+                barWrap.appendChild(bar);
+                const lbl=document.createElement('div');
+                lbl.style.cssText='font-family:Nunito,sans-serif;font-size:10px;color:rgba(155,93,229,0.8);margin-top:3px;';
+                lbl.textContent='Loading…';
+                // Insert after the track count line
+                const trackCountEl=card.querySelector('div:nth-child(2)>div:nth-child(2)');
+                if(trackCountEl){
+                  trackCountEl.after(barWrap, lbl);
+                } else {
+                  card.appendChild(barWrap); card.appendChild(lbl);
+                }
+                const updateBar=()=>{
+                  if(!a.duration||!a.buffered.length){ bar.style.width='0%'; return; }
+                  const pct=Math.min(100,Math.round((a.buffered.end(a.buffered.length-1)/a.duration)*100));
+                  bar.style.width=pct+'%';
+                  lbl.textContent=pct>=100?'Ready! ✓':`Loading… ${pct}%`;
+                  if(pct>=100){
+                    bar.style.background='#4caf7d';
+                    setTimeout(()=>{ barWrap.remove(); lbl.remove(); },1500);
+                  }
+                };
+                a.addEventListener('progress', updateBar);
+                a.addEventListener('canplaythrough', ()=>{ bar.style.width='100%'; lbl.textContent='Ready! ✓'; bar.style.background='#4caf7d'; setTimeout(()=>{ barWrap.remove(); lbl.remove(); },1500); },{once:true});
+              }
+            }
+          },250);
+        },200);
         // Toast
         const t=document.createElement('div');
         t.style.cssText=`position:fixed;bottom:calc(var(--ad-bar-h,60px)+16px);left:50%;
@@ -2865,6 +2970,134 @@ function buildModesGrid(){
       else showModeUnlockOffer(m);
     });
     grid.appendChild(card);
+  });
+}
+
+// ── All Leaderboards Screen ──
+const _LB_BOARDS=[
+  {id:'classic', label:'Classic',  icon:'⚡', fetch:()=>fetchLB(null)},
+  {id:'daily',   label:'Daily',    icon:'🗓️', fetch:()=>fetchLB(getDailyDate())},
+  ...CHALLENGE_MODES.map(m=>({id:m.id, label:m.label, icon:m.icon, fetch:()=>fetchChallengeLB(m.id)}))
+];
+
+let _lbAllIdx=0;
+let _lbAllPanels=[];
+
+function showAllLeaderboards(){
+  wipeTransition(()=>{
+    document.getElementById('s-start').style.display='none';
+    const screen=document.getElementById('s-leaderboards');
+    screen.style.display='flex';
+    _buildAllLeaderboards();
+  });
+}
+
+function hideAllLeaderboards(){
+  wipeTransitionReverse(()=>{
+    document.getElementById('s-leaderboards').style.display='none';
+    document.getElementById('s-start').style.display='flex';
+    setTimeout(_playTitleAnims,50);
+  });
+}
+
+function _buildAllLeaderboards(){
+  const inner=document.getElementById('lb-all-inner');
+  const tabs=document.getElementById('lb-all-tabs');
+  const area=document.getElementById('lb-all-area');
+  if(!inner||!tabs||!area) return;
+  inner.innerHTML=''; tabs.innerHTML=''; _lbAllPanels=[];
+  _lbAllIdx=0;
+
+  const W=area.offsetWidth||window.innerWidth;
+  inner.style.width=(W*_LB_BOARDS.length)+'px';
+
+  _LB_BOARDS.forEach((board,i)=>{
+    // Tab pill
+    const tab=document.createElement('div');
+    tab.style.cssText=`flex-shrink:0;padding:5px 12px;border-radius:20px;cursor:pointer;
+      font-family:'Fredoka One',cursive;font-size:12px;white-space:nowrap;
+      background:${i===0?'rgba(155,93,229,0.7)':'rgba(255,255,255,0.07)'};
+      color:${i===0?'#fff':'rgba(255,255,255,0.45)'};
+      border:1px solid ${i===0?'rgba(155,93,229,0.8)':'rgba(255,255,255,0.1)'};
+      transition:all 0.2s;`;
+    tab.textContent=`${board.icon} ${board.label}`;
+    tab.addEventListener('click',()=>_lbScrollTo(i));
+    tabs.appendChild(tab);
+
+    // Panel
+    const panel=document.createElement('div');
+    panel.style.cssText=`width:${W}px;height:100%;flex-shrink:0;
+      display:flex;flex-direction:column;padding:0 16px;box-sizing:border-box;overflow-y:auto;`;
+    panel.innerHTML=`
+      <div style="text-align:center;padding:16px 0 10px;">
+        <div style="font-size:40px;margin-bottom:4px;">${board.icon}</div>
+        <div style="font-family:'Fredoka One',cursive;font-size:20px;color:#fff;">${board.label}</div>
+        <div style="font-family:'Nunito',sans-serif;font-size:11px;color:rgba(255,255,255,0.3);margin-top:2px;letter-spacing:1px;">TOP SCORES</div>
+      </div>
+      <div id="lb-panel-${board.id}" style="flex:1;">
+        <div style="text-align:center;color:rgba(255,255,255,0.3);font-family:'Nunito',sans-serif;
+          font-size:13px;padding:20px;">Loading…</div>
+      </div>`;
+    inner.appendChild(panel);
+    _lbAllPanels.push(panel);
+
+    // Fetch this board
+    board.fetch().then(entries=>{
+      const el=document.getElementById(`lb-panel-${board.id}`);
+      if(!el) return;
+      if(!entries||!entries.length){
+        el.innerHTML=`<div style="text-align:center;color:rgba(255,255,255,0.25);
+          font-family:'Nunito',sans-serif;font-size:13px;padding:20px;">No scores yet!</div>`;
+        return;
+      }
+      const medals=['🥇','🥈','🥉'];
+      el.innerHTML=entries.map((e,i)=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;margin-bottom:4px;
+          border-radius:12px;background:rgba(255,255,255,0.04);
+          border:1px solid rgba(255,255,255,0.06);">
+          <span style="font-family:'Fredoka One',cursive;font-size:15px;
+            color:rgba(200,160,255,0.6);width:28px;text-align:center;">
+            ${i<3?medals[i]:'#'+(i+1)}</span>
+          <span style="flex:1;font-family:'Nunito',sans-serif;font-size:14px;
+            color:rgba(255,255,255,0.8);font-weight:700;">${e.name}</span>
+          <span style="font-family:'Fredoka One',cursive;font-size:17px;
+            color:#c8a0ff;">${e.score}</span>
+        </div>`).join('');
+    });
+  });
+
+  // Touch swipe
+  let _tx=0,_swiped=false;
+  area.addEventListener('touchstart',e=>{ _tx=e.touches[0].clientX; _swiped=false; },{passive:true});
+  area.addEventListener('touchmove',e=>{
+    if(_swiped) return;
+    const dx=e.touches[0].clientX-_tx;
+    if(Math.abs(dx)>30){
+      _swiped=true;
+      _lbScrollTo(dx<0?_lbAllIdx+1:_lbAllIdx-1);
+    }
+  },{passive:true});
+
+  _lbScrollTo(0,true);
+}
+
+function _lbScrollTo(idx, instant){
+  const area=document.getElementById('lb-all-area');
+  const inner=document.getElementById('lb-all-inner');
+  const tabs=document.getElementById('lb-all-tabs');
+  if(!inner||!area) return;
+  _lbAllIdx=Math.max(0,Math.min(_LB_BOARDS.length-1,idx));
+  const W=area.offsetWidth||window.innerWidth;
+  inner.style.transition=instant?'none':'transform 0.35s cubic-bezier(0.25,1,0.5,1)';
+  inner.style.transform=`translateX(${-_lbAllIdx*W}px)`;
+
+  // Update tabs
+  if(tabs) tabs.querySelectorAll('div').forEach((t,i)=>{
+    const active=i===_lbAllIdx;
+    t.style.background=active?'rgba(155,93,229,0.7)':'rgba(255,255,255,0.07)';
+    t.style.color=active?'#fff':'rgba(255,255,255,0.45)';
+    t.style.border='1px solid '+(active?'rgba(155,93,229,0.8)':'rgba(255,255,255,0.1)');
+    if(active) t.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
   });
 }
 
@@ -6853,7 +7086,7 @@ function updateBunnies(dt){
           const currentBlock = placed[placed.length-1];
           const currentCx = currentBlock ? currentBlock.lx + currentBlock.w/2 : 0;
           const currentHalfW = currentBlock ? currentBlock.w/2 : 1;
-          
+
           b.centerOffsetX = (b.tx - currentCx) / Math.max(currentHalfW, 0.01);
           b.fromX = g.position.x;
           b.jumping=false; b.jo=0; b.jumpT=0;
