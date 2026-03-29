@@ -67,11 +67,11 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
 .btn-p:active{transform:translateY(3px);box-shadow:0 2px 0 #6a35b0;}
 .btn-s{background:#f5c842;color:#2a1a2e;font-family:'Fredoka One',cursive;font-size:clamp(14px,3.8vw,17px);padding:10px;border:none;border-radius:16px;cursor:pointer;pointer-events:all;box-shadow:0 5px 0 #c8a020;}
 .btn-s:active{transform:translateY(3px);}
-.lb-row{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid rgba(0,0,0,0.06);font-size:13px;font-weight:700;color:#2a1a2e;}
-.lb-rank{width:24px;font-family:'Fredoka One',cursive;color:#c8a06a;font-size:15px;}
-.lb-name{flex:1;}
-.lb-score{font-family:'Fredoka One',cursive;color:#9b5de5;font-size:17px;}
-.lb-row.you{background:rgba(155,93,229,0.1);border-radius:8px;padding:4px 5px;}
+.lb-row{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:10px;font-size:13px;font-weight:700;color:rgba(255,255,255,0.75);margin-bottom:2px;}
+.lb-rank{width:24px;font-family:'Fredoka One',cursive;color:rgba(200,160,255,0.5);font-size:15px;}
+.lb-name{flex:1;color:rgba(255,255,255,0.8);}
+.lb-score{font-family:'Fredoka One',cursive;color:#c8a0ff;font-size:17px;}
+.lb-row.you{background:rgba(155,93,229,0.25);border:1px solid rgba(155,93,229,0.35);color:#fff;}
 #particles{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:15;overflow:hidden;}
 .pt{position:absolute;animation:ptfall 1.2s ease-out forwards;pointer-events:none;}
 @keyframes ptfall{0%{transform:translateY(0) rotate(0) scale(1);opacity:1}100%{transform:translateY(100px) rotate(360deg) scale(0);opacity:0}}
@@ -191,10 +191,31 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
 #wipe{position:fixed;top:0;left:0;right:0;bottom:0;z-index:8888;
   pointer-events:none;overflow:hidden;}
 #wipe-panel{position:absolute;top:0;left:0;width:100%;height:100%;
-  background:linear-gradient(160deg,#1a0a2e,#2a1050);
+  background:linear-gradient(160deg,#0d0520 0%,#1a0a3e 40%,#2a1060 70%,#1a0535 100%);
   clip-path:polygon(0% 100%, 0% 100%, 0% 100%, 0% 100%);
-  will-change:clip-path;}
-/* Bottom edge leads — so bottom-left corner enters first, top-right last */
+  will-change:clip-path;
+  overflow:hidden;}
+#wipe-panel::before{
+  content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+  background:radial-gradient(ellipse at 60% 40%, rgba(155,93,229,0.18) 0%, transparent 60%),
+             radial-gradient(ellipse at 30% 70%, rgba(255,140,60,0.08) 0%, transparent 50%);
+  pointer-events:none;}
+#wipe-panel::after{
+  content:'🍣';
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%) scale(0);
+  font-size:72px;
+  opacity:0;
+  transition:none;
+  pointer-events:none;
+  filter:drop-shadow(0 0 20px rgba(155,93,229,0.8));}
+#wipe-panel.wipe-peak::after{
+  animation:wipePeakPop 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;}
+@keyframes wipePeakPop{
+  0%{transform:translate(-50%,-50%) scale(0);opacity:0;}
+  50%{transform:translate(-50%,-50%) scale(1.15);opacity:1;}
+  100%{transform:translate(-50%,-50%) scale(1);opacity:0.9;}}
+/* Bottom edge leads — bottom-left enters first, top-right last */
 @keyframes wipeIn{
   0%  {clip-path:polygon(-80% 100%, -10% 100%, -80% 0%, -80% 0%);}
   100%{clip-path:polygon(-10% 100%, 180% 100%, 110% 0%, -80% 0%);}
@@ -203,7 +224,7 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
   0%  {clip-path:polygon(-10% 100%, 180% 100%, 110% 0%, -80% 0%);}
   100%{clip-path:polygon(180% 100%, 250% 100%, 180% 0%, 110% 0%);}
 }
-/* Reverse: top-right corner enters first, sweeps to bottom-left */
+/* Reverse: top-right enters first */
 @keyframes wipeInReverse{
   0%  {clip-path:polygon(180% 0%, 110% 0%, 180% 100%, 180% 100%);}
   100%{clip-path:polygon(110% 0%, -80% 0%, -10% 100%, 180% 100%);}
@@ -212,8 +233,7 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
   0%  {clip-path:polygon(110% 0%, -80% 0%, -10% 100%, 180% 100%);}
   100%{clip-path:polygon(-80% 0%, -150% 0%, -80% 100%, -10% 100%);}
 }
-/* Down: top-left corner enters first, sweeps to bottom-right */
-/* Down wipe: top-left → bottom-right, exact 90° rotation of forward wipe */
+/* Down: top-left → bottom-right */
 @keyframes wipeInDown{
   0%  {clip-path:polygon(0% -80%, 100% -80%, 100% -10%, 0% -80%);}
   100%{clip-path:polygon(0% -80%, 100% -80%, 100% 180%, 0% 110%);}
@@ -222,7 +242,10 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
   0%  {clip-path:polygon(0% -80%, 100% -80%, 100% 180%, 0% 110%);}
   100%{clip-path:polygon(0% 110%, 100% 110%, 100% 250%, 0% 180%);}
 }
-@keyframes colTabSlideLeft{
+@keyframes catchHintFloat{
+  0%,100%{transform:translate(-50%,-50%) translateY(0);}
+  50%{transform:translate(-50%,-50%) translateY(-10px);}
+}
   0%{transform:translateX(60px);opacity:0;}
   100%{transform:translateX(0);opacity:1;}
 }
@@ -264,7 +287,7 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
 <body>
 <div id="wipe"><div id="wipe-panel"></div></div>
 <div id="splash">
-  <div id="splash-tap">TAP TO PLAY</div>
+  <div id="splash-tap">⚡ Stack Attack</div>
 </div>
 <canvas id="c"></canvas>
 <div id="particles"></div>
@@ -762,12 +785,12 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
       color:#f5c842;letter-spacing:4px;text-transform:uppercase;margin-bottom:18px;
       text-shadow:0 2px 8px rgba(0,0,0,0.5);">BUILD IT. DON'T DROP IT.</div>
 
-    <!-- TAP TO PLAY -->
+    <!-- ⚡ Stack Attack -->
     <button class="play-btn title-btn-0" id="startBtn"
       style="width:100%;font-size:clamp(22px,5.5vw,28px);padding:clamp(16px,3.5vh,20px);
       border-radius:50px;border:3px solid rgba(255,220,100,0.6);
       box-shadow:0 6px 0 rgba(100,60,0,0.35),0 0 24px rgba(255,200,0,0.2);
-      margin-bottom:12px;">TAP TO PLAY</button>
+      margin-bottom:12px;">⚡ Stack Attack</button>
 
     <!-- Adventure Mode -->
     <button onclick="showAdvMap(undefined,undefined,false,true)" class="title-btn-1"
@@ -808,29 +831,31 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
 </div>
 
 <!-- MODES SCREEN -->
-<div id="s-modes" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:100;
-  flex-direction:column;background:linear-gradient(160deg,#0a0a1e,#1a0a2e 50%,#0a1a2e);">
+<div id="s-modes" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:100;flex-direction:column;background:#0a0a12;overflow:hidden;">
+
+  <!-- Background -->
+  <div style="position:absolute;inset:0;pointer-events:none;z-index:0;">
+    <div style="position:absolute;inset:0;background:linear-gradient(rgba(155,93,229,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(155,93,229,0.04) 1px,transparent 1px);background-size:28px 28px;"></div>
+    <div style="position:absolute;top:-80px;left:-60px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(155,93,229,0.15) 0%,transparent 65%);"></div>
+    <div style="position:absolute;bottom:-60px;right:-40px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(76,175,125,0.1) 0%,transparent 65%);"></div>
+  </div>
+
   <!-- Header -->
-  <div style="display:flex;align-items:center;padding:16px 14px 10px;flex-shrink:0;
-    border-bottom:1px solid rgba(255,255,255,0.08);">
-    <button onclick="exitModesScreen()" style="background:rgba(255,255,255,0.12);border:none;
-      border-radius:12px;padding:9px 16px;font-family:'Fredoka One',cursive;font-size:16px;
-      color:#fff;cursor:pointer;flex-shrink:0;pointer-events:all;">← Back</button>
-    <div style="flex:1;text-align:center;font-family:'Fredoka One',cursive;font-size:22px;color:#fff;">
-      🎮 Challenge Modes</div>
-    <div style="display:flex;gap:8px;flex-shrink:0;">
-      <button onclick="showCollection()" style="background:rgba(255,255,255,0.12);border:none;
-        border-radius:50%;width:38px;height:38px;font-size:20px;cursor:pointer;pointer-events:all;position:relative;">🎁</button>
-      <button onclick="openPause(true)" style="background:rgba(255,255,255,0.12);border:none;
-        border-radius:50%;width:38px;height:38px;font-size:20px;cursor:pointer;pointer-events:all;">⚙️</button>
+  <div style="position:relative;z-index:2;display:flex;align-items:center;padding:14px 14px 10px;flex-shrink:0;">
+    <button onclick="exitModesScreen()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:8px 14px;font-family:'Fredoka One',cursive;font-size:15px;color:rgba(255,255,255,0.75);cursor:pointer;flex-shrink:0;pointer-events:all;">← Back</button>
+    <div style="flex:1;text-align:center;">
+      <div style="font-family:'Fredoka One',cursive;font-size:11px;letter-spacing:3px;color:rgba(155,93,229,0.65);text-transform:uppercase;margin-bottom:1px;">Select Your</div>
+      <div style="font-family:'Fredoka One',cursive;font-size:22px;color:#fff;line-height:1;text-shadow:0 0 24px rgba(155,93,229,0.45);">⚡ Challenge</div>
+      <div style="font-family:'Nunito',sans-serif;font-size:10px;color:rgba(255,255,255,0.3);margin-top:2px;letter-spacing:0.5px;">Watch an ad to unlock each mode forever</div>    </div>
+    <div style="display:flex;gap:7px;flex-shrink:0;">
+      <button onclick="showCollection()" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;pointer-events:all;">🎁</button>
+      <button onclick="openPause(true)" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;pointer-events:all;">⚙️</button>
     </div>
   </div>
-  <div style="font-family:'Nunito',sans-serif;font-size:13px;color:rgba(255,255,255,0.45);
-    text-align:center;padding:8px 16px 0;flex-shrink:0;">
-    Watch an ad to unlock each mode forever. Scores don't count to leaderboard.</div>
-  <!-- Mode cards grid -->
-  <div id="modes-grid" style="flex:1;overflow-y:auto;padding:14px 12px calc(var(--ad-bar-h)+14px);
-    display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start;"></div>
+  <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(155,93,229,0.35),transparent);flex-shrink:0;margin:0 14px 6px;position:relative;z-index:2;"></div>
+
+  <!-- Mode cards -->
+  <div id="modes-grid" style="position:relative;z-index:2;flex:1;overflow-y:auto;padding:10px 14px calc(var(--ad-bar-h)+14px);"></div>
 </div>
 
 <!-- AD OFFER SCREEN — shown immediately after game ends -->
@@ -870,49 +895,57 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
 </div>
 
 <!-- GAME OVER / LEADERBOARD SCREEN -->
-<div class="screen" id="s-over">
-  <div class="panel" style="position:relative;">
-    <div style="position:absolute;top:12px;right:12px;display:flex;gap:6px;">
-      <button id="gift-btn-over" onclick="showCollection()" style="background:rgba(155,93,229,0.35);border:1px solid rgba(155,93,229,0.5);
-        border-radius:12px;width:44px;height:44px;font-size:20px;cursor:pointer;pointer-events:all;">🎁</button>
-      <button onclick="openPause(true)" style="background:rgba(155,93,229,0.35);border:1px solid rgba(155,93,229,0.5);
-        border-radius:12px;width:44px;height:44px;font-size:20px;cursor:pointer;pointer-events:all;">⚙️</button>
+<div class="screen" id="s-over" style="background:rgba(10,5,20,0.92);">
+  <div class="panel" style="position:relative;background:linear-gradient(170deg,#1a0a2e 0%,#12082a 60%,#1a0f38 100%);border:1px solid rgba(155,93,229,0.3);box-shadow:0 30px 80px rgba(0,0,0,0.7),0 0 0 1px rgba(155,93,229,0.2),inset 0 1px 0 rgba(255,255,255,0.08);padding:0;overflow:hidden;">
+
+    <!-- Header gradient band -->
+    <div id="go-header-band" style="background:linear-gradient(135deg,#2a1060,#3d1880,#2a0d5e);padding:clamp(14px,3vh,22px) clamp(14px,4vw,28px) clamp(10px,2vh,16px);text-align:center;position:relative;border-bottom:1px solid rgba(155,93,229,0.25);">
+      <div style="position:absolute;top:10px;right:10px;display:flex;gap:6px;">
+        <button id="gift-btn-over" onclick="showCollection()" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:12px;width:40px;height:40px;font-size:18px;cursor:pointer;pointer-events:all;">🎁</button>
+        <button onclick="openPause(true)" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:12px;width:40px;height:40px;font-size:18px;cursor:pointer;pointer-events:all;">⚙️</button>
+      </div>
+      <div id="daily-badge" style="display:none;background:linear-gradient(135deg,#f5c842,#ff9f43);color:#2a1a2e;font-family:'Fredoka One',cursive;font-size:11px;padding:3px 12px;border-radius:20px;margin-bottom:6px;display:inline-block;">🗓️ DAILY CHALLENGE</div>
+      <span class="go-emoji" id="go-emoji" style="font-size:clamp(32px,8vw,48px);display:block;margin-bottom:4px;filter:drop-shadow(0 4px 12px rgba(155,93,229,0.5));">😵</span>
+      <div class="go-title" id="go-title" style="font-family:'Fredoka One',cursive;font-size:clamp(20px,5.5vw,28px);color:#fff;margin-bottom:2px;text-shadow:0 2px 12px rgba(155,93,229,0.6);">Dropped it!</div>
     </div>
-    <div id="daily-badge" style="display:none;background:#f5c842;color:#2a1a2e;font-family:'Fredoka One',cursive;font-size:13px;padding:4px 12px;border-radius:20px;margin-bottom:6px;">🗓️ DAILY CHALLENGE</div>
-    <span class="go-emoji" id="go-emoji">😵</span>
-    <div class="go-title" id="go-title">Dropped it!</div>
-    <div class="go-score-lbl">Your Score</div>
-    <div class="go-score" id="go-score">0</div>
-    <div id="go-challenge-best" style="display:none;font-family:'Fredoka One',cursive;font-size:13px;color:#9b5de5;margin-top:2px;"></div>
-    <div id="go-streak" style="display:none;font-family:'Fredoka One',cursive;font-size:16px;
-      color:#ff9944;margin-top:4px;margin-bottom:2px;"></div>
-    <div id="name-entry" style="display:none;margin-top:6px;">
-      <div class="go-score-lbl" style="color:#9b5de5;">🏆 Enter your name</div>
-      <input id="name-input" type="text" maxlength="12" placeholder="Your name..."
-        style="margin-top:5px;width:100%;padding:7px 10px;border-radius:11px;border:2px solid rgba(155,93,229,0.35);font-family:'Fredoka One',cursive;font-size:16px;text-align:center;background:#fef9ff;color:#2a1a2e;outline:none;">
-      <button id="saveBtn" style="margin-top:6px;width:100%;background:#4caf7d;color:#fff;font-family:'Fredoka One',cursive;font-size:17px;padding:9px;border:none;border-radius:15px;cursor:pointer;pointer-events:all;box-shadow:0 4px 0 #2a8a55;">💾 Save Score</button>
-      <div id="save-msg" style="display:none;color:#4caf7d;font-family:'Fredoka One',cursive;font-size:12px;margin-top:3px;"></div>
+
+    <!-- Score section -->
+    <div style="padding:clamp(10px,2vh,16px) clamp(14px,4vw,28px);text-align:center;border-bottom:1px solid rgba(255,255,255,0.06);">
+      <div class="go-score-lbl" style="font-size:9px;letter-spacing:3px;color:rgba(200,160,255,0.6);text-transform:uppercase;font-weight:700;margin-bottom:2px;">Your Score</div>
+      <div class="go-score" id="go-score" style="font-family:'Fredoka One',cursive;font-size:clamp(52px,14vw,72px);color:#fff;line-height:1;text-shadow:0 0 30px rgba(155,93,229,0.8),0 4px 0 rgba(0,0,0,0.4);">0</div>
+      <div id="go-challenge-best" style="display:none;font-family:'Fredoka One',cursive;font-size:13px;color:#f5c842;margin-top:2px;"></div>
+      <div id="go-streak" style="display:none;font-family:'Fredoka One',cursive;font-size:14px;color:#ff9944;margin-top:2px;"></div>
+
+      <div id="name-entry" style="display:none;margin-top:8px;">
+        <div style="font-size:9px;letter-spacing:2px;color:rgba(200,160,255,0.6);text-transform:uppercase;font-weight:700;margin-bottom:5px;">🏆 Enter your name</div>
+        <input id="name-input" type="text" maxlength="12" placeholder="Your name..."
+          style="width:100%;padding:9px 12px;border-radius:12px;border:1px solid rgba(155,93,229,0.4);font-family:'Fredoka One',cursive;font-size:16px;text-align:center;background:rgba(255,255,255,0.07);color:#fff;outline:none;box-sizing:border-box;">
+        <button id="saveBtn" style="margin-top:7px;width:100%;background:linear-gradient(135deg,#4caf7d,#2d9e5f);color:#fff;font-family:'Fredoka One',cursive;font-size:17px;padding:11px;border:none;border-radius:14px;cursor:pointer;pointer-events:all;box-shadow:0 4px 0 #1a7040,0 8px 20px rgba(76,175,125,0.3);">💾 Save Score</button>
+        <div id="save-msg" style="display:none;color:#4caf7d;font-family:'Fredoka One',cursive;font-size:12px;margin-top:4px;"></div>
+      </div>
     </div>
-    <div class="div" style="margin:4px 0;"></div>
-    <div style="font-family:'Fredoka One',cursive;font-size:11px;letter-spacing:2px;color:#c8a06a;text-transform:uppercase;margin-bottom:4px;" id="lb-header">🐰 Top Scores</div>
-    <div id="lb"></div>
-    <div class="div" style="margin:4px 0;"></div>
-    <div class="btns" style="margin-top:0;">
-      <button class="btn-p" id="retryBtn">🍣 Try Again</button>
-      <button class="btn-s" id="dailyBtn">🗓️ Daily Challenge</button>
+
+    <!-- Leaderboard section -->
+    <div style="padding:10px clamp(14px,4vw,28px) 4px;">
+      <div style="font-family:'Fredoka One',cursive;font-size:10px;letter-spacing:2px;color:rgba(200,160,255,0.5);text-transform:uppercase;margin-bottom:6px;text-align:center;" id="lb-header">🐰 Top Scores</div>
+      <div id="lb"></div>
+    </div>
+
+    <!-- Buttons section -->
+    <div style="padding:6px clamp(14px,4vw,28px) clamp(12px,2vh,20px);display:flex;flex-direction:column;gap:7px;">
+      <button class="btn-p" id="retryBtn" style="background:linear-gradient(135deg,#9b5de5,#7a3cc0);box-shadow:0 4px 0 #5a2090,0 8px 24px rgba(155,93,229,0.35);font-size:clamp(16px,4.5vw,20px);padding:13px;border-radius:16px;">🍣 Try Again</button>
+      <button class="btn-s" id="dailyBtn" style="background:linear-gradient(135deg,#f5c842,#ffaa2a);box-shadow:0 4px 0 #c8901a,0 8px 20px rgba(245,200,66,0.25);font-size:clamp(14px,3.8vw,17px);padding:11px;border-radius:16px;">🗓️ Daily Challenge</button>
       <button id="challengeModesBtn" onclick="goToChallengeModes()" style="display:none;width:100%;
-        background:rgba(232,67,147,0.15);color:#f04ba0;
-        font-family:'Fredoka One',cursive;font-size:clamp(15px,4vw,19px);padding:10px;
-        border:1px solid rgba(232,67,147,0.35);border-radius:14px;cursor:pointer;
-        margin-top:2px;">🎮 Challenge Modes</button>
-      <button onclick="shareScore()" style="width:100%;background:rgba(155,93,229,0.1);color:#9b5de5;
-        font-family:'Fredoka One',cursive;font-size:15px;padding:9px;
-        border:1px solid rgba(155,93,229,0.3);border-radius:14px;cursor:pointer;
-        margin-top:2px;">📤 Share My Score</button>
-      <button onclick="goToTitle()" style="width:100%;background:rgba(155,93,229,0.12);color:#9b5de5;
-        font-family:'Fredoka One',cursive;font-size:clamp(15px,4vw,19px);padding:10px;
-        border:1px solid rgba(155,93,229,0.3);border-radius:14px;cursor:pointer;
-        margin-top:2px;">🏠 Title Screen</button>
+        background:linear-gradient(135deg,rgba(232,67,147,0.25),rgba(200,40,120,0.2));color:#f04ba0;
+        font-family:'Fredoka One',cursive;font-size:clamp(15px,4vw,18px);padding:11px;
+        border:1px solid rgba(232,67,147,0.4);border-radius:16px;cursor:pointer;
+        box-shadow:0 4px 16px rgba(232,67,147,0.15);">🎮 Challenge Modes</button>
+      <button onclick="shareScore()" style="width:100%;background:rgba(155,93,229,0.12);color:rgba(200,160,255,0.8);
+        font-family:'Fredoka One',cursive;font-size:clamp(14px,3.8vw,16px);padding:9px;
+        border:1px solid rgba(155,93,229,0.2);border-radius:14px;cursor:pointer;">📤 Share My Score</button>
+      <button onclick="goToTitle()" style="width:100%;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.45);
+        font-family:'Fredoka One',cursive;font-size:clamp(13px,3.5vw,15px);padding:8px;
+        border:1px solid rgba(255,255,255,0.1);border-radius:14px;cursor:pointer;">🏠 Title Screen</button>
     </div>
   </div>
 </div>
@@ -1303,6 +1336,7 @@ const CREDITS_DATA={
   ]
 };
 let _colCurrentTab='blocks';
+let _colMusicTabVisited=false;
 
 let _previewAud=null; // preview audio element
 let _previewPackId=null; // which pack is being previewed
@@ -1366,18 +1400,20 @@ function _updateGiftDot(){
 function _showGiftCallout(){
   if(_hasOpenedCollectionRecently()) return;
 
-  // Only show on title screen
+  // Only show on title screen — not on modes or any other screen
   var btn=document.getElementById('gift-btn-title');
   if(!btn) return;
   var ss=document.getElementById('s-start');
   if(!ss || ss.style.display==='none') return;
+  var modesScreen=document.getElementById('s-modes');
+  if(modesScreen && modesScreen.style.display!=='none') return;
   var rect=btn.getBoundingClientRect();
   if(rect.width===0 || rect.top<0 || rect.top>=window.innerHeight) return;
 
   _dismissGiftCallout();
   var el=document.createElement('div');
   el.id='gift-callout';
-  el.style.cssText='position:fixed;z-index:8000;pointer-events:none;right:75px;top:'+(rect.bottom+10)+'px;';
+  el.style.cssText='position:fixed;z-index:8000;pointer-events:none;right:'+(window.innerWidth-rect.right-40)+'px;top:'+(rect.bottom+10-50)+'px;';
   el.innerHTML='<div id="gift-callout-arrow" style="margin-left:auto;margin-right:'+(rect.width/2-10)+'px;"></div>'
     +'<div id="gift-callout-inner">🎁 Tap to see your rewards!</div>';
   document.body.appendChild(el);
@@ -1432,11 +1468,13 @@ function showCollection(tab){
   const inner=screen.querySelector('#col-inner');
   if(inner){ inner.style.animation='none'; inner.offsetHeight; inner.style.animation='colSlideUp 0.35s cubic-bezier(0.34,1.3,0.64,1) forwards'; }
   _colCurrentTab=tab||'blocks';
+  _colMusicTabVisited=(tab==='music'); // track if opened directly to music
   switchCollectionTab(_colCurrentTab, false);
 }
 
 function closeCollection(){
   paused=false;
+  _catchLastClientX=null; _catchLastClientY=null; // prevent catch mode jump on first touch
   const continuingAud=_previewAud; // grab before _stopPreview clears it
   const continuingPackId=_previewPackId;
   _stopPreview();
@@ -1450,9 +1488,20 @@ function closeCollection(){
         playAdvMapMusic(_advMapWorld);
       }
     } else if(_previewRestoreKey==='title'){
-      // Always restore title music cleanly — preview was just a preview
       if(continuingAud){ try{continuingAud.pause();}catch(e){} }
-      _ct=null; playMusic('title');
+      // Only restart title music if the music tab was visited (previews may have changed it)
+      if(_colMusicTabVisited){
+        _ct=null; playMusic('title');
+      } else {
+        // Music tab never opened — restore exactly what was playing, no restart
+        if(_previewSavedAud && _previewSavedAud.src){
+          _aud=_previewSavedAud; _ct=_previewSavedCt;
+          if(_previewSavedAud.paused) _previewSavedAud.play().catch(()=>{_ct=null;playMusic('title');});
+        } else if(!_aud || _aud.paused){
+          _ct=null; playMusic('title');
+        }
+      }
+      _colMusicTabVisited=false;
     } else {
       // game/daily — resume saved track, or adopt preview if pack was changed
       if(continuingAud && continuingPackId){
@@ -1504,6 +1553,7 @@ function initCollectionSwipe(){
 function switchCollectionTab(tab, animate, noCardAnim){
   const wasTab=_colCurrentTab;
   _colCurrentTab=tab;
+  if(tab==='music') _colMusicTabVisited=true;
   const bBtn=document.getElementById('col-tab-blocks');
   const aBtn=document.getElementById('col-tab-animals');
   const mBtn=document.getElementById('col-tab-music');
@@ -1729,6 +1779,41 @@ function buildCollectionAnimals(container, noCardAnim){
   const grid=document.createElement('div');
   grid.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:12px;';
   let _ai=0;
+
+  // "None" option — disables all animals
+  const noneActive=selectedAnimal==='none';
+  const noneCard=document.createElement('div');
+  noneCard.setAttribute('data-col-id','none');
+  noneCard.style.cssText=`border-radius:18px;padding:16px 8px 12px;text-align:center;cursor:pointer;
+    background:${noneActive?'rgba(155,93,229,0.4)':'rgba(255,255,255,0.07)'};
+    border:2px solid ${noneActive?'#9b5de5':'rgba(255,255,255,0.15)'};
+    opacity:0;min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    animation:colCardIn 0.35s cubic-bezier(0.34,1.3,0.64,1) 0s forwards;`;
+  _ai++;
+  noneCard.innerHTML=`
+    <div style="font-size:48px;line-height:1;margin-bottom:5px;">🚫</div>
+    <div style="font-family:'Fredoka One',cursive;font-size:12px;color:#fff;line-height:1.2;">None</div>
+    <div class="col-active-lbl" style="font-family:Fredoka One,cursive;font-size:10px;color:#ffcc00;letter-spacing:1px;margin-top:3px;visibility:${noneActive?'visible':'hidden'};height:14px;">ACTIVE</div>`;
+  noneCard.addEventListener('click',()=>{
+    _playSfx('switch');
+    selectedAnimal='none';
+    const sv2=getSave(); sv2.animal='none'; setSave(sv2);
+    if(state==='playing'){
+      bunnies.forEach(b=>scene.remove(b.grp));
+      bunnies=[];
+    }
+    grid.querySelectorAll('[data-col-id]').forEach(c=>{
+      const cid=c.getAttribute('data-col-id');
+      const isActive=cid==='none';
+      const cLocked=c.getAttribute('data-locked')==='1';
+      if(!cLocked) c.style.background=isActive?'rgba(155,93,229,0.4)':'rgba(255,255,255,0.07)';
+      if(!cLocked) c.style.border='2px solid '+(isActive?'#9b5de5':'rgba(255,255,255,0.15)');
+      const lbl=c.querySelector('.col-active-lbl');
+      if(lbl) lbl.style.visibility=isActive?'visible':'hidden';
+    });
+  });
+  grid.appendChild(noneCard);
+
   Object.entries(ANIMALS).forEach(([key,a])=>{
     const unlocked=a.adventureUnlock ? !!sv.pandaUnlocked : best>=a.unlockAt;
     const active=selectedAnimal===key;
@@ -2159,7 +2244,7 @@ function requestReviveAd(){
     // Reposition bunnies to the new top block — re-spawn mama if she fell off
     const newTop=placed[placed.length-1];
     const activeBunnies=bunnies.filter(b=>!b.falling);
-    if(activeBunnies.length===0 && newTop){
+    if(activeBunnies.length===0 && newTop && selectedAnimal!=='none'){
       // All bunnies fell off during game-over — re-spawn mama
       const mamaColor=(ANIMALS[selectedAnimal]||ANIMALS.bunny).color;
       const mamaGrp=mkAnimal(mamaColor,1.8);
@@ -2707,25 +2792,77 @@ function buildModesGrid(){
   const grid=document.getElementById('modes-grid');
   if(!grid) return;
   grid.innerHTML='';
+  grid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start;';
+
   CHALLENGE_MODES.forEach((m,i)=>{
     const unlocked=isModeUnlocked(m.id);
+    const best=getChallengeBest(m.id);
+    const col=m.color;
+    const r2=parseInt(col.slice(1,3),16),g2=parseInt(col.slice(3,5),16),b2=parseInt(col.slice(5,7),16);
+    const rgba=(a)=>`rgba(${r2},${g2},${b2},${a})`;
+
     const card=document.createElement('div');
-    card.style.cssText=`background:${unlocked?'rgba(255,255,255,0.08)':'rgba(0,0,0,0.3)'};
-      border:2px solid ${unlocked?m.color+'88':'rgba(255,255,255,0.08)'};
-      border-radius:20px;padding:16px 12px;text-align:center;cursor:pointer;
-      opacity:0;animation:colCardIn 0.35s cubic-bezier(0.34,1.3,0.64,1) ${i*0.06}s forwards;`;
-    card.innerHTML=`
-      <div style="font-size:38px;margin-bottom:6px;">${m.icon}</div>
-      <div style="font-family:'Fredoka One',cursive;font-size:15px;color:${unlocked?'#fff':'rgba(255,255,255,0.4)'};
-        margin-bottom:4px;line-height:1.2;">${m.label}</div>
-      <div style="font-family:'Nunito',sans-serif;font-size:11px;color:rgba(255,255,255,0.4);
-        line-height:1.3;margin-bottom:10px;">${m.desc}</div>
-      <div style="font-family:'Fredoka One',cursive;font-size:12px;
-        color:${unlocked?m.color:'rgba(255,255,255,0.3)'};letter-spacing:1px;">
-        ${unlocked?'▶ PLAY':'🔒 WATCH AD'}</div>`;
+    card.style.cssText=`
+      position:relative;overflow:hidden;border-radius:22px;
+      padding:22px 12px 18px;text-align:center;cursor:pointer;
+      background:${unlocked
+        ?`linear-gradient(170deg,${rgba(0.25)} 0%,rgba(10,8,22,0.98) 55%)`
+        :'rgba(255,255,255,0.03)'};
+      border:1.5px solid ${unlocked?rgba(0.45):'rgba(255,255,255,0.08)'};
+      box-shadow:${unlocked?`0 6px 28px ${rgba(0.2)},inset 0 1px 0 rgba(255,255,255,0.07)`:''};
+      display:flex;flex-direction:column;align-items:center;
+      opacity:0;animation:colCardIn 0.32s cubic-bezier(0.34,1.3,0.64,1) ${i*0.05}s forwards;`;
+
+    if(unlocked){
+      card.innerHTML=`
+        <div style="position:absolute;top:-15px;left:50%;transform:translateX(-50%);
+          width:110px;height:110px;border-radius:50%;
+          background:radial-gradient(circle,${rgba(0.28)} 0%,transparent 65%);pointer-events:none;"></div>
+        <div style="position:absolute;top:0;left:15%;right:15%;height:2px;border-radius:0 0 3px 3px;
+          background:linear-gradient(90deg,transparent,${col},transparent);"></div>
+        <div style="width:76px;height:76px;border-radius:20px;flex-shrink:0;
+          background:${rgba(0.18)};border:1.5px solid ${rgba(0.4)};
+          display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:12px;">
+          <div style="position:absolute;inset:0;border-radius:20px;
+            background:radial-gradient(circle at 35% 30%,${rgba(0.35)},transparent 60%);"></div>
+          <span style="font-size:38px;position:relative;filter:drop-shadow(0 0 12px ${rgba(1)});">${m.icon}</span>
+        </div>
+        <div style="font-family:'Fredoka One',cursive;font-size:16px;color:#fff;line-height:1.15;margin-bottom:6px;">${m.label}</div>
+        <div style="width:36px;height:1.5px;margin-bottom:8px;border-radius:2px;
+          background:linear-gradient(90deg,transparent,${rgba(0.8)},transparent);"></div>
+        <div style="font-family:'Nunito',sans-serif;font-size:10px;color:rgba(255,255,255,0.4);line-height:1.5;flex:1;">${m.desc}</div>
+        ${best>0?`<div style="margin-top:8px;font-family:'Fredoka One',cursive;font-size:10px;
+          color:${col};background:${rgba(0.15)};border:1px solid ${rgba(0.3)};
+          border-radius:20px;padding:2px 8px;">🏆 ${best}</div>`:'<div style="height:20px;"></div>'}
+        <div style="margin-top:10px;width:100%;background:${col};color:#fff;
+          font-family:'Fredoka One',cursive;font-size:13px;letter-spacing:1px;
+          padding:9px 0;border-radius:13px;
+          box-shadow:0 3px 12px ${rgba(0.5)},inset 0 1px 0 rgba(255,255,255,0.22);">▶ Play</div>`;
+    } else {
+      card.innerHTML=`
+        <div style="position:absolute;top:12px;right:12px;font-size:14px;opacity:0.4;z-index:3;">🔒</div>
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.25);border-radius:22px;pointer-events:none;z-index:1;"></div>
+        <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;width:100%;">
+          <div style="width:76px;height:76px;border-radius:20px;flex-shrink:0;
+            background:rgba(255,255,255,0.03);border:1.5px solid rgba(255,255,255,0.07);
+            display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
+            <span style="font-size:38px;filter:grayscale(1) opacity(0.15);">${m.icon}</span>
+          </div>
+          <div style="font-family:'Fredoka One',cursive;font-size:16px;color:rgba(255,255,255,0.2);line-height:1.15;margin-bottom:6px;">${m.label}</div>
+          <div style="width:36px;height:1.5px;margin-bottom:8px;border-radius:2px;background:rgba(255,255,255,0.07);"></div>
+          <div style="font-family:'Nunito',sans-serif;font-size:10px;color:rgba(255,255,255,0.15);line-height:1.5;flex:1;">${m.desc}</div>
+          <div style="height:20px;"></div>
+          <div style="margin-top:10px;width:100%;
+            background:linear-gradient(135deg,rgba(245,200,66,0.2),rgba(245,160,40,0.15));
+            border:1px solid rgba(245,200,66,0.35);color:rgba(245,200,66,0.8);
+            font-family:'Fredoka One',cursive;font-size:12px;
+            padding:9px 0;border-radius:13px;text-align:center;">📺 Watch Ad</div>
+        </div>`;
+    }
+
     card.addEventListener('click',()=>{
-      if(unlocked){ startChallengeMode(m.id); }
-      else{ showModeUnlockOffer(m); }
+      if(unlocked) startChallengeMode(m.id);
+      else showModeUnlockOffer(m);
     });
     grid.appendChild(card);
   });
@@ -2837,6 +2974,8 @@ function resetActiveMode(){
   bunnies.forEach(b=>{ b._clockSlotOffset=undefined; });
   _modeCatcherX=0.5;
   _modeConveyorOffset=0;
+  const catchHint=document.getElementById('catch-hint');
+  if(catchHint) catchHint.remove();
   if(_modeCatcherEl){ _modeCatcherEl.remove(); _modeCatcherEl=null; }
   // Clean up catch mode falling blocks
   if(_catchFallingMesh){ scene.remove(_catchFallingMesh); blockDispose(_catchFallingMesh); _catchFallingMesh=null; }
@@ -3009,6 +3148,31 @@ function _setupCatchMode(){
   });
 
   setTimeout(()=>{ if(_activeMode==='catch' && state==='playing') _spawnCatchBlock(); }, 500);
+
+  // Show drag hint overlay — disappears on first touch
+  const existing=document.getElementById('catch-hint');
+  if(existing) existing.remove();
+  const hint=document.createElement('div');
+  hint.id='catch-hint';
+  hint.style.cssText=`position:fixed;left:50%;top:calc(55% + 200px);transform:translate(-50%,-50%);
+    z-index:80;pointer-events:none;text-align:center;
+    animation:catchHintFloat 1.2s ease-in-out infinite;`;
+  hint.innerHTML=`
+    <div style="font-size:52px;line-height:1;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.5));">👆</div>
+    <div style="font-family:'Fredoka One',cursive;font-size:15px;color:#fff;
+      text-shadow:0 2px 8px rgba(0,0,0,0.8);margin-top:6px;white-space:nowrap;
+      background:rgba(0,0,0,0.45);padding:4px 12px;border-radius:20px;letter-spacing:0.5px;">
+      Drag to move the stack!</div>`;
+  document.body.appendChild(hint);
+  // Remove on first drag
+  const _removeCatchHint=()=>{
+    const h=document.getElementById('catch-hint');
+    if(h){ h.style.animation='none'; h.style.opacity='0'; h.style.transition='opacity 0.3s'; setTimeout(()=>h.remove(),300); }
+    document.removeEventListener('touchstart',_removeCatchHint);
+    document.removeEventListener('mousedown',_removeCatchHint);
+  };
+  document.addEventListener('touchstart',_removeCatchHint,{once:true,passive:true});
+  document.addEventListener('mousedown',_removeCatchHint,{once:true});
 }
 
 // Module-level drag state — registered once, checked each event
@@ -3472,40 +3636,45 @@ function wipeTransition(fn){
   if(!panel){ fn(); return; }
   let fired=false;
   function doFn(){ if(fired) return; fired=true; fn(); }
-  // Hard safety: if animation never fires, call fn anyway after 700ms
-  const safety=setTimeout(doFn, 700);
+  const safety=setTimeout(doFn, 900);
   panel.style.animation='none';
   panel.offsetHeight;
-  panel.style.animation='wipeIn 0.31s linear forwards';
+  panel.style.animation='wipeIn 0.38s cubic-bezier(0.55,0,0.45,1) forwards';
   setTimeout(()=>{
     clearTimeout(safety);
     doFn();
-    panel.style.animation='wipeOut 0.31s linear forwards';
+    // Peak flash
+    panel.classList.add('wipe-peak');
+    setTimeout(()=>panel.classList.remove('wipe-peak'), 380);
+    panel.style.animation='wipeOut 0.38s cubic-bezier(0.55,0,0.45,1) forwards';
     setTimeout(()=>{
       panel.style.animation='none';
       panel.style.clipPath='polygon(0% 100%, 0% 100%, 0% 100%, 0% 100%)';
-    }, 330);
-  }, 320);
+    }, 400);
+  }, 370);
 }
 
-function wipeTransitionReverse(fn){  if(!_clipPathSupported()){ fn(); return; }
+function wipeTransitionReverse(fn){
+  if(!_clipPathSupported()){ fn(); return; }
   const panel=document.getElementById('wipe-panel');
   if(!panel){ fn(); return; }
   let fired=false;
   function doFn(){ if(fired) return; fired=true; fn(); }
-  const safety=setTimeout(doFn, 700);
+  const safety=setTimeout(doFn, 900);
   panel.style.animation='none';
   panel.offsetHeight;
-  panel.style.animation='wipeInReverse 0.31s linear forwards';
+  panel.style.animation='wipeInReverse 0.38s cubic-bezier(0.55,0,0.45,1) forwards';
   setTimeout(()=>{
     clearTimeout(safety);
     doFn();
-    panel.style.animation='wipeOutReverse 0.31s linear forwards';
+    panel.classList.add('wipe-peak');
+    setTimeout(()=>panel.classList.remove('wipe-peak'), 380);
+    panel.style.animation='wipeOutReverse 0.38s cubic-bezier(0.55,0,0.45,1) forwards';
     setTimeout(()=>{
       panel.style.animation='none';
       panel.style.clipPath='polygon(0% 100%, 0% 100%, 0% 100%, 0% 100%)';
-    }, 330);
-  }, 320);
+    }, 400);
+  }, 370);
 }
 
 function wipeTransitionDown(fn){
@@ -3514,19 +3683,21 @@ function wipeTransitionDown(fn){
   if(!panel){ fn(); return; }
   let fired=false;
   function doFn(){ if(fired) return; fired=true; fn(); }
-  const safety=setTimeout(doFn, 700);
+  const safety=setTimeout(doFn, 900);
   panel.style.animation='none';
   panel.offsetHeight;
-  panel.style.animation='wipeInDown 0.31s linear forwards';
+  panel.style.animation='wipeInDown 0.38s cubic-bezier(0.55,0,0.45,1) forwards';
   setTimeout(()=>{
     clearTimeout(safety);
     doFn();
-    panel.style.animation='wipeOutDown 0.31s linear forwards';
+    panel.classList.add('wipe-peak');
+    setTimeout(()=>panel.classList.remove('wipe-peak'), 380);
+    panel.style.animation='wipeOutDown 0.38s cubic-bezier(0.55,0,0.45,1) forwards';
     setTimeout(()=>{
       panel.style.animation='none';
       panel.style.clipPath='polygon(0% 100%, 0% 100%, 0% 100%, 0% 100%)';
-    }, 330);
-  }, 320);
+    }, 400);
+  }, 370);
 }
 
 function exitAdvMap(){
@@ -5608,12 +5779,14 @@ function initGame(){
   base.position.set(0,BH/2,0);
   placed.push({mesh:base,lx:-S/2,w:S,by:0,isBase:true});
 
-  // Mama bunny — use selected animal's color
-  const mamaColor=(ANIMALS[selectedAnimal]||ANIMALS.bunny).color;
-  const mamaGrp=mkAnimal(mamaColor,1.8);
-  const mamaGndY=bunnyGroundY(0,1.8,true);
-  mamaGrp.position.set(0,mamaGndY,0);
-  bunnies.push({grp:mamaGrp,tx:0,tz:0,blockBy:0,jv:0,jo:0,jumping:false,hopping:false,hopT:0,fromY:mamaGndY,toY:mamaGndY,toBlockBy:0,lp:0,falling:false,fv:0,fvx:0,isMama:true,cel:0,sc:1.8,moverState:'none',moverCooldown:0});
+  // Mama bunny — use selected animal's color (skip if disabled)
+  if(selectedAnimal!=='none'){
+    const mamaColor=(ANIMALS[selectedAnimal]||ANIMALS.bunny).color;
+    const mamaGrp=mkAnimal(mamaColor,1.8);
+    const mamaGndY=bunnyGroundY(0,1.8,true);
+    mamaGrp.position.set(0,mamaGndY,0);
+    bunnies.push({grp:mamaGrp,tx:0,tz:0,blockBy:0,jv:0,jo:0,jumping:false,hopping:false,hopT:0,fromY:mamaGndY,toY:mamaGndY,toBlockBy:0,lp:0,falling:false,fv:0,fvx:0,isMama:true,cel:0,sc:1.8,moverState:'none',moverCooldown:0});
+  }
 
   // Camera reset
   cam.position.set(10,8,10);
@@ -6256,6 +6429,7 @@ function getBabySlots(top, count){
 }
 
 function addBunny(top){
+  if(selectedAnimal==='none') return; // animals disabled
   const baseCol=(ANIMALS[selectedAnimal]||ANIMALS.bunny).color;
   const c=new THREE.Color(baseCol);
   c.r=Math.min(1,c.r+(Math.random()-0.5)*0.08);
@@ -7322,6 +7496,13 @@ function showGameOver(){
   const title=score===0?'Zero pieces!':nb?'New Record!':score>=15?'Sushi Master!':'Dropped it!';
   document.getElementById('go-emoji').textContent=emoji;
   document.getElementById('go-title').textContent=title;
+  // Style header band based on outcome
+  const band=document.getElementById('go-header-band');
+  if(band){
+    if(nb) band.style.background='linear-gradient(135deg,#1a6040,#2a9060,#1a5535)'; // green for new record
+    else if(score===0) band.style.background='linear-gradient(135deg,#3a1a1a,#5a2020,#2a1010)'; // red for zero
+    else band.style.background='linear-gradient(135deg,#2a1060,#3d1880,#2a0d5e)'; // default purple
+  }
   document.getElementById('go-score').textContent=score;
   // Show challenge mode best if applicable
   const cbEl=document.getElementById('go-challenge-best');
@@ -8090,6 +8271,7 @@ function openPause(fromMenu){
 
 function closePause(){
   paused=false;
+  _catchLastClientX=null; _catchLastClientY=null; // prevent catch mode jump on first touch
   const pm=document.getElementById('pause-menu');
   const pmCard=pm.querySelector('div');
   if(pmCard) pmCard.style.animation='modalCardOut 0.18s ease-in forwards';
@@ -8220,6 +8402,7 @@ function devResetRewards(){
   if(!confirm('Reset ALL rewards? This clears unlocked meshes, music packs, and block selections.')) return;
   try{
     localStorage.removeItem('ssUnlockedMeshes');
+    localStorage.removeItem('ssModeUnlocks');
     const sv=getSave();
     Object.keys(sv).filter(k=>k.startsWith('musicPack_')).forEach(k=>delete sv[k]);
     sv.musicPack='default';
