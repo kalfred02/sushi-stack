@@ -2511,7 +2511,27 @@ const ADV_WORLDS = [
     boss:'all',         bossLabel:'Dragon\'s Wrath!',bossDesc:'All mechanics at once. Good luck.', bossBounces:1 },
 ];
 
-// Per-world difficulty scaling
+// Challenge modes for adventure levels — indexed [world][level], null = normal
+// Boss levels (index 9) are always null. Modes introduced progressively.
+// Simpler modes early, weirder modes in later worlds.
+const ADV_LEVEL_MODES = [
+  // W1: Bamboo Beach — 1 easy mode, level 4
+  [null,null,null,null,'conveyor',null,null,null,null,null],
+  // W2: Lava Peaks — 2 modes
+  [null,null,'upsidedown',null,null,'conveyor',null,null,null,null],
+  // W3: Jungle Ruins — 2 modes
+  [null,'ghost',null,null,'conveyor',null,null,'upsidedown',null,null],
+  // W4: Frost Spire — 3 modes
+  [null,null,'sideways',null,'ghost',null,'conveyor',null,'upsidedown',null],
+  // W5: Shadow Keep — 3 modes, introducing spiral
+  [null,'conveyor',null,'ghost',null,'clockhand',null,null,'sideways',null],
+  // W6: Cherry Garden — 4 modes, introducing perfects
+  [null,null,'upsidedown','ghost',null,'conveyor',null,'clockhand','perfects',null],
+  // W7: Storm Tower — 4 modes, introducing zerograv
+  ['sideways',null,'ghost',null,'clockhand','upsidedown',null,'zerograv',null,null],
+  // W8: Dragon's Peak — 5 modes, all the chaos
+  ['ghost','conveyor','clockhand',null,'upsidedown','sideways','zerograv',null,'perfects',null],
+];
 // Goals: blocks needed per level (index 0-9), per world (0-7)
 const ADV_GOALS_W = [
   [ 6,  8, 10, 12, 15, 18, 22, 26, 32, 40],  // W1 - gentle intro, boss=40
@@ -3427,7 +3447,7 @@ function updateChallengeMode(){
       else if(cycle<2500) opacity=0;
       else if(cycle<3500) opacity=(cycle-2500)/1000;
       else                opacity=1;
-      opacity=Math.max(0.05, opacity);
+      opacity=Math.max(0.20, opacity); // max 80% invisible
       mover.mesh.traverse(child=>{
         if(child.isMesh && child.material){
           child.material.opacity=opacity;
@@ -3842,9 +3862,24 @@ function buildAdvPathMap(wi){
         animation:animalFloat 2.2s ease-in-out infinite;
         z-index:15;pointer-events:none;`;
       chest.textContent='🎁';
-      wrap.style.position='absolute'; // already absolute but ensure overflow visible
+      wrap.style.position='absolute';
       wrap.style.overflow='visible';
       wrap.appendChild(chest);
+    }
+
+    // Challenge mode badge — small icon in top-left of node, no extra space
+    const lvlMode=ADV_LEVEL_MODES[wi]?.[li];
+    if(lvlMode && !isBoss){
+      const cm=CHALLENGE_MODES.find(m=>m.id===lvlMode);
+      if(cm){
+        wrap.style.overflow='visible';
+        const badge=document.createElement('div');
+        badge.style.cssText=`position:absolute;top:-10px;left:-4px;
+          font-size:26px;line-height:1;z-index:15;pointer-events:none;
+          filter:drop-shadow(0 2px 6px rgba(0,0,0,0.8));`;
+        badge.textContent=cm.icon;
+        wrap.appendChild(badge);
+      }
     }
 
     // Stars below circle
@@ -3895,7 +3930,7 @@ function _getAnimalTop(li){
 }
 
 function _getAnimalLeft(li){
-  return ADV_SLOT_W/2 + li*ADV_SLOT_W;
+  return ADV_SLOT_W/2 + li*ADV_SLOT_W + 67;
 }
 
 function _placeAnimal(wi, li, positions){
@@ -3907,14 +3942,18 @@ function _placeAnimal(wi, li, positions){
   const nodeY=positions&&positions[li]?positions[li].y:_cachedMapVh/2;
   const R=li===9?ADV_NODE_R+10:ADV_NODE_R;
   const topPx=nodeY-R-ADV_ANIMAL_SIZE*0.9;
+  // Outer div handles position (left/top) — never animates so float is never interrupted
   const el=document.createElement('div');
   el.className='adv-animal-el';
   el.style.cssText=`position:absolute;left:${_getAnimalLeft(li)}px;top:${topPx}px;
-    transform:translateX(-50%);font-size:${ADV_ANIMAL_SIZE}px;line-height:1;
-    z-index:10;pointer-events:none;
+    transform:translateX(-50%);z-index:10;pointer-events:none;`;
+  // Inner div handles the float animation independently
+  const inner=document.createElement('div');
+  inner.style.cssText=`font-size:${ADV_ANIMAL_SIZE}px;line-height:1;
     filter:drop-shadow(0 5px 12px rgba(0,0,0,0.85));
     animation:animalFloat 1.8s ease-in-out infinite;`;
-  el.textContent=getAnimalEmoji();
+  inner.textContent=getAnimalEmoji();
+  el.appendChild(inner);
   nodesEl.appendChild(el);
   _advAnimalEl=el;
 }
@@ -3958,15 +3997,11 @@ function selectLevel(wi,li,animate){
     const nodeY=_cachedMapVh>0?_cachedMapVh/2:area.offsetHeight/2;
     const R=li===9?ADV_NODE_R+10:ADV_NODE_R;
     const targetTop=nodeY-R-ADV_ANIMAL_SIZE*0.9;
-    _advAnimalEl.style.animationPlayState='paused';
-    _advAnimalEl.style.transition='left 0.45s cubic-bezier(0.25,1,0.5,1),top 0.2s ease-in,transform 0.2s ease-in';
+    // Smooth transition for both left and top — never restart float animation
+    _advAnimalEl.style.transition='left 0.45s cubic-bezier(0.25,1,0.5,1),top 0.45s cubic-bezier(0.25,1,0.5,1)';
     _advAnimalEl.style.left=_getAnimalLeft(li)+'px';
     _advAnimalEl.style.top=targetTop+'px';
-    _advAnimalEl.style.transform='translateX(-50%)';
-    setTimeout(()=>{
-      if(_advAnimalEl) _advAnimalEl.style.animationPlayState='running';
-      _animalAnimating=false;
-    }, 460);
+    setTimeout(()=>{ _animalAnimating=false; }, 500);
   }, 80);
 }
 
@@ -4042,12 +4077,13 @@ function recenterMapNodes(){
       wrap.style.top=(mid-r)+'px';
     });
   }
-  // Reposition animal using updated vh
+  // Reposition animal using updated vh — never restart float animation
   if(_advAnimalEl && !_animalAnimating){
     const correctTop=_getAnimalTop(_advSelectedLevel);
     _advAnimalEl.style.transition='none';
     _advAnimalEl.style.top=correctTop+'px';
-    setTimeout(()=>{ if(_advAnimalEl){ _advAnimalEl.style.transition=''; _advAnimalEl.style.animationPlayState='running'; }},30);
+    // Don't touch animationPlayState — let float run continuously
+    setTimeout(()=>{ if(_advAnimalEl) _advAnimalEl.style.transition=''; }, 30);
   }
 }
 
@@ -4060,7 +4096,9 @@ function updateLevelPanel(wi,li,show){
   document.getElementById('adv-panel-levelname').textContent=`${world.icon} World ${wi+1} · Level ${li+1}`;
   document.getElementById('adv-panel-title').textContent=ADV_LEVEL_NAMES[wi][li];
   const goalEl=document.getElementById('adv-panel-goal');
-  goalEl.textContent=`Stack ${getAdvGoal(wi,li)} blocks · ${getAdvTime(wi,li)}s · ${getAdvRequiredStreak(wi,li)}x streak`;
+  const lvlMode=ADV_LEVEL_MODES[wi]?.[li];
+  const modeStr=(!isBoss&&lvlMode)?(()=>{const cm=CHALLENGE_MODES.find(m=>m.id===lvlMode);return cm?` · ${cm.icon} ${cm.label}`:''})():'';
+  goalEl.textContent=`Stack ${getAdvGoal(wi,li)} blocks · ${getAdvTime(wi,li)}s · ${getAdvRequiredStreak(wi,li)}x streak${modeStr}`;
   goalEl.style.opacity=unlocked?'1':'0.35';
   const starsEl=document.getElementById('adv-panel-stars');
   starsEl.textContent=data.stars>0?'⭐'.repeat(data.stars)+'☆'.repeat(3-data.stars):'☆☆☆';
@@ -4170,6 +4208,8 @@ function startAdvLevel(){
   // _advGLBOverride stays as whatever the player selected in settings
   advBoss=isBoss?world.boss:null;
   advBossLabel=isBoss?world.bossLabel:'';
+  // Always clear any lingering challenge mode — will be re-applied if this level has one
+  resetActiveMode();
   // Boss levels play tense music, normal levels play regular bgm
   // Override MT.world key for startGame to pick up
   _advLevelMusicKey=isBoss?'daily':'game';
@@ -4189,12 +4229,16 @@ function startAdvLevel(){
 
   _pendingAdvBoss=advBoss;
   _pendingAdvBossRotating=isBoss;
+  // Challenge mode for this level (boss levels never get a mode)
+  // Always reset _activeMode first so previous level's mode doesn't persist
+  _activeMode=null;
+  _pendingAdvMode=isBoss?null:(ADV_LEVEL_MODES[advWorld]?.[advLevel]||null);
 
   startGame(); // wipes then calls initGame; boss applied inside via _pendingAdvBoss
 }
 
 // Boss to apply after startGame wipe — set by startAdvLevel
-let _pendingAdvBoss=null, _pendingAdvBossRotating=false;
+let _pendingAdvBoss=null, _pendingAdvBossRotating=false, _pendingAdvMode=null;
 
 function applyAdvBoss(boss){
   // Boss mechanics applied via flags checked in game loop
@@ -7928,6 +7972,25 @@ function startGame(){
       applyAdvBoss(_pendingAdvBoss);
       if(_pendingAdvBossRotating) advBossRotating=true;
       _pendingAdvBoss=null; _pendingAdvBossRotating=false;
+    }
+    // Apply challenge mode for this adventure level
+    if(_pendingAdvMode){
+      _activeMode=_pendingAdvMode; _pendingAdvMode=null;
+      applyChallengeModeSetup();
+      const cm=CHALLENGE_MODES.find(m=>m.id===_activeMode);
+      if(cm){
+        const seenKey='advModeSeen_'+_activeMode;
+        const sv=getSave();
+        if(!sv[seenKey]){
+          // First time seeing this mode in adventure — show full description
+          sv[seenKey]=true; setSave(sv);
+          setTimeout(()=>_modeToast(cm.icon,'✨ NEW: '+cm.label.toUpperCase(),'rgba(20,10,50,0.97)'), 1200);
+          setTimeout(()=>_modeToast('💡', cm.desc,'rgba(20,30,60,0.97)'), 3400);
+        } else {
+          // Already seen — just remind them
+          setTimeout(()=>_modeToast(cm.icon, cm.label.toUpperCase()+'!', cm.color+'dd'), 1200);
+        }
+      }
     }
     applyHeadStart();
     activateHeartShower();
