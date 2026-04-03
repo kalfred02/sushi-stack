@@ -1080,12 +1080,12 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
             tex.image=img;
             tex.encoding=THREE.sRGBEncoding||3001; // correct color space
             tex.needsUpdate=true;
-            // Force all materials in the scene to update their maps
-            if(typeof scene!=='undefined' && scene.traverse){
-              scene.traverse(obj=>{
+            // Force all materials in the global scene to update their maps
+            if(typeof window._threeScene!=='undefined' && window._threeScene && window._threeScene.traverse){
+              window._threeScene.traverse(obj=>{
                 if(obj.isMesh && obj.material){
                   const mats=Array.isArray(obj.material)?obj.material:[obj.material];
-                  mats.forEach(mat=>{ if(mat.map===tex||mat.map){ mat.needsUpdate=true; } });
+                  mats.forEach(mat=>{ if(mat.map===tex){ mat.needsUpdate=true; } });
                 }
               });
             }
@@ -1143,7 +1143,7 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
           return raw;
         }
 
-        const scene=new THREE.Group();
+        const gltfScene=new THREE.Group();
         (json.meshes||[]).forEach(meshDef=>{
           (meshDef.primitives||[]).forEach(prim=>{
             try{
@@ -1181,13 +1181,13 @@ html,body{height:100%;overflow:hidden;background:#a8d8ea;font-family:'Nunito',sa
               const mat=new THREE.MeshStandardMaterial(matParams);
               const mesh=new THREE.Mesh(geo,mat);
               mesh.castShadow=true;mesh.receiveShadow=true;
-              scene.add(mesh);
+              gltfScene.add(mesh);
             }catch(e){console.warn('GLB primitive error:',e.message);}
           });
         });
 
-        if(scene.children.length===0) throw new Error('No meshes in GLB');
-        if(onLoad) onLoad({scene});
+        if(gltfScene.children.length===0) throw new Error('No meshes in GLB');
+        if(onLoad) onLoad({scene:gltfScene});
       }catch(e){
         console.warn('GLB parse error:',e.message);
         if(onError) onError(e);
@@ -1380,12 +1380,8 @@ const CREDITS_DATA={
     {name:'🍣 Sushi Roll 3D Model',author:'gecko0307',license:'CC Attribution 4.0',url:'https://sketchfab.com/3d-models/sushi-roll-d7653693cc704752a54784febebbce3b'},
   ],
   music:[
-    {title:'Bumblebee Loop',author:'jobromedia',license:'CC-BY 3.0',url:'https://opengameart.org/content/bumblebee-loop'},
-    {title:'Menu Music',author:'mrpoly',license:'CC0',url:'https://opengameart.org/content/menu-music-2'},
-    {title:'The Field of Dreams',author:'pauliuw',license:'CC0',url:'https://opengameart.org/content/the-field-of-dreams'},
-    {title:'Tower Defense Theme',author:'DST',license:'CC0',url:'https://opengameart.org/content/tower-defense-theme'},
-    {title:'Adventure Time',author:'Scribe',license:'CC0',url:'https://opengameart.org/content/adventure-time-3'},
-    {title:'Awake! (Megawall-10)',author:'cynicmusic',license:'CC0',url:'https://opengameart.org/content/awake-megawall-10'},
+    {source:'OpenGameArt',license:'CC0',url:'https://opengameart.org'},
+    {source:'Pixabay',license:'Pixabay License',url:'https://pixabay.com'},
   ]
 };
 let _colCurrentTab='blocks';
@@ -2125,12 +2121,13 @@ function showCreditsPopup(){
       <a href="${m.url}" target="_blank" style="font-size:10px;color:#9b8de5;text-decoration:none;padding:3px 8px;background:rgba(155,93,229,0.15);border-radius:6px;border:1px solid rgba(155,93,229,0.25);">↗</a></div>`;
   });
   html+=`<div style="font-family:'Fredoka One',cursive;font-size:11px;letter-spacing:2px;color:rgba(255,255,255,0.4);text-transform:uppercase;margin:12px 0 10px;">🎵 Music</div>`;
-  CREDITS_DATA.music.forEach(m=>{
-    html+=`<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:9px 12px;margin-bottom:6px;text-align:left;display:flex;justify-content:space-between;align-items:center;">
-      <div><div style="font-family:'Fredoka One',cursive;font-size:13px;color:#fff;">${m.title}</div>
-      <div style="font-family:'Nunito',sans-serif;font-size:11px;color:rgba(255,255,255,0.45);">${m.author} — ${m.license}</div></div>
-      <a href="${m.url}" target="_blank" style="font-size:10px;color:#9b8de5;text-decoration:none;padding:3px 8px;background:rgba(155,93,229,0.15);border-radius:6px;border:1px solid rgba(155,93,229,0.25);">↗</a></div>`;
-  });
+  html+=`<div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:12px 14px;margin-bottom:6px;text-align:left;">
+    <div style="font-family:'Nunito',sans-serif;font-size:12px;color:rgba(255,255,255,0.75);line-height:1.6;">Music from <a href="https://opengameart.org" target="_blank" style="color:#9b8de5;">OpenGameArt.org</a> (CC0) and <a href="https://pixabay.com" target="_blank" style="color:#9b8de5;">Pixabay.com</a></div>
+    <div style="font-family:'Nunito',sans-serif;font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;">Pixabay content used under Pixabay License</div>
+  </div>
+  <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:12px 14px;margin-bottom:6px;text-align:left;">
+    <div style="font-family:'Nunito',sans-serif;font-size:12px;color:rgba(255,255,255,0.75);line-height:1.6;">3D assets generated with <a href="https://www.meshy.ai" target="_blank" style="color:#9b8de5;">Meshy</a> (CC-BY 4.0)</div>
+  </div>`;
   html+=`<div style="font-family:'Nunito',sans-serif;font-size:11px;color:rgba(255,255,255,0.25);margin-top:12px;">Game by kalfred02</div>
     <button onclick="this.closest('div[style*=fixed]').remove()" style="margin-top:14px;width:100%;background:#9b5de5;color:#fff;
       font-family:'Fredoka One',cursive;font-size:16px;padding:11px;border:none;border-radius:12px;cursor:pointer;">Close</button>
@@ -4618,27 +4615,21 @@ function startAdvLevel(){
   // Override MT.world key for startGame to pick up
   _advLevelMusicKey=isBoss?'daily':'game';
 
-  // Close all screens
-  document.getElementById('s-adv-intro').style.display='none';
-  document.getElementById('s-adventure').style.display='none';
-  document.getElementById('s-start').style.display='none';
-
+  // Close all screens — inside wipe so they're never exposed
+  // (screens are hidden inside _doStart, which runs after wipe covers the view)
   // Store world speed — applied after initGame in startGame
-  // Starting speed = base speed × world multiplier
   _advWorldSpeedBonus = BASE_ADV_SPEED * getWorldSpeedMult(advWorld) - BASE_ADV_SPEED;
 
-  // Set stage colors to world theme
+  // Set stage colors to world theme — do this before wipe so canvas is right when revealed
   scene.background=new THREE.Color(world.sky);
   scene.fog=new THREE.Fog(world.fog,16,40);
 
   _pendingAdvBoss=advBoss;
   _pendingAdvBossRotating=isBoss;
-  // Challenge mode for this level (boss levels never get a mode)
-  // Always reset _activeMode first so previous level's mode doesn't persist
   _activeMode=null;
   _pendingAdvMode=isBoss?null:(ADV_LEVEL_MODES[advWorld]?.[advLevel]||null);
 
-  startGame(); // wipes then calls initGame; boss applied inside via _pendingAdvBoss
+  startGame(); // wipes then calls initGame; screens hidden inside wipe callback
 }
 
 // Boss to apply after startGame wipe — set by startAdvLevel
@@ -5230,7 +5221,14 @@ async function discoverPackTracks(folder, prefix){
   for(let i=1;i<=99;i++){
     const n=String(i).padStart(2,'0');
     const path=base+`bgm_${prefix}_${n}.mp3`;
-    const exists=await fetch(path,{method:'HEAD'}).then(r=>r.ok).catch(()=>false);
+    const exists=await new Promise(resolve=>{
+      const a=new Audio();
+      a.oncanplaythrough=()=>{ a.src=''; resolve(true); };
+      a.onloadedmetadata=()=>{ a.src=''; resolve(true); }; // fires earlier than canplaythrough
+      a.onerror=()=>resolve(false);
+      setTimeout(()=>resolve(false),8000); // longer timeout for slow connections
+      a.src=path;
+    });
     if(!exists) break;
     tracks.push(path);
   }
@@ -5483,6 +5481,7 @@ renderer.toneMapping=THREE.LinearToneMapping;
 renderer.toneMappingExposure=0.9;
 
 const scene=new THREE.Scene();
+window._threeScene=scene;
 scene.background=new THREE.Color(0xc8eec8);
 scene.fog=new THREE.Fog(0xb0d8b0,16,40);
 
@@ -5562,7 +5561,7 @@ function w2s(v3){const v=v3.clone().project(cam);return{x:(v.x+1)/2*window.inner
 function mkBlock(w,color){
   if(advMode && _advGLBOverride) return mkAdvRewardBlock(w,color);
   // Named GLB styles (selectable from pause menu)
-  const GLB_STYLES=['strawberry','tomato','carrot','cucumber','banana','lemon','orange_bell_pepper','orange','bread','chocolate_cake','cinnamon_roll','glazed_donut','pepperoni_pizza','salami','swiss_cheese'];
+  const GLB_STYLES=['sushi_roll_01','sushi_roll_02','sushi_roll_03','sushi_roll_04','strawberry','tomato','carrot','cucumber','banana','lemon','orange_bell_pepper','orange','bread','chocolate_cake','cinnamon_roll','glazed_donut','pepperoni_pizza','salami','swiss_cheese'];
   if(GLB_STYLES.includes(blockStyle)){
     const cache=_glbCache[blockStyle];
     if(cache&&cache.glb&&cache.size){
@@ -5982,7 +5981,8 @@ function initGame(){
   if(!advMode) _advGLBOverride=null; // clear reward model for non-adv games
   // Load saved style and animal
   const sv2=getSave();
-  blockStyle=sv2.blockStyle||'sushi';
+  blockStyle=sv2.blockStyle||'sushi_roll_01';
+  if(blockStyle==='sushi') blockStyle='sushi_roll_01'; // migrate old save data
   selectedAnimal=sv2.animal||'bunny';
   setBlockStyle(blockStyle);
   const bel=document.getElementById('stage-progress');
@@ -6080,7 +6080,7 @@ function preloadSushiGLB(){
     console.warn('GLTFLoader not available — check CDN');return;
   }
   sushiGLBLoading=true;
-  const path=resolveAssetPath('Models/sushi_roll.glb');
+  const path=resolveAssetPath('Models/sushi_roll_01.glb');
   console.log('Loading sushi GLB from:',path);
   try{
     const loader=new THREE.GLTFLoader();
@@ -6173,6 +6173,10 @@ function getAdvRewardModel(w, l){
 
 function getAdvRewardModelPath(name){
   const paths={
+    sushi_roll_01:'Models/sushi_roll_01.glb',
+    sushi_roll_02:'Models/sushi_roll_02.glb',
+    sushi_roll_03:'Models/sushi_roll_03.glb',
+    sushi_roll_04:'Models/sushi_roll_04.glb',
     strawberry:'Models/strawberry.glb',
     tomato:'Models/tomato.glb',
     carrot:'Models/carrot.glb',
@@ -6234,7 +6238,7 @@ function _showGLBLoader(){
 }
 
 function _updateGLBLoadingUI(){
-  const total=['strawberry','tomato','carrot','cucumber','banana','lemon','orange_bell_pepper','orange','bread','chocolate_cake','cinnamon_roll','glazed_donut','pepperoni_pizza','salami','swiss_cheese'].length;
+  const total=['sushi_roll_01','sushi_roll_02','sushi_roll_03','sushi_roll_04','strawberry','tomato','carrot','cucumber','banana','lemon','orange_bell_pepper','orange','bread','chocolate_cake','cinnamon_roll','glazed_donut','pepperoni_pizza','salami','swiss_cheese'].length;
   const done=Object.values(_glbCache).filter(c=>c.glb||(!c.loading&&!c.glb)).length;
   const el=document.getElementById('glb-loader');
   if(done>=total){
@@ -6253,7 +6257,7 @@ function _updateGLBLoadingUI(){
   document.head.appendChild(s);
 })();
 
-['strawberry','tomato','carrot','cucumber','banana','lemon','orange_bell_pepper','orange','bread','chocolate_cake','cinnamon_roll','glazed_donut','pepperoni_pizza','salami','swiss_cheese'].forEach(name=>{
+['sushi_roll_01','sushi_roll_02','sushi_roll_03','sushi_roll_04','strawberry','tomato','carrot','cucumber','banana','lemon','orange_bell_pepper','orange','bread','chocolate_cake','cinnamon_roll','glazed_donut','pepperoni_pizza','salami','swiss_cheese'].forEach(name=>{
   loadGLB(name, getAdvRewardModelPath(name));
 });
 _showGLBLoader();
@@ -7971,7 +7975,10 @@ function updatePerfectDisplay(){
 // All block styles definition
 const BLOCK_STYLES=[
   {id:'default',           label:'🟦 Classic',          unlock:'always'},
-  {id:'sushi',             label:'🍣 Sushi',             unlock:'always'},
+  {id:'sushi_roll_01',     label:'🍣 Sushi Roll 1',     unlock:'always'},
+  {id:'sushi_roll_02',     label:'🍣 Sushi Roll 2',     unlock:'mesh'},
+  {id:'sushi_roll_03',     label:'🍣 Sushi Roll 3',     unlock:'mesh'},
+  {id:'sushi_roll_04',     label:'🍣 Sushi Roll 4',     unlock:'mesh'},
   {id:'strawberry',        label:'🍓 Strawberry',        unlock:'mesh'},
   {id:'tomato',            label:'🍅 Tomato',            unlock:'mesh'},
   {id:'carrot',            label:'🥕 Carrot',            unlock:'mesh'},
@@ -8032,6 +8039,9 @@ function onGoldenStyleClick(){
 function setBlockStyle(s){
   blockStyle=s;
   const sv=getSave();sv.blockStyle=s;setSave(sv);
+  // Ensure GLB is loaded if this is a mesh style
+  const path=getAdvRewardModelPath(s);
+  if(path && (!_glbCache[s]||(!_glbCache[s].glb&&!_glbCache[s].loading))) loadGLB(s,path);
   buildBlockStyleSelector(); // rebuild to update active highlights
   if(state==='playing' && mover){
     const oldLx=mover.lx,oldW=mover.w,oldDir=mover.dir,oldBy=mover.by,oldBounces=mover.bounces,oldOrigColor=mover.origColor;
@@ -8340,8 +8350,11 @@ function startGame(){
   hideScreenAds();
 
   const _doStart=()=>{
+    // Hide all screens now that wipe is covering the view
     document.getElementById('s-start').style.display='none';
     document.getElementById('s-over').style.display='none';
+    document.getElementById('s-adv-intro').style.display='none';
+    document.getElementById('s-adventure').style.display='none';
     document.getElementById('hud').style.display='flex';
     const hintEl=document.getElementById('hint');
     hintEl.style.display='block';
@@ -8582,6 +8595,8 @@ function showMeshUnlockPopup(name, onDismiss){
     cinnamon_roll:'🥐 Cinnamon Roll', glazed_donut:'🍩 Glazed Donut',
     pepperoni_pizza:'🍕 Pepperoni Pizza', salami:'🥩 Salami',
     swiss_cheese:'🧀 Swiss Cheese',
+    sushi_roll_02:'🍣 Sushi Roll 2', sushi_roll_03:'🍣 Sushi Roll 3',
+    sushi_roll_04:'🍣 Sushi Roll 4', sushi_roll_01:'🍣 Sushi Roll 1',
   };
   const label=labels[name]||name;
   const pop=document.createElement('div');
@@ -8632,7 +8647,7 @@ function devResetRewards(){
     const sv=getSave();
     Object.keys(sv).filter(k=>k.startsWith('musicPack_')).forEach(k=>delete sv[k]);
     sv.musicPack='default';
-    sv.blockStyle='sushi';
+    sv.blockStyle='sushi_roll_01';
     sv.animal='bunny';
     delete sv.pandaUnlocked;
     delete sv.collectionOpened;
